@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Arithmetization.M3
+public import LeanerVM.Protocol.ToClean.ComponentPolynomial
 public import LeanerVM.Arithmetization.Statement
 public import LeanerVM.Protocol.Bus
 public import LeanerVM.Protocol.FixedColumns
@@ -48,14 +48,14 @@ program's eight entry columns known to both parties, `Coord.known`). The index c
 verifier's (`idxColumn`), as the Rust's `Coord::Index` is.
 
 **The stack** (`witness.rs:67-101`). Every committed column has a log-size, its table's; the
-eighteen `BLAKE2S` limb columns have none (`Placement::VIRTUAL`, `witness.rs:21-29`; `layout.rs:160-168`). The
-committed columns, in global order, are sorted by log-size, largest first, ties in global order
-(`stack_offsets`), and laid end to end at aligned offsets (`Blocks.layout`); the stack has
-`μ = max(⌈log₂ total⌉, 15)` variables (`placements_of`). Limb `k` of the `BLAKE2S` table is read
-at the strided slot `F.slot k` of the Flock region (`Blocks.stridedLayout`; `hash_flock.rs:79-115`):
-row `t`'s limb is cell `F.slot k` of block `t`. The layout is `Layout.piecewise` of the two,
-renamed to the instance's columns; no two columns share a cell except the limbs and the region
-they are read from, as the Rust routes them.
+eighteen `BLAKE2S` limb columns have none (`Placement::VIRTUAL`, `witness.rs:21-29`;
+`layout.rs:160-168`). The committed columns, in global order, are sorted by log-size, largest first,
+ties in global order (`stack_offsets`), and laid end to end at aligned offsets (`Blocks.layout`);
+the stack has `μ = max(⌈log₂ total⌉, 15)` variables (`placements_of`). Limb `k` of the `BLAKE2S`
+table is read at the strided slot `F.slot k` of the Flock region (`Blocks.stridedLayout`;
+`hash_flock.rs:79-115`): row `t`'s limb is cell `F.slot k` of block `t`. The layout is
+`Layout.piecewise` of the two, renamed to the instance's columns; no two columns share a cell except
+the limbs and the region they are read from, as the Rust routes them.
 
 **The public lines** (§8.2). Three: cells `0, 1` of `MEM_LO` are `input₀, input₂` and of
 `MEM_HI` are `input₁, input₃`, both sent; cells `0, 1` of `MEM_TOP` are `0, 0`, not sent. The
@@ -115,7 +115,8 @@ def opcodeComponent : Fin 6 → Component K
 def counted (c : RawChannel K) : Bool := c.name = MemPull.name || c.name = BytecodePull.name
 
 /-- Opcode table `j` as an M3 table. -/
-def opcodeTable (j : Fin 6) : M3Table K := (opcodeComponent j).toM3 channelSep channelDir counted
+def opcodeTable (j : Fin 6) : M3Table K Arithmetization.Direction :=
+  (opcodeComponent j).toM3 channelSep channelDir counted
 
 /-- The side of the bus a direction flushes on. -/
 def sideOf : Arithmetization.Direction → Side

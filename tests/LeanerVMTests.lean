@@ -1,7 +1,6 @@
 import LeanerVMTests.Arithmetization.Boundary
 import LeanerVMTests.Arithmetization.Bytecode
 import LeanerVMTests.Arithmetization.Channels
-import LeanerVMTests.Arithmetization.M3
 import LeanerVMTests.Arithmetization.Statement
 import LeanerVMTests.Arithmetization.Tables
 import LeanerVMTests.Imports
@@ -17,6 +16,7 @@ import LeanerVMTests.Protocol.Blake2sCircuit
 import LeanerVMTests.Protocol.Bus
 import LeanerVMTests.Protocol.BusSecurity
 import LeanerVMTests.Protocol.ClaimWeights
+import LeanerVMTests.Protocol.ComponentPolynomial
 import LeanerVMTests.Protocol.Field
 import LeanerVMTests.Protocol.Fingerprint
 import LeanerVMTests.Protocol.FixedColumns

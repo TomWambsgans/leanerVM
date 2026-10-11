@@ -1,12 +1,13 @@
-import LeanerVM.Arithmetization.M3
+import LeanerVM.Protocol.ToClean.ComponentPolynomial
 import LeanerVM.Arithmetization.Statement
 
 /-!
 # Tests: Clean components as polynomials
 
 A classic test for kernel evaluation. An expression with a degree-two constraint is translated
-and evaluated on a satisfying and a failing row; a variable at the width reads `0`, as Clean
-reads a missing cell; the syntactic degree bounds but need not equal the degree.
+and evaluated on a satisfying and a failing row, and is Clean's polynomial of it; a variable at
+the width reads `0`, as Clean reads a missing cell; the syntactic degree bounds but need not
+equal the degree.
 
 The six opcode tables and the two blocks of leanISA are translated with leanISA's separators,
 directions and counted channels (the memory and bytecode pulls), and the result is checked
@@ -21,9 +22,9 @@ constant count fails) and every message has at most fifteen coordinates, so a tu
 its message.
 -/
 
-namespace LeanerVMTests.Arithmetization.M3
+namespace LeanerVMTests.Protocol.ComponentPolynomial
 
-open LeanerVM.Parameters LeanerVM.Arithmetization Air.Flat CPoly
+open LeanerVM.Parameters LeanerVM.Arithmetization LeanerVM.Protocol Air.Flat CPoly
 
 /-! ## One expression -/
 
@@ -40,6 +41,10 @@ example : xy.degreeBound = 2 := rfl
 example (row : Fin 2 → K) (data : ProverData K) :
     (xy.toCMvPolynomial 2).eval row = xy.eval (Environment.fromArray (Array.ofFn row) data) :=
   Expression.eval_toCMvPolynomial row data xy
+
+/-- Within the width, the translation is Clean's polynomial of the expression. -/
+example : fromCMvPolynomial (xy.toCMvPolynomial 2) = xy.toBoundedPolynomial 2 (by decide) :=
+  Expression.fromCMvPolynomial_toCMvPolynomial xy _
 
 /-- A variable at the width is `0`, as Clean reads a missing cell. -/
 example : (Expression.var ⟨2⟩ : Expression K).toCMvPolynomial 2 = 0 := rfl
@@ -89,6 +94,14 @@ example : components.all fun c ↦ c.rowOperations.interactions.all fun i ↦
 example : components.all fun c ↦ decide (CountsAreVariables c counted) := by
   decide +kernel
 
+-- Every multiplicity is `1` or `-1`, so the tables drop none. A pull's is the product
+-- `-1 · 1`, which has a value; a variable has none.
+example : components.all fun c ↦ decide (UnitMultiplicities c) := by
+  decide +kernel
+example : (Expression.mul (.const (-1)) (.const 1) : Expression K).constValue = some (-1) := by
+  decide +kernel
+example : (Expression.var ⟨0⟩ : Expression K).constValue = none := rfl
+
 -- Every message has at most fifteen coordinates, so its tuple determines it.
 example : components.all fun c ↦ c.rowOperations.interactions.all fun i ↦
     decide (i.channel.arity ≤ 15) := by
@@ -105,4 +118,4 @@ example : components.all fun c ↦ (c.rowOperations.constraints.all fun e ↦
       i.msg.toList.all fun e ↦ decide (e.WithinWidth c.width) := by
   decide +kernel
 
-end LeanerVMTests.Arithmetization.M3
+end LeanerVMTests.Protocol.ComponentPolynomial
