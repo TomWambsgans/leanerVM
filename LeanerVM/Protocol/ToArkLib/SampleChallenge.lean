@@ -276,7 +276,7 @@ def drawPushesFront : (j : ℕ) → Front (drawPushes (S := S) (W := W) OStmt C 
   | j + 1 => (drawPushesFront j).append (sampleFront OStmt C _ _)
 
 variable {relIn : Set ((S × ∀ i, OStmt i) × W)}
-  (rel : (j : ℕ) → Set (((S × Vector C j) × ∀ i, OStmt i) × W)) (n : ℕ)
+  (rel : (j : ℕ) → Set (((S × Vector C j) × ∀ i, OStmt i) × W)) {n : ℕ}
 
 /-- Completeness of the first `j ≤ n` draws: the input relation holds at the empty vector in
 relation `0`, and each draw below `n` carries relation `j` into relation `j + 1`. -/

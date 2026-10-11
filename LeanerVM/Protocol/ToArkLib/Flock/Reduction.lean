@@ -181,7 +181,7 @@ def flockComplete
     (hbool : ∀ o i (u : Fin (2 ^ (P.m + P.κ))), (z o i)[u] = 0 ∨ (z o i)[u] = 1)
     (hread : ∀ o p, eval₂Mle (col o) φ p = eval₂Mle (stack o) φ (lift p)) :
     Component.Complete (flock P C z side s' φ g lift finish (W := W)) relIn relOut :=
-  (Component.drawPushesComplete O F (pointRel P C z side) P.nRand (fun s o w h ↦ by
+  (Component.drawPushesComplete O F (pointRel P C z side) (fun s o w h ↦ by
       obtain ⟨hside, hholds⟩ := hIn s o w h
       obtain ⟨herr, hconst⟩ := (batchHolds_iff C P.cpos (z o)).mp hholds
       refine ⟨hside, fun i b ↦ ?_, hconst⟩

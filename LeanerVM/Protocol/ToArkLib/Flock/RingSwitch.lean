@@ -235,7 +235,7 @@ def ringSwitchComplete {StmtOut : Type} (finish : S → Weight F μ → F → St
     (hread : ∀ o p, eval₂Mle (col o) φ p = eval₂Mle (stack o) φ (lift p)) :
     Component.Complete (ringSwitch P s' φ g lift finish (O := O) (W := W)) (outRel P z side)
       relOut :=
-  (Component.drawPushesComplete O F (ringRel P z side s' φ g) s'
+  (Component.drawPushesComplete O F (ringRel P z side s' φ g)
       (fun _ _ _ h ↦ ringRel_zero_of_outRel P z side s' φ g h)
       (fun p hp ↦ ringDrawComplete P z side s' φ g p hp.le) s' le_rfl).append
     (Component.sampleChallengeComplete O F _ _ fun st o w h ↦ ⟨rfl, fun x ↦
