@@ -115,8 +115,9 @@ definition and completeness (`Protocol/Flock.lean`: `flockPhase` at the slot `fl
 at leanVM's sizes and constants (`ToArkLib/Flock/`, `Parameters/Flock.lean`); on the branch of
 #88, stacked on it, its knowledge soundness (`flockSecurity`, on the generic
 `ToArkLib/Flock/Security.lean` and the field facts of `Protocol/FlockFields.lean`). On the
-branches stacked on the oracle protocol's, the Clean bridge (`Arithmetization/M3.lean`:
-`Expression.toCMvPolynomial` and `Component.toM3` with their two translation theorems) and the
+branches stacked on the oracle protocol's, the Clean bridge (`ToClean/ComponentPolynomial.lean`:
+`Expression.toCMvPolynomial` and `Component.toM3` with their two translation theorems, over a
+verbatim copy of Clean's expression polynomials in `ToClean/ExpressionPolynomial.lean`) and the
 adaptor: the leanISA instance with the deployed stack layout (`Protocol/LeanIsa.lean`:
 `leanIsaInstance`, `witnessOf`, `stackOf`, `leanIsa_conditions`), its soundness
 (`LeanIsa/Sound.lean`: `satisfiedBy_witnessOf`, which discharges `SatisfiedBy`'s BLAKE2s validity
@@ -610,12 +611,17 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     unfold `lowPoint` by name, has merged. The review is
     [archived](../reviews/protocol-table-sumcheck.md).
 
-- **The Clean bridge (Layer 2)** is computable over CompPoly, beside Clean #466's Mathlib-side
-  `toMvPolynomial` (claimed by #28, merged upstream after the pin). Where it differs from the
-  sketch:
-  - Flushes carry the arithmetization's `Direction`, since the arithmetization may not import the
-    spine's `Side`; the counted channels are a predicate, and the count columns are listed in
-    column order, each once, as the Rust's `count_columns()` are.
+- **The Clean bridge (Layer 2)** is a Clean candidate (`ToClean/`), computable over CompPoly
+  and written over Clean #466's `degreeBound`, `WithinWidth` and `toBoundedPolynomial` (claimed
+  by #28; on Clean's main, but in no Clean revision built for Lean 4.34). Until the pin contains
+  it, `ToClean/ExpressionPolynomial.lean` is a verbatim copy of Clean's module, deleted at the
+  bump (the watch list). Where it differs from the sketch:
+  - Tables are generic over the type of bus sides; leanISA's carry the arithmetization's
+    `Direction`, mapped to the spine's `Side` by the instance. The counted channels are a
+    predicate, and the count columns are listed in column order, each once, as the Rust's
+    `count_columns()` are.
+  - Flushes drop Clean's multiplicities; `UnitMultiplicities`, which the kernel checks for
+    leanISA's components, says there is none to drop.
   - `eval_toCMvPolynomial` is stated on a row of the width's cells (on a longer array it is
     false); `eval_fromArray_truncate` covers other rows.
 - **The adaptor (Layer 3).** Where it differs from the sketch:
