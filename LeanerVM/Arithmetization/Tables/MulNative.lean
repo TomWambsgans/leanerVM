@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Arithmetization.Tables.Basic
+public import LeanerVM.Arithmetization.Tables.Xor
 public import Clean.Circuit.Formal
 public import Clean.Utils.Tactics.CircuitProofStart
 
@@ -25,10 +25,11 @@ flushes `tables.rs:483-495` (`Arith::flushes` with `is_xor = false`), the result
 §7.2 (`doc/leanvm/body/07-instruction-tables.tex:28-50`). There is no constraint: the bus
 balance is the assertion `[o_C] = [o_A] · [o_B]` (§5, "M3").
 
-**The row** `MulRow` is the column list: `pc, fp`; the operands `o_A, o_B, o_C`; the two read
-words `v_A, v_B` as three limbs each; the memory counts `r_A, r_B, r_C`; the bytecode count
-`r_bc`. The product is never a column: its limbs ride the third memory read as the twelve
-products over the nine limb pairs, folded by `y^3 = y + 1` into three lanes,
+**The row** `MulRow` is `XorRow`, the one `mod arith` layout both tables share: `pc, fp`; the
+operands `o_A, o_B, o_C`; the two read words `v_A, v_B` as three limbs each; the memory counts
+`r_A, r_B, r_C`; the bytecode count `r_bc`. The product is never a column: its limbs ride the
+third memory read as the twelve products over the nine limb pairs, folded by `y^3 = y + 1` into
+three lanes,
 
 ```text
 c0 = a0·b0 + a1·b2 + a2·b1
@@ -41,9 +42,10 @@ statement that these are the limbs of the product in `E`, and licenses the proof
 result coordinates as `v_A · v_B` (roadmap acceptance test 9).
 
 **The relation** is the `XOR` table's with the product for the sum (see
-`LeanerVM.Arithmetization.Tables.Xor` for the template): `MulBindings mem r` binds the two
-operand words (`readA_eq`, `readB_eq`) to an image; `MulRefines mem r next` is the bindings and
-the execution of the instruction the row names, `MUL_NATIVE o_A o_B o_C` (`exec_eq`);
+`LeanerVM.Arithmetization.Tables.Xor` for the template): `MulBindings mem r` is
+`XorBindings mem r`, binding the two operand words (`readA_eq`, `readB_eq`) to an image;
+`MulRefines mem r next` is the bindings and the execution of the instruction the row names,
+`MUL_NATIVE o_A o_B o_C` (`exec_eq`);
 `mul_refines_iff` expands it to the word at `fp·o_C` being the product of the two words in `E`,
 and the successor `(g·pc, fp)`. The public description of the operation is the product in `E`;
 the circuit's expanded polynomial is `main`'s coordinates alone, tied to it by `mul_limbs`.
@@ -79,40 +81,14 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `MUL_NATIVE` columns, in the order of `tables.rs:436-456`. -/
-structure MulRow (F : Type) where
-  /-- The program counter. -/
-  pc : F
-  /-- The frame pointer. -/
-  fp : F
-  /-- The operand `o_A`. -/
-  oA : F
-  /-- The operand `o_B`. -/
-  oB : F
-  /-- The operand `o_C`. -/
-  oC : F
-  /-- The word read at `fp · o_A`, as limbs. -/
-  vA : Vector F 3
-  /-- The word read at `fp · o_B`, as limbs. -/
-  vB : Vector F 3
-  /-- The read count of the cell `fp · o_A`. -/
-  rA : F
-  /-- The read count of the cell `fp · o_B`. -/
-  rB : F
-  /-- The read count of the cell `fp · o_C`. -/
-  rC : F
-  /-- The read count of the bytecode entry at `pc`. -/
-  rbc : F
-  deriving ProvableStruct
+/-- The `MUL_NATIVE` columns: the `XOR` columns, as both tables share the one `mod arith`
+layout (`tables.rs:436-456`). -/
+abbrev MulRow := XorRow
 
 /-! ## The relation -/
 
-/-- The row's bindings to an image: the operand cells hold the row's words. -/
-structure MulBindings {κ : ℕ} (mem : MemImage κ) (r : MulRow K) : Prop where
-  /-- The cell `fp · o_A` holds the row's word `v_A`. -/
-  readA_eq : mem.read (r.fp * r.oA) = some (E.ofLimbs r.vA[0] r.vA[1] r.vA[2])
-  /-- The cell `fp · o_B` holds the row's word `v_B`. -/
-  readB_eq : mem.read (r.fp * r.oB) = some (E.ofLimbs r.vB[0] r.vB[1] r.vB[2])
+/-- The row's bindings to an image: the `XOR` row's, the operand cells hold the row's words. -/
+abbrev MulBindings {κ : ℕ} (mem : MemImage κ) (r : MulRow K) : Prop := XorBindings mem r
 
 /-- The relation a `MUL_NATIVE` row refines: it is bound to the image, and from its registers
 the machine executes the instruction it names, `MUL_NATIVE o_A o_B o_C`, to `next`. -/
