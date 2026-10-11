@@ -11,6 +11,7 @@ module
 public import LeanerVM.Protocol.ToArkLib.Component
 public import LeanerVM.Protocol.ToArkLib.GuardedVerdict
 public import LeanerVM.Protocol.ToArkLib.KeepOracles
+public import LeanerVM.Protocol.ToArkLib.PassThrough
 public import LeanerVM.Protocol.ToArkLib.Schedule
 public import LeanerVM.Protocol.ToArkLib.Refutation
 
@@ -247,6 +248,28 @@ theorem sampleChallenge_not_rbr {WitMid : Fin 2 → Type}
       ⟨Transcript.concat c (default : (draw C).Transcript 0), rfl, w,
         Verifier.GuardedForm.probEvent_pos_of_check (sampleGuarded OStmt C check f) init impl
           (s, o) _ (fun t ↦ (t, w) ∈ relOut) hc (hesc c)⟩
+
+/-! ## Challenges recorded in a vector -/
+
+section Pushes
+
+variable {S : Type}
+
+/-- One challenge, appended to the vector of challenges beside the statement. -/
+def drawPush (j : ℕ) : Def (S × Vector C j) OStmt W (S × Vector C (j + 1)) OStmt W (draw C) :=
+  sampleChallenge OStmt C (fun _ ↦ true) fun s x ↦ (s.1, s.2.push x)
+
+/-- `j` challenges, appended one by one to a vector beside the statement. -/
+def drawPushes : (j : ℕ) → Def S OStmt W (S × Vector C j) OStmt W (draws C j)
+  | 0 => passThrough OStmt fun s ↦ (s, #v[])
+  | j + 1 => (drawPushes j).append (drawPush OStmt C j)
+
+/-- The draws read only the transcript. -/
+def drawPushesFront : (j : ℕ) → Front (drawPushes (S := S) (W := W) OStmt C j)
+  | 0 => passThroughFront OStmt _
+  | j + 1 => (drawPushesFront j).append (sampleFront OStmt C _ _)
+
+end Pushes
 
 end Component
 

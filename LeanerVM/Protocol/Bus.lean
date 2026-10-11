@@ -116,10 +116,11 @@ def Source.tuple (q : Column I.μ) : (src : Source I) → Fin (2 ^ src.κ) → V
   | .flush j f, x => (flushPolys j f).map fun P ↦ P.eval (I.row q j x)
   | .count j c, x => Vector.ofFn fun i ↦ if i.val = 0 then (I.column q ⟨j, c⟩).values.get x else 0
 
-/-- A block's leaf at row `x`: the count cell, or `β − π_α(t)` for the row's tuple `t`. -/
+/-- A block's leaf at row `x`: `β − π_α(t)` for the row's tuple `t`, or the count cell. -/
 def Source.leaf (α : Fin 4 → E) (β : E) (q : Column I.μ) : (src : Source I) → Fin (2 ^ src.κ) → E
+  | .boundary b, x => β - fingerprint α ((Source.boundary b).tuple q x)
+  | .flush j f, x => β - fingerprint α ((Source.flush j f).tuple q x)
   | .count j c, x => ofK ((I.column q ⟨j, c⟩).values.get x)
-  | src, x => β - fingerprint α (src.tuple q x)
 
 variable (I)
 
@@ -680,24 +681,24 @@ def Source.boundaryValue (α : Fin 4 → E) (β : E) (vals : Vector E I.busClaim
   | .count _ _, _ => 0
 
 /-- The constant `1` is within every degree bound. -/
-theorem totalDegree_one_le (j : Fin I.ntab) :
+private theorem totalDegree_one_le (j : Fin I.ntab) :
     (1 : CMvPolynomial (I.width j) K).totalDegree ≤ I.d := by
   rw [totalDegree_equiv (S := K), CPoly.map_one, MvPolynomial.totalDegree_one]
   omega
 
 /-- A flush's coordinate polynomials are within the degree bound. -/
-theorem flushPolys_totalDegree_le (j : Fin I.ntab) (f : Fin (I.flushes j).length) (i : Fin 16) :
-    (flushPolys j f)[i].totalDegree ≤ I.d := by
+private theorem flushPolys_totalDegree_le (j : Fin I.ntab) (f : Fin (I.flushes j).length)
+    (i : Fin 16) : (flushPolys j f)[i].totalDegree ≤ I.d := by
   simpa [flushPolys, Vector.get_eq_getElem] using I.flushes_degree j _ (List.getElem_mem f.isLt) i
 
 /-- A variable is within a degree bound of at least one. -/
-theorem totalDegree_X_le (hd : 1 ≤ I.d) (j : Fin I.ntab) (c : Fin (I.width j)) :
+private theorem totalDegree_X_le (hd : 1 ≤ I.d) (j : Fin I.ntab) (c : Fin (I.width j)) :
     (CMvPolynomial.X c : CMvPolynomial (I.width j) K).totalDegree ≤ I.d := by
   rw [totalDegree_equiv (S := K), CMvPolynomial.fromCMvPolynomial_X, MvPolynomial.totalDegree_X]
   exact hd
 
 /-- The constant row polynomial `1`. -/
-def oneRow (j : Fin I.ntab) : I.RowPoly j := ⟨1, totalDegree_one_le j⟩
+def oneRow (j : Fin I.ntab) : I.RowPoly j := ⟨1, by exact totalDegree_one_le j⟩
 
 /-- A flush block's terms on its table, at the block's weight `w`: `w·β` against `1`, and
 `−w·eq(α, i)` against coordinate `i`'s polynomial. -/
@@ -705,12 +706,12 @@ def flushForm (j : Fin I.ntab) (f : Fin (I.flushes j).length) (w : E) (α : Fin 
     I.Form j :=
   let tw := fingerprintWeights α
   (w * β, oneRow j) :: (List.finRange 16).map fun i ↦
-    (-(w * tw[i.val]), ⟨(flushPolys j f)[i], flushPolys_totalDegree_le j f i⟩)
+    (-(w * tw[i.val]), ⟨(flushPolys j f)[i], by exact flushPolys_totalDegree_le j f i⟩)
 
 /-- A count column's term on its table, at the block's weight `w`: `w` against the column's
 variable. -/
 def countForm (hd : 1 ≤ I.d) (j : Fin I.ntab) (c : Fin (I.width j)) (w : E) : I.Form j :=
-  [(w, ⟨CMvPolynomial.X c, totalDegree_X_le hd j c⟩)]
+  [(w, ⟨CMvPolynomial.X c, by exact totalDegree_X_le hd j c⟩)]
 
 /-- A block's terms on table `j`: its flush's or count column's if it is table `j`'s, none
 otherwise. -/

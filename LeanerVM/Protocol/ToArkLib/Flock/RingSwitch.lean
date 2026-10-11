@@ -25,7 +25,7 @@ weighted claims on `stack` can be proved. Ring switching turns the family into o
 `T = Σ_i g^i · Φ(s_i)` and `W = Σ_{(c, e)} c · eq(lift(r'^(2^e)), ·)` over the terms of `Φ` as a
 Frobenius sum. Two components:
 
-1. `ringDraws p`: the first `p` coefficients. The state (`ringRel p`): with
+1. `Component.drawPushes O F p`: the first `p` coefficients. The state (`ringRel p`): with
    `δ_i = s_i - ẑ_i(r')` and `Φ_p` the first `p` stages, every
    `π_k = Σ_i g^i · Φ_p(δ_i) ^ 2 ^ k`, `k < 2 ^ (s' + 1 - p)`, is zero.
 2. `ringFinal`: the last coefficient, and the weighted claim handed on through `finish`.
@@ -83,18 +83,6 @@ instance [∀ s o, Decidable (side s o)] (p : ℕ)
     Decidable (q ∈ ringRel P z side s' φ g p) :=
   inferInstanceAs (Decidable (_ ∧ _))
 
-/-- One coefficient. -/
-def ringDraw (p : ℕ) :
-    Component.Def (RingStmt S F (P.m + P.κ) P.s p) O W (RingStmt S F (P.m + P.κ) P.s (p + 1)) O W
-      (draw F) :=
-  Component.sampleChallenge O F (fun _ ↦ true) fun st x ↦ (st.1, st.2.push x)
-
-/-- The first `p` coefficients. -/
-def ringDraws : (p : ℕ) →
-    Component.Def (OutStmt S F (P.m + P.κ) P.s) O W (RingStmt S F (P.m + P.κ) P.s p) O W (draws F p)
-  | 0 => Component.passThrough O fun st ↦ (st, #v[])
-  | p + 1 => (ringDraws p).append (ringDraw P p)
-
 variable {μ : ℕ} (lift : Vector F (P.m + P.κ) → Vector F μ)
 
 /-- The weight of the switched claim: `Σ_{(c, e)} c · eq(lift(r'^(2^e)), ·)` over the terms of the
@@ -117,7 +105,7 @@ def ringFinal {StmtOut : Type} (finish : S → Weight F μ → F → StmtOut) :
 /-- Ring switching: the coefficients, then the weighted claim. -/
 def ringSwitch {StmtOut : Type} (finish : S → Weight F μ → F → StmtOut) :
     Component.Def (OutStmt S F (P.m + P.κ) P.s) O W StmtOut O W (draws F (s' + 1)) :=
-  (ringDraws P s').append (ringFinal P s' φ g lift finish)
+  (Component.drawPushes O F s').append (ringFinal P s' φ g lift finish)
 
 /-! ## Completeness -/
 
@@ -177,8 +165,8 @@ theorem frobMap_ringStages_push {p : ℕ} (fs : Vector F p) (x a : F) :
 /-- Completeness of one coefficient: the zero `π`s of the slices' errors stay zero, half as
 many. -/
 def ringDrawComplete (p : ℕ) (hp : p ≤ s') :
-    Component.Complete (ringDraw P (S := S) (O := O) (W := W) p) (ringRel P z side s' φ g p)
-      (ringRel P z side s' φ g (p + 1)) :=
+    Component.Complete (Component.drawPush (S := OutStmt S F (P.m + P.κ) P.s) (W := W) O F p)
+      (ringRel P z side s' φ g p) (ringRel P z side s' φ g (p + 1)) :=
   Component.sampleChallengeComplete O F _ _ fun st o w h ↦ ⟨rfl, fun x ↦ ⟨h.1, fun k hk ↦ by
     show frobPair _ _ (fun i ↦ frobMap (ringStages s' (st.2.push x)) _) k = 0
     simp only [frobMap_ringStages_push]
@@ -197,8 +185,8 @@ def ringDrawComplete (p : ℕ) (hp : p ≤ s') :
 
 /-- Completeness of the first `p` coefficients: true slices have zero errors. -/
 def ringDrawsComplete : (p : ℕ) → p ≤ s' →
-    Component.Complete (ringDraws P (S := S) (O := O) (W := W) p) (outRel P z side)
-      (ringRel P z side s' φ g p)
+    Component.Complete (Component.drawPushes (S := OutStmt S F (P.m + P.κ) P.s) (W := W) O F p)
+      (outRel P z side) (ringRel P z side s' φ g p)
   | 0, _ => Component.passThroughComplete O _ fun st o w h ↦ ⟨h.1, fun k _ ↦ by
       have herr : ∀ i, sliceError P z o st i = 0 := fun i ↦ by
         rw [sliceError, h.2 i, sub_self]

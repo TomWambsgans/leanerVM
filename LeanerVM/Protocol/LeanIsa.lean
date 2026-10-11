@@ -465,14 +465,14 @@ theorem width_memTable : (⟨memTable⟩ : Component K).width = 5 := by decide +
 theorem width_bytecodeTable : (⟨bytecodeTable⟩ : Component K).width = 10 := by decide +kernel
 
 /-- The rows of opcode table `j` have its width. -/
-theorem size_of_mem_opcodeRows (j : Fin 6) :
+private theorem size_of_mem_opcodeRows (j : Fin 6) :
     ∀ r ∈ opcodeRows F prog s q j, r.size = (opcodeComponent j).width := by
   simp only [opcodeRows, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
   exact Array.size_ofFn
 
 /-- The memory block's rows have its width. -/
-theorem size_of_mem_memBlockRowsOf :
+private theorem size_of_mem_memBlockRowsOf :
     ∀ r ∈ memBlockRowsOf F prog s q, r.size = (⟨memTable⟩ : Component K).width := by
   simp only [memBlockRowsOf, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
@@ -480,7 +480,7 @@ theorem size_of_mem_memBlockRowsOf :
   rfl
 
 /-- The bytecode block's rows have its width. -/
-theorem size_of_mem_bytecodeBlockRowsOf :
+private theorem size_of_mem_bytecodeBlockRowsOf :
     ∀ r ∈ bytecodeBlockRowsOf F prog s q, r.size = (⟨bytecodeTable⟩ : Component K).width := by
   simp only [bytecodeBlockRowsOf, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
@@ -498,11 +498,13 @@ columns, the public input from the first two cells of `MEM_LO` and `MEM_HI`. -/
 def witnessOf : EnsembleWitness (leanIsaEnsemble prog) :=
   let data := dataOf (imageRows F prog s q)
   let op (j : Fin 6) : Air.Flat.Table K :=
-    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data (size_of_mem_opcodeRows F prog s q j)
+    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data
+      (by exact size_of_mem_opcodeRows F prog s q j)
   { tables := [op 0, op 1, op 2, op 3, op 4, op 5,
-      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data (size_of_mem_memBlockRowsOf F prog s q),
+      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data
+        (by exact size_of_mem_memBlockRowsOf F prog s q),
       tableOf ⟨bytecodeTable⟩ (bytecodeBlockRowsOf F prog s q) data
-        (size_of_mem_bytecodeBlockRowsOf F prog s q)]
+        (by exact size_of_mem_bytecodeBlockRowsOf F prog s q)]
     data := data
     publicInput := publicInputOf F prog s q
     same_length := rfl
