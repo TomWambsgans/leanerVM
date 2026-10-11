@@ -160,23 +160,17 @@ def shape (prog : Program) (s : Sizes) : Shape := ⟨9, height prog s, width⟩
 
 /-- The constraint polynomials: the opcode tables' only. -/
 def constraints : (j : Fin 9) → List (CMvPolynomial (width j) K)
-  | ⟨0, _⟩ => []
-  | ⟨1, _⟩ => []
-  | ⟨2, _⟩ => []
+  | ⟨0, _⟩ | ⟨1, _⟩ | ⟨2, _⟩ => []
   | ⟨j + 3, h⟩ => (opcodeTable ⟨j, by omega⟩).constraints
 
 /-- The flushes: the opcode tables' only, each on its channel's side. -/
 def flushes : (j : Fin 9) → List (Side × Vector (CMvPolynomial (width j) K) 16)
-  | ⟨0, _⟩ => []
-  | ⟨1, _⟩ => []
-  | ⟨2, _⟩ => []
+  | ⟨0, _⟩ | ⟨1, _⟩ | ⟨2, _⟩ => []
   | ⟨j + 3, h⟩ => (opcodeTable ⟨j, by omega⟩).flushes.map fun f ↦ (sideOf f.1, f.2)
 
 /-- The count columns: the opcode tables' only. -/
 def counts : (j : Fin 9) → List (Fin (width j))
-  | ⟨0, _⟩ => []
-  | ⟨1, _⟩ => []
-  | ⟨2, _⟩ => []
+  | ⟨0, _⟩ | ⟨1, _⟩ | ⟨2, _⟩ => []
   | ⟨j + 3, h⟩ => (opcodeTable ⟨j, by omega⟩).count
 
 /-- Every assert expression of an opcode table has syntactic degree at most two. -/
@@ -263,16 +257,21 @@ theorem stackOrder_pairwise :
   List.pairwise_mergeSort (fun _ _ _ h₁ h₂ ↦ by simp only [decide_eq_true_eq] at *; omega)
     (fun a b ↦ by simp only [Bool.or_eq_true, decide_eq_true_eq]; omega) _
 
+/-- The log-heights along the stacking order are antitone. -/
+theorem stackOrder_antitone :
+    Antitone fun b : Fin (stackOrder prog s).length ↦ kappa prog s (stackOrder prog s)[b] := by
+  intro a b hab
+  rcases (Fin.le_iff_val_le_val.mp hab).eq_or_lt with h | h
+  · rw [Fin.ext h]
+  · have := List.pairwise_iff_getElem.mp (stackOrder_pairwise prog s) a b a.isLt b.isLt h
+    simp only [decide_eq_true_eq] at this
+    exact this
+
 /-- The committed columns as aligned blocks, in stacking order. -/
 def blocks : Blocks where
   n := (stackOrder prog s).length
   size b := kappa prog s (stackOrder prog s)[b]
-  descending a b hab := by
-    rcases (Fin.le_iff_val_le_val.mp hab).eq_or_lt with h | h
-    · rw [Fin.ext h]
-    · have := List.pairwise_iff_getElem.mp (stackOrder_pairwise prog s) a b a.isLt b.isLt h
-      simp only [decide_eq_true_eq] at this
-      exact this
+  descending := stackOrder_antitone prog s
 
 /-- The minimum stacked size, `MIN_MU` (`pcs.rs:49`). -/
 def minMu : ℕ := 15
@@ -330,8 +329,7 @@ theorem route_kappa (c : Col) :
 
 /-- The layout of the stack: the committed columns at their aligned blocks, limb `k` of the
 `BLAKE2S` table at the strided slot `slot k` of the Flock region. -/
-def layout (slot : Fin 18 → Fin 256) :
-    Layout (leanIsaμ prog s) Col (kappa prog s) :=
+def layout (slot : Fin 18 → Fin 256) : Layout (leanIsaμ prog s) Col (kappa prog s) :=
   (((blocks prog s).layout (blocks_fits prog s)).piecewise
     ((blocks prog s).stridedLayout (blocks_fits prog s) (flockBlock prog s) 8 slot
       (κ := fun _ ↦ s.τ 5) fun _ ↦ size_flockBlock prog s)).comap (route prog s)
@@ -475,6 +473,29 @@ theorem width_memTable : (⟨memTable⟩ : Component K).width = 5 := by decide +
 /-- The bytecode block has ten columns. -/
 theorem width_bytecodeTable : (⟨bytecodeTable⟩ : Component K).width = 10 := by decide +kernel
 
+/-- The rows of opcode table `j` have its width. -/
+theorem opcodeRows_size (j : Fin 6) :
+    ∀ r ∈ opcodeRows F prog s q j, r.size = (opcodeComponent j).width := by
+  simp only [opcodeRows, List.mem_ofFn, forall_exists_index]
+  rintro _ x rfl
+  exact Array.size_ofFn
+
+/-- The memory block's rows have its width. -/
+theorem memBlockRowsOf_size :
+    ∀ r ∈ memBlockRowsOf F prog s q, r.size = (⟨memTable⟩ : Component K).width := by
+  simp only [memBlockRowsOf, List.mem_ofFn, forall_exists_index]
+  rintro _ x rfl
+  rw [Vector.size_toArray, width_memTable]
+  rfl
+
+/-- The bytecode block's rows have its width. -/
+theorem bytecodeBlockRowsOf_size :
+    ∀ r ∈ bytecodeBlockRowsOf F prog s q, r.size = (⟨bytecodeTable⟩ : Component K).width := by
+  simp only [bytecodeBlockRowsOf, List.mem_ofFn, forall_exists_index]
+  rintro _ x rfl
+  rw [Vector.size_toArray, width_bytecodeTable]
+  rfl
+
 /-- A table of the witness: a component, its rows of its width, the data. -/
 def tableOf (c : Component K) (rows : List (Array K)) (data : ProverData K)
     (h : ∀ r ∈ rows, r.size = c.width) : Air.Flat.Table K :=
@@ -486,21 +507,11 @@ columns, the public input from the first two cells of `MEM_LO` and `MEM_HI`. -/
 def witnessOf : EnsembleWitness (leanIsaEnsemble prog) :=
   let data := dataOf (imageRows F prog s q)
   let op (j : Fin 6) : Air.Flat.Table K :=
-    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data (by
-      simp only [opcodeRows, List.mem_ofFn, forall_exists_index]
-      rintro _ x rfl
-      exact Array.size_ofFn)
+    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data (opcodeRows_size F prog s q j)
   { tables := [op 0, op 1, op 2, op 3, op 4, op 5,
-      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data (by
-        simp only [memBlockRowsOf, List.mem_ofFn, forall_exists_index]
-        rintro _ x rfl
-        rw [Vector.size_toArray, width_memTable]
-        rfl),
-      tableOf ⟨bytecodeTable⟩ (bytecodeBlockRowsOf F prog s q) data (by
-        simp only [bytecodeBlockRowsOf, List.mem_ofFn, forall_exists_index]
-        rintro _ x rfl
-        rw [Vector.size_toArray, width_bytecodeTable]
-        rfl)]
+      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data (memBlockRowsOf_size F prog s q),
+      tableOf ⟨bytecodeTable⟩ (bytecodeBlockRowsOf F prog s q) data
+        (bytecodeBlockRowsOf_size F prog s q)]
     data := data
     publicInput := publicInputOf F prog s q
     same_length := rfl

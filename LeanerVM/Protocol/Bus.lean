@@ -100,8 +100,7 @@ variable {I}
 /-- A block's log-height: its boundary block's, or its table's. -/
 def Source.κ : Source I → ℕ
   | .boundary b => b.κ
-  | .flush j _ => I.τ j
-  | .count j _ => I.τ j
+  | .flush j _ | .count j _ => I.τ j
 
 /-- The sixteen coordinate polynomials of flush `f` of table `j`. -/
 abbrev flushPolys (j : Fin I.ntab) (f : Fin (I.flushes j).length) :

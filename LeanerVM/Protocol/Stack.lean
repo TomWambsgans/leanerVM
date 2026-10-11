@@ -67,15 +67,23 @@ private theorem Layout.readWith_comap {μ : ℕ} {ι ι' : Type} {κ : ι → �
   simp only [Vector.getElem_cast, Vector.getElem_ofFn, boolVec_cast]
   rfl
 
+/-- The reading law of a renamed layout. -/
+theorem Layout.comap_read_eval {μ : ℕ} {ι ι' : Type} {κ : ι → ℕ} {κ' : ι' → ℕ}
+    (L : Layout μ ι κ) (f : ι' → ι) (h : ∀ c, κ (f c) = κ' c) (q : Column μ) (c : ι')
+    (z : Vector E (κ' c)) :
+    eval₂Mle (Layout.readWith (fun c z ↦ L.extend (f c) (Vector.cast (h c).symm z)) q c).values
+        (algebraMap K E) z =
+      eval₂Mle q.values (algebraMap K E) (L.extend (f c) (Vector.cast (h c).symm z)) := by
+  rw [Layout.readWith_comap L.extend f h]
+  have hz : z = Vector.cast (h c) (Vector.cast (h c).symm z) := by simp
+  conv_lhs => rw [hz]
+  rw [eval₂Mle_cast, L.read_eval]
+
 /-- A layout read through a renaming of its columns that keeps their heights. -/
 def Layout.comap {μ : ℕ} {ι ι' : Type} {κ : ι → ℕ} {κ' : ι' → ℕ} (L : Layout μ ι κ)
     (f : ι' → ι) (h : ∀ c, κ (f c) = κ' c) : Layout μ ι' κ' where
   extend := fun c z ↦ L.extend (f c) (Vector.cast (h c).symm z)
-  read_eval := fun q c z ↦ by
-    rw [Layout.readWith_comap L.extend f h]
-    have hz : z = Vector.cast (h c) (Vector.cast (h c).symm z) := by simp
-    conv_lhs => rw [hz]
-    rw [eval₂Mle_cast, L.read_eval]
+  read_eval := L.comap_read_eval f h
 
 /-- The union of two layouts: a left column is read through `L₁`, a right column through
 `L₂`. -/
@@ -165,6 +173,20 @@ private theorem readWith_strided (hμ : B.total ≤ 2 ^ μ) (b : Fin B.n) (k : �
   simp only [Layout.readWith, Vector.getElem_ofFn, boolVec_append, boolVec_cast, key, sliceLow,
     Fin.getElem_fin, Vector.getElem_cast, Fin.val_cast]
 
+/-- The reading law of the strided slots. -/
+theorem stridedLayout_read_eval (hμ : B.total ≤ 2 ^ μ) (b : Fin B.n) (k : ℕ) {ι : Type}
+    {κ : ι → ℕ} (slot : ι → Fin (2 ^ k)) (h : ∀ c, B.size b = k + κ c) (q : Column μ) (c : ι)
+    (z : Vector E (κ c)) :
+    eval₂Mle (Layout.readWith (fun c (z : Vector E (κ c)) ↦
+        B.extendPoint hμ b (Vector.cast (h c).symm ((boolVec (slot c) : Vector E k) ++ z)))
+        q c).values (algebraMap K E) z =
+      eval₂Mle q.values (algebraMap K E)
+        (B.extendPoint hμ b (Vector.cast (h c).symm ((boolVec (slot c) : Vector E k) ++ z))) := by
+  rw [B.readWith_strided hμ b k slot h q c, ← B.readColumn_eval hμ q b,
+    ← eval₂Mle_cast (algebraMap K E) (h c)]
+  simp only [Vector.cast_cast, Vector.cast_rfl]
+  rw [eval₂Mle, eval₂Mle, sliceLow_map, evalMle_boolVec_append]
+
 /-- The strided slots of block `b`, one column per slot: the low `k` coordinates of the block
 are frozen to the bits of the column's slot, and a point `z` of the column lifts to the stack's
 point `(slot bits, z, selector bits of b)`. The weight of such a claim is nonzero only at the
@@ -173,11 +195,7 @@ def stridedLayout (hμ : B.total ≤ 2 ^ μ) (b : Fin B.n) (k : ℕ) {ι : Type}
     (slot : ι → Fin (2 ^ k)) (h : ∀ c, B.size b = k + κ c) : Layout μ ι κ where
   extend := fun c z ↦
     B.extendPoint hμ b (Vector.cast (h c).symm ((boolVec (slot c) : Vector E k) ++ z))
-  read_eval := fun q c z ↦ by
-    rw [B.readWith_strided hμ b k slot h q c, ← B.readColumn_eval hμ q b,
-      ← eval₂Mle_cast (algebraMap K E) (h c)]
-    simp only [Vector.cast_cast, Vector.cast_rfl]
-    rw [eval₂Mle, eval₂Mle, sliceLow_map, evalMle_boolVec_append]
+  read_eval := B.stridedLayout_read_eval hμ b k slot h
 
 /-- A strided slot's cell `x` is the block's cell `slot + x · 2 ^ k`, at the block's offset. -/
 theorem get_stridedLayout (hμ : B.total ≤ 2 ^ μ) (b : Fin B.n) (k : ℕ) {ι : Type}
