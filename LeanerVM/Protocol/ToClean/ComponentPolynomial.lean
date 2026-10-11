@@ -70,7 +70,9 @@ Clean's semantics of a flat component at `42fe4b26` (`Clean/Air/FlatComponent.le
 * The degree bound is syntactic and can exceed the polynomial's degree (`x · y + x · y` is
   `2 · x · y`, `x · y - x · y` is `0`); it is an upper bound, never the degree.
 * A flush carries no multiplicity: the side is the channel's (`dir`), never the sign of a
-  multiplicity, which carries none in characteristic two.
+  multiplicity, which carries none in characteristic two. The table is faithful to a component
+  whose multiplicities have no variable and the value `1` or `-1` (`UnitMultiplicities`,
+  decidable; `eval_of_constValue`).
 * A message longer than fifteen coordinates is truncated by the sixteen-slot tuple.
 -/
 
@@ -152,6 +154,32 @@ theorem eval_fromArray_truncate {n : ℕ} (row : Array F) (data : ProverData F)
   | const c => rfl
   | add x y hx hy => simp only [eval, hx h.1, hy h.2]
   | mul x y hx hy => simp only [eval, hx h.1, hy h.2]
+
+omit [DecidableEq F] in
+/-- The value of an expression that mentions no variable; `none` if it mentions one. -/
+def constValue : Expression F → Option F
+  | var _ => none
+  | const c => some c
+  | add x y => match x.constValue, y.constValue with
+    | some a, some b => some (a + b)
+    | _, _ => none
+  | mul x y => match x.constValue, y.constValue with
+    | some a, some b => some (a * b)
+    | _, _ => none
+
+omit [DecidableEq F] in
+/-- An expression with a value evaluates to it in every environment. -/
+theorem eval_of_constValue {e : Expression F} {m : F} (h : e.constValue = some m)
+    (env : Environment F) : e.eval env = m := by
+  induction e generalizing m with
+  | var v => simp [constValue] at h
+  | const c => simpa [constValue, eval] using h
+  | add x y hx hy =>
+    cases hx' : x.constValue <;> cases hy' : y.constValue <;> simp [constValue, hx', hy'] at h
+    rw [eval, hx hx', hy hy', h]
+  | mul x y hx hy =>
+    cases hx' : x.constValue <;> cases hy' : y.constValue <;> simp [constValue, hx', hy'] at h
+    rw [eval, hx hx', hy hy', h]
 
 end Expression
 
@@ -323,6 +351,14 @@ def CountsAreVariables : Prop :=
   ∀ i ∈ c.rowOperations.interactions, counted i.channel → (countVar c.width i).isSome
 
 instance : Decidable (CountsAreVariables c counted) :=
+  inferInstanceAs (Decidable (∀ i ∈ c.rowOperations.interactions, _))
+
+/-- Every interaction's multiplicity mentions no variable and has the value `1` or `-1`: a
+flush stands for one message, its side given by `dir`, so a table drops no multiplicity. -/
+def UnitMultiplicities : Prop :=
+  ∀ i ∈ c.rowOperations.interactions, ∃ m, i.mult.constValue = some m ∧ (m = 1 ∨ m = -1)
+
+instance : Decidable (UnitMultiplicities c) :=
   inferInstanceAs (Decidable (∀ i ∈ c.rowOperations.interactions, _))
 
 /-- When counts are variables, every counted interaction has a count column. -/

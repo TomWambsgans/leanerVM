@@ -38,8 +38,8 @@ obligation, never an axiom.
 Home: `LeanerVM/Protocol/Spine/` (the spine), `LeanerVM/Protocol/` (the phases over an abstract
 instance, the adaptor, the compilation), the Clean bridge in `LeanerVM/Protocol/ToClean/`, the
 transcribed constants in `LeanerVM/Parameters/`, following [architecture.md](../architecture.md).
-Generic components live under `LeanerVM/Protocol/ToArkLib/` (and `ToClean/`, `ToCompPoly/`, `ToVCVio/`) until
-their upstream pull request merges.
+Generic components live under `LeanerVM/Protocol/ToArkLib/` (and `ToClean/`, `ToCompPoly/`,
+`ToVCVio/`) until their upstream pull request merges.
 
 This document is the specification: what is wanted and what was decided. It records no state;
 what is built is in [protocol-status.md](protocol-status.md), who is taking what in issue
@@ -294,7 +294,7 @@ and when the local copy goes. Nothing is worked around by a hypothesis.
 | Correlated agreement up to Johnson | `rs_mcaError_le_in_johnson_range` admitted (the printed [BCHKS25] constant); `ReedSolomon.mcaError_affineLine_johnson_le` proved (another constant, any characteristic); the capacity-range theorems exclude characteristic two | `McaJohnson` is parametrized by its constant; Layer 11 uses the proved inhabitant if its constant meets Annex B's budget at the pinned parameters, else names the admitted one as the obligation. |
 | Fiat–Shamir, BCS | `fiatShamir_completeness` admitted and for a constant oracle; `BCSTransform` commented out; `Commitment.extractability` has body `False`; #848 and #469 are single-salt and duplex-sponge Fiat–Shamir with no proof of work; #627 is a design issue | Assumed interfaces for leanVM's constructions (Layer 12), their obligation the literature; upstream theorems, when they come, are about other constructions, so a chain lemma and a role-separation lemma are owed here. |
 | Ring switching for `GF(2) → K` | the profile structure; every security leaf admitted; the protocol is Diamond–Posen's, not leanVM's | #3's; the profile structure only is consumed. |
-| Clean expressions as polynomials | on Clean's main since #466 (2026-10-05), but in no revision built for Lean 4.34 (Clean #474, the port, does not contain it) | `ToClean/ExpressionPolynomial.lean` is a verbatim copy of Clean's module; deleted when the pin contains #466, its importers then importing `Clean.Circuit.ExpressionPolynomial`. The computable translation and the component tables (`ToClean/ComponentPolynomial.lean`) are written over Clean's names and stay. |
+| Clean expressions as polynomials | on Clean's main since #466 (2026-10-05), but in no revision built for Lean 4.34 (Clean #474, the port, does not contain it) | `ToClean/ExpressionPolynomial.lean` is a verbatim copy of Clean's module; deleted when the pin contains #466 and its file is still `b449bf59`'s, its importer then importing `Clean.Circuit.ExpressionPolynomial` and the aggregate dropping it. The computable translation and the component tables (`ToClean/ComponentPolynomial.lean`) are written over Clean's names and stay. |
 | Balance counted in ℕ, direction-tagged | absent; Clean #464, #20 | leanISA's `BalancedPair` stands in. |
 | Fixed columns, sound prover data | absent; Clean #446, #23 | The instance states them as known coordinates (`Coord.known`). |
 
@@ -712,35 +712,38 @@ defines `degreeBound`, `WithinWidth` and the Mathlib polynomial `toBoundedPolyno
 module is a verbatim copy of it until the pin contains it (the upstream ledger).
 
 ```lean
-def Expression.toCMvPolynomial (n) : Expression K → CMvPolynomial n K   -- var i < n ↦ X i, else 0
-theorem eval_toCMvPolynomial (row) (e) :
-    (e.toCMvPolynomial n).eval (fun i ↦ row[i]?.getD 0) = e.eval (Environment.fromArray row data)
+def Expression.toCMvPolynomial (n) : Expression F → CMvPolynomial n F   -- var i < n ↦ X i, else 0
+theorem eval_toCMvPolynomial (row : Fin n → F) (data) (e) :
+    (e.toCMvPolynomial n).eval row = e.eval (Environment.fromArray (Array.ofFn row) data)
 theorem fromCMvPolynomial_toCMvPolynomial (e) (h : e.WithinWidth n) :
     fromCMvPolynomial (e.toCMvPolynomial n) = e.toBoundedPolynomial n h   -- Clean's polynomial
-theorem totalDegree_toCMvPolynomial_le (e) : (e.toCMvPolynomial n).totalDegree ≤ e.degreeBound
-structure M3Table where
+theorem totalDegree_toCMvPolynomial_le (n) (e) : (e.toCMvPolynomial n).totalDegree ≤ e.degreeBound
+structure M3Table (F) (σ) where                                          -- σ: the bus sides
   width : ℕ
-  constraints : List (CMvPolynomial width K)
-  flushes : List (Side × Vector (CMvPolynomial width K) 16)             -- separator first
+  constraints : List (CMvPolynomial width F)
+  flushes : List (σ × Vector (CMvPolynomial width F) 16)                 -- separator first
   count : List (Fin width)
-def Component.toM3 (c : Component K) (sep) (dir) (lookups : List (RawChannel K)) : M3Table
-  -- `count`: coordinate 2 of every pull on a lookup channel, required to be a variable (`count_is_var`)
-theorem toM3_constraints_iff (t : Table K) (row ∈ t.table) :
-    (∀ C ∈ (t.component.toM3 …).constraints, C.eval row = 0) ↔ t.component.operations.ConstraintsHold (t.environment row)
-theorem toM3_flushes_eq (t : Table K) : (evaluated flush tuples) = (t.interactions as 16-tuples)
+def Component.toM3 (c : Component F) (sep : RawChannel F → F) (dir : RawChannel F → σ)
+    (counted : RawChannel F → Bool) : M3Table F σ
+  -- `count`: coordinate 1 of every interaction on a counted channel, when it is a variable
+theorem toM3_constraints_iff (hl : c.rowOperations.lookups = []) (row : Fin c.width → F) (data) :
+    (∀ C ∈ (c.toM3 sep dir counted).constraints, C.eval row = 0) ↔
+      c.operations.ConstraintsHold (Environment.fromArray (Array.ofFn row) data)
+theorem toM3_flushes_eq (row) (data) : (evaluated flushes) = (Clean's interactions as 16-tuples)
+def CountsAreVariables (c) (counted) : Prop                   -- decidable; every count a column
+def UnitMultiplicities (c) : Prop                             -- decidable; every multiplicity ±1
 ```
 
-The translation is direct and computable: Clean's polynomial is a Mathlib polynomial, and both
-it and CompPoly's conversion from one are noncomputable, which would make `M3Holds` of the
-leanISA instance undecidable by evaluation and `verify` noncomputable. Within the width the
-translation is Clean's polynomial; the degree bound is Clean's `degreeBound` and goes through
-CompPoly's `totalDegree_equiv`. The
-separator and direction are given per channel, so the map from Clean's typed channels to the bus
-is explicit data. A component whose expressions mention a variable at or beyond its width reads
-`0` there, as `Environment.fromArray` does. Tests: a two-column component whose constraint `x·y`
-has `degreeBound = 2`, checked on a satisfying and a failing row; the six tables' count columns
-against `count_columns()` (`layout.rs:412-414`); the memory, bytecode and verifier components
-against the boundary blocks of Layer 3 on the one-row witness.
+The translation is direct and computable: Clean's polynomial is a Mathlib polynomial, and both it
+and CompPoly's conversion from one are noncomputable, which would make `M3Holds` of the leanISA
+instance undecidable by evaluation and `verify` noncomputable. Within the width the translation is
+Clean's polynomial; the degree bound is Clean's `degreeBound` and goes through CompPoly's
+`totalDegree_equiv`. The separator and direction are given per channel, so the map from Clean's
+typed channels to the bus is explicit data. A component whose expressions mention a variable at or
+beyond its width reads `0` there, as `Environment.fromArray` does. Tests: a two-column component
+whose constraint `x·y` has `degreeBound = 2`, checked on a satisfying and a failing row; the six
+tables' count columns against `count_columns()` (`layout.rs:412-414`); the memory, bytecode and
+verifier components against the boundary blocks of Layer 3 on the one-row witness.
 
 ### Layer 3: the leanISA instance and the adaptor
 
