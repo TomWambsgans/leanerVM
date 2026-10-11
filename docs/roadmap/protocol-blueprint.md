@@ -266,9 +266,10 @@ spine stays on it (decision 24).
 | `MerkleTree` `build`, `verify`, `extractability_rom_bound` (VCVio `CryptoFoundations/MerkleTree/`) | Merkle trees with proved completeness and single-opening random-oracle extractability; the candidate for Layer 11 (decision 32). |
 | `BF64`, `BF64.Ext3`, `card_bf64`, `card_ext3`, `Ext.coeff`, `Ext.ofFn` (CompPoly) | As in the leanISA roadmap; `Fintype.card E = 2^192` is the only cardinality fact the errors use. |
 | `CMlPolynomialEval R n`, `evalMle`, `evalMleLayer`, `eval₂Mle`, `eqTilde`, `lagrangeBasis`, `evalManyMleByLayers` (CompPoly `Multilinear/`) | Hypercube tables and their multilinear evaluation, computable; `eval₂Mle` is the `K → E` lift. |
-| `CMvPolynomial`, `CPolynomial` (CompPoly) | Constraint and flush polynomials of the instance; round polynomials. The conversion to Mathlib's `MvPolynomial` is noncomputable, so Layer 2 translates Clean expressions directly. |
+| `CMvPolynomial`, `CPolynomial` (CompPoly) | Constraint and flush polynomials of the instance; round polynomials. The conversion to Mathlib's `MvPolynomial` is noncomputable, so Layer 2 translates Clean expressions directly and proves the translation equal to Clean's polynomial. |
 | `AdditiveNTT` (CompPoly `Fields/Binary/AdditiveNTT/`) | The novel basis and the encoder of Annex B, generic over a basis; instantiated only at `GF(2^8)`, so Layer 11 supplies the `K` basis. |
 | `Expression`, `Expression.eval`, `Operations.constraints`, `Operations.interactions`, `AbstractInteraction`, `EnsembleWitness`, `Table.environment`, `Environment.fromArray` (Clean `Circuit/`, `Air/`) | Constraints and flushes as syntax over the row's variables (out-of-range variables read `0`); the witness. Clean's own balance over `K` is vacuous (#16), so `SatisfiedBy` uses `BalancedPair`. |
+| `Expression.degreeBound`, `Expression.WithinWidth`, `Expression.toBoundedPolynomial` (Clean `Circuit/ExpressionPolynomial`, held as a local copy until the pin contains it) | An expression's syntactic degree, the claim that its variables lie below a width, and its noncomputable Mathlib polynomial in that many variables; Layer 2's computable translation is proved equal to it. |
 | `MvPolynomial`, `Polynomial.card_roots'`, `UniqueFactorizationMonoid`, `Multiset.prod` (Mathlib) | Degrees and root counts behind every Schwartz–Zippel step; Lemma 5.2 by unique factorization. |
 
 ### The upstream ledger
@@ -293,7 +294,7 @@ and when the local copy goes. Nothing is worked around by a hypothesis.
 | Correlated agreement up to Johnson | `rs_mcaError_le_in_johnson_range` admitted (the printed [BCHKS25] constant); `ReedSolomon.mcaError_affineLine_johnson_le` proved (another constant, any characteristic); the capacity-range theorems exclude characteristic two | `McaJohnson` is parametrized by its constant; Layer 11 uses the proved inhabitant if its constant meets Annex B's budget at the pinned parameters, else names the admitted one as the obligation. |
 | Fiat–Shamir, BCS | `fiatShamir_completeness` admitted and for a constant oracle; `BCSTransform` commented out; `Commitment.extractability` has body `False`; #848 and #469 are single-salt and duplex-sponge Fiat–Shamir with no proof of work; #627 is a design issue | Assumed interfaces for leanVM's constructions (Layer 12), their obligation the literature; upstream theorems, when they come, are about other constructions, so a chain lemma and a role-separation lemma are owed here. |
 | Ring switching for `GF(2) → K` | the profile structure; every security leaf admitted; the protocol is Diamond–Posen's, not leanVM's | #3's; the profile structure only is consumed. |
-| Clean expressions as polynomials | on Clean's main since #466 (2026-10-05), as noncomputable Mathlib polynomials, but in no revision built for Lean 4.34 (Clean #474, the port, does not contain it) | Written here (Layer 2, `ToClean/`), computable. When the pin contains #466: delete `Expression.degreeBound`, `Expression.WithinWidth` and its decision instance from `ToClean/ExpressionPolynomial.lean` in favour of Clean's (same clauses), keep the CompPoly translation and prove it equal to Clean's `toBoundedPolynomial` within the width. |
+| Clean expressions as polynomials | on Clean's main since #466 (2026-10-05), but in no revision built for Lean 4.34 (Clean #474, the port, does not contain it) | `ToClean/ExpressionPolynomial.lean` is a verbatim copy of Clean's module; deleted when the pin contains #466, its importers then importing `Clean.Circuit.ExpressionPolynomial`. The computable translation and the component tables (`ToClean/ComponentPolynomial.lean`) are written over Clean's names and stay. |
 | Balance counted in ℕ, direction-tagged | absent; Clean #464, #20 | leanISA's `BalancedPair` stands in. |
 | Fixed columns, sound prover data | absent; Clean #446, #23 | The instance states them as known coordinates (`Coord.known`). |
 
@@ -573,7 +574,7 @@ no other; the hole is built when the names in bold of its row are declared and m
 | the spine | [The spine](#the-spine) | everything under [What the spine fixes](#what-the-spine-fixes); marked by **`M3Holds`**, **`Phases`**, **`piopError_le`**, **`piopExtractedStack_eq`**, **`piop_perfectCompleteness`**, **`piop_rbrKnowledgeSoundness`**, **`Refinement.knowledge_transport`** | field instances |
 | the knowledge-soundness composition | [What the spine fixes](#what-the-spine-fixes), item 5 | **`Verifier.KnowledgeStateFunction.appendGuarded`**, **`Verifier.append_rbrKnowledgeSoundnessWorstCaseWith_of_guarded_first`** (the port of ArkLib #615) | ArkLib only |
 | tables and stacking | [Layer 1](#layer-1-hypercube-tables-stacking-the-strided-reader-the-index-and-bytecode-columns) | **`Blocks.stack_eval`**, **`Blocks.unstack_eval₂`**, **`Blocks.stack_eval_ambient`**, **`evalMle_boolVec_append`**, **`Blocks.layout`**, **`Blocks.stridedLayout`**, **`Layout.piecewise`**, **`ColumnClaim.holds_iff_weighted`**, **`idxColumn_eval`**, **`bytecodeColumn_answer_boolVec`**, `bytecodeColumn_eval` | field instances; the spine's `Layout` and claims |
-| Clean expressions as polynomials | [Layer 2](#layer-2-clean-components-as-polynomials) | **`Expression.toCMvPolynomial`**, **`eval_toCMvPolynomial`**, `Expression.degreeBound`, **`Component.toM3`**, **`toM3_constraints_iff`**, **`toM3_flushes_eq`** | Clean |
+| Clean expressions as polynomials | [Layer 2](#layer-2-clean-components-as-polynomials) | **`Expression.toCMvPolynomial`**, **`eval_toCMvPolynomial`**, `fromCMvPolynomial_toCMvPolynomial`, **`Component.toM3`**, **`toM3_constraints_iff`**, **`toM3_flushes_eq`** | Clean |
 | the adaptor | [Layer 3](#layer-3-the-leanisa-instance-and-the-adaptor) | `Sizes`, **`Sizes.Admissible`**, `validRate`, **`leanIsaInstance`**, **`boundary_tuples_eq`**, `stackOf`, `witnessOf`, **`satisfiedBy_witnessOf`**, **`m3Holds_stackOf`**, `witnessOf_stackOf` | the spine; Clean expressions as polynomials; tables and stacking; leanISA Layers 5–8; `FlockSpec` from #3 |
 | sumcheck: definitions and completeness | [Layer 4](#layer-4-the-sumchecks-and-batching) | `Virtual`, **`Sumcheck.plain`**, **`Sumcheck.normalized`**, their `Complete`, **`Sumcheck.transport`** | nothing |
 | sumcheck: knowledge soundness | [Layer 4](#layer-4-the-sumchecks-and-batching) | **`Sumcheck.plainSecurity`**, **`Sumcheck.normalizedSecurity`** | sumcheck: definitions and completeness |
@@ -707,14 +708,15 @@ written with `K.ofBits`.
 `LeanerVM/Protocol/ToClean/ExpressionPolynomial.lean` (an expression as a polynomial) and
 `LeanerVM/Protocol/ToClean/ComponentPolynomial.lean` (a component as a table; generic over any
 Clean component, its field and its type of bus sides). Upstream: Clean's pull request #466
-defines `degreeBound`, `WithinWidth` and a Mathlib polynomial; the upstream ledger says what is
-deleted when the pin contains it.
+defines `degreeBound`, `WithinWidth` and the Mathlib polynomial `toBoundedPolynomial`; the first
+module is a verbatim copy of it until the pin contains it (the upstream ledger).
 
 ```lean
 def Expression.toCMvPolynomial (n) : Expression K → CMvPolynomial n K   -- var i < n ↦ X i, else 0
 theorem eval_toCMvPolynomial (row) (e) :
     (e.toCMvPolynomial n).eval (fun i ↦ row[i]?.getD 0) = e.eval (Environment.fromArray row data)
-def Expression.degreeBound : Expression F → ℕ                           -- syntactic
+theorem fromCMvPolynomial_toCMvPolynomial (e) (h : e.WithinWidth n) :
+    fromCMvPolynomial (e.toCMvPolynomial n) = e.toBoundedPolynomial n h   -- Clean's polynomial
 theorem totalDegree_toCMvPolynomial_le (e) : (e.toCMvPolynomial n).totalDegree ≤ e.degreeBound
 structure M3Table where
   width : ℕ
@@ -728,9 +730,11 @@ theorem toM3_constraints_iff (t : Table K) (row ∈ t.table) :
 theorem toM3_flushes_eq (t : Table K) : (evaluated flush tuples) = (t.interactions as 16-tuples)
 ```
 
-The translation is direct and computable, since CompPoly's conversion from Mathlib polynomials
-is noncomputable, which would make `M3Holds` of the leanISA instance undecidable by evaluation and
-`verify` noncomputable; the degree bound goes through CompPoly's `totalDegree_equiv`. The
+The translation is direct and computable: Clean's polynomial is a Mathlib polynomial, and both
+it and CompPoly's conversion from one are noncomputable, which would make `M3Holds` of the
+leanISA instance undecidable by evaluation and `verify` noncomputable. Within the width the
+translation is Clean's polynomial; the degree bound is Clean's `degreeBound` and goes through
+CompPoly's `totalDegree_equiv`. The
 separator and direction are given per channel, so the map from Clean's typed channels to the bus
 is explicit data. A component whose expressions mention a variable at or beyond its width reads
 `0` there, as `Environment.fromArray` does. Tests: a two-column component whose constraint `x·y`
@@ -1467,7 +1471,7 @@ Tables and stacking:  sumCube  hadamard  slice  sliceLow  placeSlice  boolVec
                       padHigh  sumCube_padHigh  evalMle_padHigh  ColumnClaim.holds_iff_weighted
                       idxColumn  idxColumnEval  idxColumn_eval  idxColumnEval_eq
                       bytecodeColumn  bytecodeColumnEval  bytecodeColumn_answer_boolVec  bytecodeColumn_eval
-Clean polynomials:    Expression.toCMvPolynomial  eval_toCMvPolynomial  Expression.degreeBound  M3Table  Component.toM3
+Clean polynomials:    Expression.toCMvPolynomial  eval_toCMvPolynomial  fromCMvPolynomial_toCMvPolynomial  M3Table  Component.toM3
                       toM3_constraints_iff  toM3_flushes_eq
 The adaptor:          Sizes  Sizes.ofWitness  Sizes.Admissible  validRate  leanIsaBlocks  leanIsaμ
                       leanIsaInstance  stackOf  witnessOf  boundary_tuples_eq
