@@ -1,4 +1,4 @@
-import LeanerVM.Arithmetization.M3
+import LeanerVM.Protocol.ToClean.ComponentPolynomial
 import LeanerVM.Arithmetization.Statement
 
 /-!
@@ -21,9 +21,9 @@ constant count fails) and every message has at most fifteen coordinates, so a tu
 its message.
 -/
 
-namespace LeanerVMTests.Arithmetization.M3
+namespace LeanerVMTests.Protocol.ComponentPolynomial
 
-open LeanerVM.Parameters LeanerVM.Arithmetization Air.Flat CPoly
+open LeanerVM.Parameters LeanerVM.Arithmetization LeanerVM.Protocol Air.Flat CPoly
 
 /-! ## One expression -/
 
@@ -105,4 +105,4 @@ example : components.all fun c ↦ (c.rowOperations.constraints.all fun e ↦
       i.msg.toList.all fun e ↦ decide (e.WithinWidth c.width) := by
   decide +kernel
 
-end LeanerVMTests.Arithmetization.M3
+end LeanerVMTests.Protocol.ComponentPolynomial
