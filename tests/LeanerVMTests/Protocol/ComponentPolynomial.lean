@@ -94,6 +94,14 @@ example : components.all fun c ↦ c.rowOperations.interactions.all fun i ↦
 example : components.all fun c ↦ decide (CountsAreVariables c counted) := by
   decide +kernel
 
+-- Every multiplicity is `1` or `-1`, so the tables drop none. A pull's is the product
+-- `-1 · 1`, which has a value; a variable has none.
+example : components.all fun c ↦ decide (UnitMultiplicities c) := by
+  decide +kernel
+example : (Expression.mul (.const (-1)) (.const 1) : Expression K).constValue = some (-1) := by
+  decide +kernel
+example : (Expression.var ⟨0⟩ : Expression K).constValue = none := rfl
+
 -- Every message has at most fifteen coordinates, so its tuple determines it.
 example : components.all fun c ↦ c.rowOperations.interactions.all fun i ↦
     decide (i.channel.arity ≤ 15) := by

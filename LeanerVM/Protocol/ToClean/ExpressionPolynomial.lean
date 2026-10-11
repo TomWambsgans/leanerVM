@@ -1,9 +1,10 @@
 /-
   LeanerVM.Protocol.ToClean.ExpressionPolynomial
 
-  A verbatim copy of Clean's `Clean/Circuit/ExpressionPolynomial.lean` at `b449bf59` (Clean pull
-  request 466), which no Clean revision built for this repository's Lean contains yet. Deleted
-  when the pin contains it; importers then import `Clean.Circuit.ExpressionPolynomial`.
+  Below this header, a verbatim copy of Clean's `Clean/Circuit/ExpressionPolynomial.lean` at
+  `b449bf59` (Clean pull request 466), which no Clean revision built for this repository's Lean
+  contains yet. Deleted when the pin contains it; its importer then imports
+  `Clean.Circuit.ExpressionPolynomial`, and the aggregate drops it.
 
   Clean's licence notice:
 
