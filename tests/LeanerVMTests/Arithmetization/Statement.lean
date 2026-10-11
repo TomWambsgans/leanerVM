@@ -605,42 +605,37 @@ theorem fins_split (cnt : ℕ → K) (h : ∀ i, touched ≤ i → cnt i = 1) :
 theorem xor_constraints (env : Environment K) :
     (⟨xorTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, xorTable, xorMain, instructionStep, memRead, bytecodeRead,
-    -BitVec.reduceNeg]
+  simp only [circuit_norm, xorTable, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
 
 theorem mul_constraints (env : Environment K) :
     (⟨mulTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, mulTable, mulMain, instructionStep, memRead, bytecodeRead,
-    -BitVec.reduceNeg]
+  simp only [circuit_norm, mulTable, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
 
 theorem set_constraints (env : Environment K) :
     (⟨setTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, setTable, setMain, instructionStep, memRead, bytecodeRead,
-    -BitVec.reduceNeg]
+  simp only [circuit_norm, setTable, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
 
 theorem deref_constraints (env : Environment K) :
     (⟨derefTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, derefTable, derefMain, instructionStep, memRead, bytecodeRead,
-    -BitVec.reduceNeg]
+  simp only [circuit_norm, derefTable, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
 
 theorem blake2s_constraints (env : Environment K) :
     (⟨blake2sTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, blake2sTable, blake2sMain, instructionStep, memRead, bytecodeRead,
-    -BitVec.reduceNeg]
+  simp only [circuit_norm, blake2sTable, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
 
 theorem mem_constraints (env : Environment K) :
     (⟨memTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, memTable, memMain, -BitVec.reduceNeg]
+  simp only [circuit_norm, memTable, -BitVec.reduceNeg]
 
 theorem bytecode_constraints (env : Environment K) :
     (⟨bytecodeTable⟩ : Component K).operations.ConstraintsHold env := by
   rw [Component.constraintsHold_iff]
-  simp only [circuit_norm, bytecodeTable, bytecodeMain, -BitVec.reduceNeg]
+  simp only [circuit_norm, bytecodeTable, -BitVec.reduceNeg]
 
 theorem verifier_constraints (env : Environment K) :
     (⟨leanIsaVerifier fillProg⟩ : Component K).operations.ConstraintsHold env := by
@@ -654,8 +649,8 @@ theorem jumpT_constraints : jumpT.Constraints := by
     or_false] at hr
   rcases hr with rfl | rfl | rfl | rfl <;>
   · rw [Component.constraintsHold_iff]
-    simp only [jumpT, mkT, circuit_norm, jumpTable, jumpMain, instructionStep, memRead,
-      bytecodeRead, -BitVec.reduceNeg]
+    simp only [jumpT, mkT, circuit_norm, jumpTable, instructionStep, memRead, bytecodeRead,
+      -BitVec.reduceNeg]
     rintro e (rfl | rfl) <;> decide +kernel
 
 /-! ## The witness satisfies the statement -/

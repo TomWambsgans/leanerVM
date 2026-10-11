@@ -120,63 +120,46 @@ def SetSpec (r : SetRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The circuit of one row of the `SET_CONSTANT` table (specification §7.3; `tables.rs:527-580`):
-state step, bytecode read of `(SET, o, k₀, k₁, k₂, 0, 0, 0)`, and the read of `fp·o` carrying the
-immediate. Returns the pushed successor `(g·pc, fp)`. -/
-def setMain (r : Var SetRow K) : Circuit K (Var Regs K) := do
-  let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-  instructionStep r.pc r.fp r.rbc next .setConstant #v[r.o, r.k[0], r.k[1], r.k[2], 0, 0, 0]
-  memRead (r.fp * r.o) r.r r.k
-  pure next
-
-@[reducible]
-instance : ElaboratedCircuit K SetRow Regs setMain := by
-  elaborate_circuit
-
-/-- `setMain` is sound for `SetSpec`. -/
-theorem setMain_soundness :
-    GeneralFormalCircuit.Soundness K setMain (fun _ _ ↦ True) SetSpec := by
-  circuit_proof_start [setMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
-    BytecodePush, instructionStep, memRead, bytecodeRead]
-  -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
-  obtain ⟨-, hk⟩ := h_holds
-  obtain ⟨_, _, _, hvk, _, _⟩ := h_input
-  subst hvk
-  refine (set_refines_iff _ _ _).mpr ⟨?_, rfl⟩
-  simpa only [Vector.getElem_map] using hk
-
-/-- `setMain` is complete for the honest prover's row. -/
-theorem setMain_completeness :
-    GeneralFormalCircuit.Completeness K setMain (fun r data _ ↦ ∃ next, SetSpec r next data)
-      (fun _ _ _ ↦ True) := by
-  circuit_proof_start [setMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
-    BytecodePush, instructionStep, memRead, bytecodeRead]
-  -- The two pull guarantees, from the semantic premise: the tuple `main` emits decodes
-  -- (Layer 4).
-  obtain ⟨next, h⟩ := h_assumptions
-  obtain ⟨hk, -⟩ := (set_refines_iff _ _ _).mp h
-  obtain ⟨_, _, _, hvk, _, _⟩ := h_input
-  subst hvk
-  simp only [Vector.getElem_map] at hk ⊢
-  exact ⟨⟨_, decode_entry (.setConstant _ (E.ofLimbs _ _ _))⟩, hk⟩
-
-/-- The `SET_CONSTANT` table: the component of `setMain`, sound for `SetSpec` and complete for
-the honest row. -/
+/-- The `SET_CONSTANT` table (specification §7.3; `tables.rs:527-580`): state step, bytecode
+read of `(SET, o, k₀, k₁, k₂, 0, 0, 0)`, and the read of `fp·o` carrying the immediate. Returns
+the pushed successor `(g·pc, fp)`. -/
 def setTable : GeneralFormalCircuit K SetRow Regs where
-  main := setMain
+  main r := do
+    let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
+    instructionStep r.pc r.fp r.rbc next .setConstant #v[r.o, r.k[0], r.k[1], r.k[2], 0, 0, 0]
+    memRead (r.fp * r.o) r.r r.k
+    pure next
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, setMain, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The row refines the relation over the data's image, to the pushed successor.
   Spec := SetSpec
   -- The honest prover's row: written from a valid step, it executes its instruction. Proved of
   -- the row built from any valid execution by `setRowOf_refines`; see `set_exec_complete`.
   ProverAssumptions r data _ := ∃ next, SetSpec r next data
-  soundness := setMain_soundness
-  completeness := setMain_completeness
+  soundness := by
+    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
+      instructionStep, memRead, bytecodeRead]
+    -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
+    obtain ⟨-, hk⟩ := h_holds
+    obtain ⟨_, _, _, hvk, _, _⟩ := h_input
+    subst hvk
+    refine (set_refines_iff _ _ _).mpr ⟨?_, rfl⟩
+    simpa only [Vector.getElem_map] using hk
+  completeness := by
+    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
+      instructionStep, memRead, bytecodeRead]
+    -- The two pull guarantees, from the semantic premise: the tuple `main` emits decodes
+    -- (Layer 4).
+    obtain ⟨next, h⟩ := h_assumptions
+    obtain ⟨hk, -⟩ := (set_refines_iff _ _ _).mp h
+    obtain ⟨_, _, _, hvk, _, _⟩ := h_input
+    subst hvk
+    simp only [Vector.getElem_map] at hk ⊢
+    exact ⟨⟨_, decode_entry (.setConstant _ (E.ofLimbs _ _ _))⟩, hk⟩
 
 /-! ## Rows from executions -/
 
@@ -203,7 +186,7 @@ theorem set_exec_complete {data : ProverData K} {pc fp o : K} {k : E} {next : Re
       ((setTable.main (const (setRowOf pc fp o k rc rbc))).operations 0) :=
   (setTable.completeness 0 (rowEnv data) (const _)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, setTable, setMain, instructionStep, memRead, bytecodeRead,
+    (by simp only [circuit_norm, setTable, instructionStep, memRead, bytecodeRead,
       -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover ⟨_, setRowOf_refines hexec rc rbc⟩).1
 

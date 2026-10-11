@@ -221,75 +221,29 @@ def Blake2sSpec (r : Blake2sRow K) (next : Regs K) (data : ProverData K) : Prop 
 
 /-! ## The table -/
 
-/-- The circuit of one row of the `BLAKE2S` table (specification §7.6; `tables.rs:833-951`): state
-step, bytecode read of `(B2S, o_{m₀}, …, o_md)`, and the nine canonical cell reads. Returns the
-pushed successor `(g·pc, fp)`. -/
-def blake2sMain (r : Var Blake2sRow K) : Circuit K (Var Regs K) := do
-  let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-  instructionStep r.pc r.fp r.rbc next .blake2s
-    #v[r.om0, r.om1, r.om2, r.om3, r.ocv, r.oout, r.omd]
-  memRead (r.fp * r.om0) r.rm0 #v[r.m0[0], r.m0[1], 0]
-  memRead (r.fp * r.om1) r.rm1 #v[r.m1[0], r.m1[1], 0]
-  memRead (r.fp * r.om2) r.rm2 #v[r.m2[0], r.m2[1], 0]
-  memRead (r.fp * r.om3) r.rm3 #v[r.m3[0], r.m3[1], 0]
-  memRead (r.fp * r.ocv) r.rcv0 #v[r.cv0[0], r.cv0[1], 0]
-  memRead (r.fp * (Expression.const g * r.ocv)) r.rcv1 #v[r.cv1[0], r.cv1[1], 0]
-  memRead (r.fp * r.oout) r.rout0 #v[r.out0[0], r.out0[1], 0]
-  memRead (r.fp * (Expression.const g * r.oout)) r.rout1 #v[r.out1[0], r.out1[1], 0]
-  memRead (r.fp * r.omd) r.rmd #v[r.md[0], r.md[1], 0]
-  pure next
-
-@[reducible]
-instance : ElaboratedCircuit K Blake2sRow Regs blake2sMain := by
-  elaborate_circuit
-
-/-- `blake2sMain` is sound for `Blake2sSpec` under `Blake2sRelation`. -/
-theorem blake2sMain_soundness :
-    GeneralFormalCircuit.Soundness K blake2sMain (fun r _ ↦ Blake2sRelation r) Blake2sSpec := by
-  circuit_proof_start [blake2sMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
-    BytecodePush, instructionStep, memRead, bytecodeRead]
-  -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
-  obtain ⟨-, hm0, hm1, hm2, hm3, hcv0, hcv1, hout0, hout1, hmd⟩ := h_holds
-  obtain ⟨_, _, _, _, _, _, _, _, _, hvm0, hvm1, hvm2, hvm3, hvout0, hvout1, hvcv0, hvcv1, hvmd,
-    _, _, _, _, _, _, _, _, _, _⟩ := h_input
-  subst hvm0 hvm1 hvm2 hvm3 hvout0 hvout1 hvcv0 hvcv1 hvmd
-  refine (blake2s_refines_iff _ _ _).mpr
-    ⟨⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩, h_assumptions, rfl⟩
-  · simpa only [E.ofCell, Vector.getElem_map] using hm0
-  · simpa only [E.ofCell, Vector.getElem_map] using hm1
-  · simpa only [E.ofCell, Vector.getElem_map] using hm2
-  · simpa only [E.ofCell, Vector.getElem_map] using hm3
-  · simpa only [E.ofCell, Vector.getElem_map] using hcv0
-  · simpa only [E.ofCell, Vector.getElem_map] using hcv1
-  · simpa only [E.ofCell, Vector.getElem_map] using hout0
-  · simpa only [E.ofCell, Vector.getElem_map] using hout1
-  · simpa only [E.ofCell, Vector.getElem_map] using hmd
-
-/-- `blake2sMain` is complete for a row bound to the image. -/
-theorem blake2sMain_completeness :
-    GeneralFormalCircuit.Completeness K blake2sMain
-      (fun r data _ ↦ Blake2sBindings (imageOf data).2 r) (fun _ _ _ ↦ True) := by
-  circuit_proof_start [blake2sMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
-    BytecodePush, instructionStep, memRead, bytecodeRead, E.ofCell]
-  -- The nine memory pull guarantees are the bindings; the tuple `main` emits decodes
-  -- (Layer 4).
-  obtain ⟨hm0, hm1, hm2, hm3, hcv0, hcv1, hout0, hout1, hmd⟩ := h_assumptions
-  obtain ⟨_, _, _, _, _, _, _, _, _, hvm0, hvm1, hvm2, hvm3, hvout0, hvout1, hvcv0, hvcv1, hvmd,
-    _, _, _, _, _, _, _, _, _, _⟩ := h_input
-  subst hvm0 hvm1 hvm2 hvm3 hvout0 hvout1 hvcv0 hvcv1 hvmd
-  simp only [E.ofCell, Vector.getElem_map] at hm0 hm1 hm2 hm3 hcv0 hcv1 hout0 hout1 hmd ⊢
-  exact ⟨⟨_, by rw [blake2s_entry, decode_entry]⟩, hm0, hm1, hm2, hm3, hcv0, hcv1, hout0,
-    hout1, hmd⟩
-
-/-- The `BLAKE2S` table: the component of `blake2sMain`, sound for `Blake2sSpec` under
-`Blake2sRelation` and complete for a bound row. -/
+/-- The `BLAKE2S` table (specification §7.6; `tables.rs:833-951`): state step, bytecode read of
+`(B2S, o_{m₀}, …, o_md)`, and the nine canonical cell reads. Returns the pushed successor
+`(g·pc, fp)`; sound under `Blake2sRelation`. -/
 def blake2sTable : GeneralFormalCircuit K Blake2sRow Regs where
-  main := blake2sMain
+  main r := do
+    let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
+    instructionStep r.pc r.fp r.rbc next .blake2s
+      #v[r.om0, r.om1, r.om2, r.om3, r.ocv, r.oout, r.omd]
+    memRead (r.fp * r.om0) r.rm0 #v[r.m0[0], r.m0[1], 0]
+    memRead (r.fp * r.om1) r.rm1 #v[r.m1[0], r.m1[1], 0]
+    memRead (r.fp * r.om2) r.rm2 #v[r.m2[0], r.m2[1], 0]
+    memRead (r.fp * r.om3) r.rm3 #v[r.m3[0], r.m3[1], 0]
+    memRead (r.fp * r.ocv) r.rcv0 #v[r.cv0[0], r.cv0[1], 0]
+    memRead (r.fp * (Expression.const g * r.ocv)) r.rcv1 #v[r.cv1[0], r.cv1[1], 0]
+    memRead (r.fp * r.oout) r.rout0 #v[r.out0[0], r.out0[1], 0]
+    memRead (r.fp * (Expression.const g * r.oout)) r.rout1 #v[r.out1[0], r.out1[1], 0]
+    memRead (r.fp * r.omd) r.rmd #v[r.md[0], r.md[1], 0]
+    pure next
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, blake2sMain, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The named assumption: Flock's proof of the compression relation on the row's limbs.
   Assumptions r _ := Blake2sRelation r
@@ -297,8 +251,37 @@ def blake2sTable : GeneralFormalCircuit K Blake2sRow Regs where
   Spec := Blake2sSpec
   -- The local premise: the nine memory pull guarantees, the compression not among them.
   ProverAssumptions r data _ := Blake2sBindings (imageOf data).2 r
-  soundness := blake2sMain_soundness
-  completeness := blake2sMain_completeness
+  soundness := by
+    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
+      instructionStep, memRead, bytecodeRead]
+    -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
+    obtain ⟨-, hm0, hm1, hm2, hm3, hcv0, hcv1, hout0, hout1, hmd⟩ := h_holds
+    obtain ⟨_, _, _, _, _, _, _, _, _, hvm0, hvm1, hvm2, hvm3, hvout0, hvout1, hvcv0, hvcv1, hvmd,
+      _, _, _, _, _, _, _, _, _, _⟩ := h_input
+    subst hvm0 hvm1 hvm2 hvm3 hvout0 hvout1 hvcv0 hvcv1 hvmd
+    refine (blake2s_refines_iff _ _ _).mpr
+      ⟨⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩, h_assumptions, rfl⟩
+    · simpa only [E.ofCell, Vector.getElem_map] using hm0
+    · simpa only [E.ofCell, Vector.getElem_map] using hm1
+    · simpa only [E.ofCell, Vector.getElem_map] using hm2
+    · simpa only [E.ofCell, Vector.getElem_map] using hm3
+    · simpa only [E.ofCell, Vector.getElem_map] using hcv0
+    · simpa only [E.ofCell, Vector.getElem_map] using hcv1
+    · simpa only [E.ofCell, Vector.getElem_map] using hout0
+    · simpa only [E.ofCell, Vector.getElem_map] using hout1
+    · simpa only [E.ofCell, Vector.getElem_map] using hmd
+  completeness := by
+    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
+      instructionStep, memRead, bytecodeRead, E.ofCell]
+    -- The nine memory pull guarantees are the bindings; the tuple `main` emits decodes
+    -- (Layer 4).
+    obtain ⟨hm0, hm1, hm2, hm3, hcv0, hcv1, hout0, hout1, hmd⟩ := h_assumptions
+    obtain ⟨_, _, _, _, _, _, _, _, _, hvm0, hvm1, hvm2, hvm3, hvout0, hvout1, hvcv0, hvcv1, hvmd,
+      _, _, _, _, _, _, _, _, _, _⟩ := h_input
+    subst hvm0 hvm1 hvm2 hvm3 hvout0 hvout1 hvcv0 hvcv1 hvmd
+    simp only [E.ofCell, Vector.getElem_map] at hm0 hm1 hm2 hm3 hcv0 hcv1 hout0 hout1 hmd ⊢
+    exact ⟨⟨_, by rw [blake2s_entry, decode_entry]⟩, hm0, hm1, hm2, hm3, hcv0, hcv1, hout0,
+      hout1, hmd⟩
 
 /-- A bound row satisfies the constraints of `main` in the row environment over its data: local
 completeness, which does not check the compression. The boundary with Flock, stated. -/
@@ -307,8 +290,8 @@ theorem blake2sRow_complete {r : Blake2sRow K} {data : ProverData K}
     ConstraintsHold.Completeness (rowEnv data) ((blake2sTable.main (const r)).operations 0) :=
   (blake2sTable.completeness 0 (rowEnv data) (const r)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, blake2sTable, blake2sMain, instructionStep, memRead,
-      bytecodeRead, -BitVec.reduceNeg]) r
+    (by simp only [circuit_norm, blake2sTable, instructionStep, memRead, bytecodeRead,
+      -BitVec.reduceNeg]) r
     ProvableType.eval_const_prover h).1
 
 /-! ## Rows from executions -/
