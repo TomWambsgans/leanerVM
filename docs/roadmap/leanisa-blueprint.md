@@ -698,20 +698,27 @@ theorem xor_refines_iff : XorRefines mem r next ↔
       next = Regs.next ⟨r.pc, r.fp⟩
 def XorSpec (r : XorRow K) (next : Regs K) (data : ProverData K) : Prop :=
   XorRefines (imageOf data).2 r next
+-- Tables/Basic.lean: the state step and fetch every opcode row shares
+def instructionStep (pc fp rbc : Expression K) (next : Var Regs K) (op : Opcode)
+    (operands : Vector (Expression K) 7) : Circuit K Unit := do
+  StatePull.pull ⟨pc, fp⟩
+  StatePush.push next
+  bytecodeRead pc rbc (Expression.const op.code) operands
+def xorMain (r : Var XorRow K) : Circuit K (Var Regs K) := do
+  let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
+  instructionStep r.pc r.fp r.rbc next .xor #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
+  memRead (r.fp * r.oA) r.rA r.vA
+  memRead (r.fp * r.oB) r.rB r.vB
+  memRead (r.fp * r.oC) r.rC #v[r.vA[0] + r.vB[0], r.vA[1] + r.vB[1], r.vA[2] + r.vB[2]]
+  pure next
+theorem xorMain_soundness ; theorem xorMain_completeness   -- the circuit's two proofs, named
 def xorTable : GeneralFormalCircuit K XorRow Regs where
-  main r := do
-    let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-    StatePull.pull ⟨r.pc, r.fp⟩
-    StatePush.push next
-    bytecodeRead r.pc r.rbc (Expression.const Opcode.xor.code) #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
-    memRead (r.fp * r.oA) r.rA r.vA
-    memRead (r.fp * r.oB) r.rB r.vB
-    memRead (r.fp * r.oC) r.rC #v[r.vA[0] + r.vB[0], r.vA[1] + r.vB[1], r.vA[2] + r.vB[2]]
-    pure next
+  main := xorMain
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   Spec := XorSpec
   ProverAssumptions r data _ := ∃ next, XorSpec r next data
-  …
+  soundness := xorMain_soundness
+  completeness := xorMain_completeness
 theorem xor_exec_complete {data : ProverData K}
     (hexec : execute (imageOf data).2 ⟨pc, fp⟩ (.xor oA oB oC) = some next) (rA rB rC rbc : K) :
     ConstraintsHold.Completeness (rowEnv data)
@@ -798,8 +805,11 @@ structure MemRow (F : Type) where (idx cntFin : F) (m : Vector F 3)
 structure MemBindings {κ} (mem : MemImage κ) (r : MemRow K) : Prop where
   word_eq : mem.read r.idx = some (E.ofLimbs r.m[0] r.m[1] r.m[2])
 def MemSpec (r : MemRow K) (data : ProverData K) : Prop := MemBindings (imageOf data).2 r
-def memTable : GeneralFormalCircuit K MemRow unit where           -- seed push, finalize pull
-  main r := do MemPush.push ⟨r.idx, 1, r.m⟩; MemPull.pull ⟨r.idx, r.cntFin, r.m⟩
+def memMain (r : Var MemRow K) : Circuit K Unit := do           -- seed push, finalize pull
+  MemPush.push ⟨r.idx, 1, r.m⟩
+  MemPull.pull ⟨r.idx, r.cntFin, r.m⟩
+def memTable : GeneralFormalCircuit K MemRow unit where
+  main := memMain
   channelsWithRequirements := [MemPush.toRaw]
   Spec r _ data := MemSpec r data
   ProverAssumptions r data _ := MemSpec r data
@@ -1316,11 +1326,13 @@ Arithmetization:  derefFlags  entry  encodeSlots  decode  decode_entry  decode_e
                   Direction  channelDir  channelSep  busTuple
                   memDataName  memRows  imageOf
                   WellShapedData
-                  rowEnv
+                  rowEnv  instructionStep
                   XorRow  MulRow  SetRow  DerefRow  JumpRow  Blake2sRow  Blake2sRelation
                   XorBindings  MulBindings  DerefBindings  JumpBindings  Blake2sBindings
                   XorRefines  MulRefines  SetRefines  DerefRefines  JumpRefines  Blake2sRefines
                   XorSpec  MulSpec  SetSpec  DerefSpec  JumpSpec  Blake2sSpec
+                  xorMain  mulMain  setMain  derefMain  jumpMain  blake2sMain  (each with
+                  its `_soundness` and `_completeness`)
                   xorTable  mulTable  setTable  derefTable  jumpTable  blake2sTable
                   xor_refines_iff  mul_refines_iff  set_refines_iff  deref_refines_iff
                   jump_refines_iff  blake2s_refines_iff
@@ -1333,6 +1345,7 @@ Arithmetization:  derefFlags  entry  encodeSlots  decode  decode_entry  decode_e
                   storeCoords_eval  flags_sound  flags_complete
                   PublicIO  PublicIO.ofInput  MemRow  BytecodeRow
                   MemBindings  MemSpec  BytecodeDecodes  BytecodeBindings
+                  memMain  bytecodeMain  (with their `_soundness` and `_completeness`)
                   memTable  bytecodeTable  leanIsaVerifier  verifier_push_eval  verifier_pull_eval
                   memRowOf  bytecodeRowOf  memRowOf_bindings  bytecodeRowOf_bindings
                   bytecodeRowOf_decodes  mem_word_complete  bytecode_entry_complete
