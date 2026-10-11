@@ -1,49 +1,33 @@
 /-
-  LeanerVM.Arithmetization.M3
+  LeanerVM.Protocol.ToClean.ComponentPolynomial
 
-  Clean components as polynomials: a Clean expression as a computable polynomial in a row's
-  variables, and a flat component as one table of the M3 model, with its constraint
-  polynomials, its bus flushes and its count columns.
+  A flat Clean component as one table of the M3 model: its constraint polynomials, its bus
+  flushes and its count columns. A candidate for Clean.
 -/
 
 module
 
-public import LeanerVM.Arithmetization.Channels
+public import LeanerVM.Protocol.ToClean.ExpressionPolynomial
 public import Clean.Air.FlatComponent
-public import CompPoly.Multivariate.Eval
-public import CompPoly.Multivariate.MvPolyEquiv.Eval
 
 @[expose] public section
 
 /-!
-# Clean components as polynomials
+# Clean components as polynomial tables
 
-The proof system reads a table as polynomials in its row's variables (specification §5.5, the
-zerocheck; §5.1, the bus): a constraint is a polynomial that vanishes on every row, and a flush
-is a side of the bus with sixteen coordinate polynomials, the domain separator first. Clean
-writes the same table as a component whose circuit records, per row, `assert` expressions and
-channel interactions. This module is the translation, generic over the field and over the
-component.
+The M3 model reads a table as polynomials in its row's variables: a constraint is a polynomial
+that vanishes on every row, and a flush is a side of the bus with sixteen coordinate
+polynomials, a domain separator first. Clean writes the same table as a component whose circuit
+records, per row, `assert` expressions and channel interactions. This module is the
+translation, generic over the field, the component and the type of bus sides.
 
-* `Expression.toCMvPolynomial n e` is the expression `e` as a CompPoly polynomial in `n`
-  variables: variable `i` is `X i` when `i < n` and `0` otherwise, constants are constants, sum
-  and product are sum and product. It is computable, so a polynomial of the M3 instance is
-  data the verifier evaluates. `eval_toCMvPolynomial` says it evaluates, at a row of `n`
-  cells, to Clean's evaluation of `e` on that row: Clean reads a missing cell as `0`, which is
-  what the translation makes of a variable at or beyond `n`.
-* `Expression.degreeBound` is the syntactic degree (a variable `1`, a constant `0`, a sum the
-  larger, a product the sum), and `totalDegree_toCMvPolynomial_le` bounds the polynomial's
-  total degree by it. `Expression.WithinWidth n e`, every variable of `e` is below `n`, is
-  decidable; under it Clean's evaluation reads only the first `n` cells of a row
-  (`eval_fromArray_truncate`).
-* `Component.toM3 c sep dir counted` is the component `c` as one M3 table of width
-  `c.width`: its constraints are its `assert` expressions as polynomials; its flushes are its
-  interactions, each on the side `dir` names for its channel, the separator `sep` names
-  first, then the message's coordinates, then zeros (`flushPolys`); its count columns are the
-  coordinate-`1` variables of the interactions on the channels `counted` selects (the
-  memory and bytecode pulls for leanISA, whose second coordinate is the read count), in
-  column order and each once. The separators, the sides and the counted channels are explicit
-  data, so the map from Clean's channels to the bus is stated, not inferred.
+* `Component.toM3 c sep dir counted` is the component `c` as one table of width `c.width`: its
+  constraints are its `assert` expressions as polynomials; its flushes are its interactions,
+  each on the side `dir` names for its channel, the separator `sep` names first, then the
+  message's coordinates, then zeros (`flushPolys`); its count columns are the coordinate-`1`
+  variables of the interactions on the channels `counted` selects, in column order and each
+  once. The separators, the sides and the counted channels are explicit data, so the map from
+  Clean's channels to the bus is stated, not inferred.
 * `toM3_constraints_iff`: on a row of `c.width` cells, the constraint polynomials vanish
   exactly when Clean's constraints hold, for a component without lookups (Clean's
   `ConstraintsHold` is its `assert` expressions and its lookups).
@@ -53,130 +37,25 @@ component.
   `1` of a counted interaction, and that coordinate evaluates to the column's cell. Under
   `CountsAreVariables`, which a component's data decides, every counted interaction has one
   (`exists_count_of_counted`).
-* `tupleMsg_flushTuple`: a message of at most fifteen coordinates is read back off its tuple, so
-  the tuples of one channel's messages determine the messages; `flushTuple_channelSep`: with
-  leanISA's separators the tuple is the bus tuple `busTuple` of the channels.
+* `tupleMsg_flushTuple`: a message of at most fifteen coordinates is read back off its tuple,
+  so the tuples of one channel's messages determine the messages.
 
-Category A: written from the specification's M3 model (§5.1 "The bus", §5.5 "The zerocheck")
-and Clean's semantics of a flat component at `42fe4b26` (`Clean/Air/FlatComponent.lean`,
-`Clean/Circuit/Operations.lean`); nothing here transcribes Rust. The Mathlib-side bridge,
-`toMvPolynomial`, is Clean's pull request 466, merged upstream after the pinned revision; the
-translation here is CompPoly's, since a Mathlib polynomial is noncomputable and the
-instance's polynomials must be evaluable data.
+Written from the M3 model of leanVM's specification (§5.1 "The bus", §5.5 "The zerocheck") and
+Clean's semantics of a flat component at `42fe4b26` (`Clean/Air/FlatComponent.lean`,
+`Clean/Circuit/Operations.lean`).
 
 ## Wrong readings excluded
 
-* A variable at or beyond the width is not a free variable of the polynomial: it is `0`, as
-  Clean's `Environment.fromArray` reads a missing cell (tests: a variable at the width
-  evaluates to `0`).
-* The degree bound is syntactic and can exceed the polynomial's degree (`x · y + x · y` is
-  `2 · x · y`, `x · y - x · y` is `0`); it is an upper bound, never the degree.
-* A flush carries no multiplicity: every interaction of leanISA has multiplicity `1`, and the
-  direction is the channel's (`dir`), never the sign of a multiplicity, which carries none in
-  characteristic two.
-* A message longer than fifteen coordinates is truncated by the sixteen-slot tuple; leanISA's
-  longest has ten.
+* A flush carries no multiplicity: the side is the channel's (`dir`), never the sign of a
+  multiplicity, which carries none in characteristic two.
+* A message longer than fifteen coordinates is truncated by the sixteen-slot tuple.
 -/
 
-namespace Expression
-
-open CPoly
-
-variable {F : Type} [Field F] [DecidableEq F]
-
-/-- The expression as a polynomial in `n` variables: variable `i` is `X i` when `i < n` and `0`
-otherwise, as Clean reads a missing cell. -/
-def toCMvPolynomial (n : ℕ) : Expression F → CMvPolynomial n F
-  | var v => if h : v.index < n then CMvPolynomial.X ⟨v.index, h⟩ else 0
-  | const c => CMvPolynomial.C c
-  | add x y => x.toCMvPolynomial n + y.toCMvPolynomial n
-  | mul x y => x.toCMvPolynomial n * y.toCMvPolynomial n
-
-/-- The polynomial evaluates, at a row of `n` cells, to Clean's evaluation of the expression on
-that row, over any prover data. -/
-theorem eval_toCMvPolynomial {n : ℕ} (row : Fin n → F) (data : ProverData F)
-    (e : Expression F) :
-    (e.toCMvPolynomial n).eval row = e.eval (Environment.fromArray (Array.ofFn row) data) := by
-  induction e with
-  | var v =>
-    simp only [toCMvPolynomial, eval]
-    split_ifs with h
-    · simp [CMvPolynomial.eval_X, h]
-    · simp [CMvPolynomial.eval_zero, h]
-  | const c => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_C]
-  | add x y hx hy => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_add, hx, hy]
-  | mul x y hx hy => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_mul, hx, hy]
-
-/-- The syntactic degree: a variable `1`, a constant `0`, a sum the larger of its terms', a
-product the sum of its factors'. -/
-def degreeBound : Expression F → ℕ
-  | var _ => 1
-  | const _ => 0
-  | add x y => max x.degreeBound y.degreeBound
-  | mul x y => x.degreeBound + y.degreeBound
-
-/-- The syntactic degree bounds the polynomial's total degree. -/
-theorem totalDegree_toCMvPolynomial_le (n : ℕ) (e : Expression F) :
-    (e.toCMvPolynomial n).totalDegree ≤ e.degreeBound := by
-  rw [CPoly.totalDegree_equiv (S := F)]
-  induction e with
-  | var v =>
-    simp only [toCMvPolynomial, degreeBound]
-    split_ifs
-    · rw [CMvPolynomial.fromCMvPolynomial_X]
-      rw [MvPolynomial.totalDegree_X]
-    · rw [CPoly.map_zero, MvPolynomial.totalDegree_zero]
-      exact Nat.zero_le _
-  | const c =>
-    rw [toCMvPolynomial, CMvPolynomial.fromCMvPolynomial_C, MvPolynomial.totalDegree_C]
-    exact Nat.zero_le _
-  | add x y hx hy =>
-    rw [toCMvPolynomial, CPoly.map_add]
-    exact (MvPolynomial.totalDegree_add _ _).trans (max_le_max hx hy)
-  | mul x y hx hy =>
-    rw [toCMvPolynomial, CPoly.map_mul]
-    exact (MvPolynomial.totalDegree_mul _ _).trans (Nat.add_le_add hx hy)
-
-/-- Every variable of the expression is below `n`. -/
-def WithinWidth (n : ℕ) : Expression F → Prop
-  | var v => v.index < n
-  | const _ => True
-  | add x y => x.WithinWidth n ∧ y.WithinWidth n
-  | mul x y => x.WithinWidth n ∧ y.WithinWidth n
-
-instance instDecidableWithinWidth (n : ℕ) : (e : Expression F) → Decidable (e.WithinWidth n)
-  | var v => inferInstanceAs (Decidable (v.index < n))
-  | const _ => inferInstanceAs (Decidable True)
-  | add x y =>
-    have := instDecidableWithinWidth n x
-    have := instDecidableWithinWidth n y
-    inferInstanceAs (Decidable (_ ∧ _))
-  | mul x y =>
-    have := instDecidableWithinWidth n x
-    have := instDecidableWithinWidth n y
-    inferInstanceAs (Decidable (_ ∧ _))
-
-omit [DecidableEq F] in
-/-- An expression within width `n` reads only the first `n` cells of a row: its evaluation on
-the row is its evaluation on those cells, a missing one `0`. -/
-theorem eval_fromArray_truncate {n : ℕ} (row : Array F) (data : ProverData F)
-    {e : Expression F} (h : e.WithinWidth n) :
-    e.eval (Environment.fromArray row data) =
-      e.eval (Environment.fromArray (Array.ofFn fun i : Fin n ↦ row[(i : ℕ)]?.getD 0) data) := by
-  induction e with
-  | var v =>
-    simp [eval, show v.index < n from h]
-  | const c => rfl
-  | add x y hx hy => simp only [eval, hx h.1, hy h.2]
-  | mul x y hx hy => simp only [eval, hx h.1, hy h.2]
-
-end Expression
-
-namespace LeanerVM.Arithmetization
+namespace LeanerVM.Protocol
 
 open CPoly Air.Flat
 
-variable {F : Type} [FiniteField F] [DecidableEq F]
+variable {F : Type} [FiniteField F] [DecidableEq F] {σ : Type}
 
 /-! ## Flushes -/
 
@@ -250,15 +129,15 @@ theorem totalDegree_flushPolys_le (sep : RawChannel F → F) {n d : ℕ} (i : Ab
 
 /-! ## A component as an M3 table -/
 
-/-- One table of the M3 model: its width, constraint polynomials, flushes (a direction and
+/-- One table of the M3 model: its width, constraint polynomials, flushes (a side and
 sixteen coordinate polynomials, separator first) and count columns. -/
-structure M3Table (F : Type) [FiniteField F] where
+structure M3Table (F : Type) [FiniteField F] (σ : Type) where
   /-- The number of columns. -/
   width : ℕ
   /-- The polynomials that vanish on every row. -/
   constraints : List (CMvPolynomial width F)
   /-- The bus flushes of a row. -/
-  flushes : List (Direction × Vector (CMvPolynomial width F) 16)
+  flushes : List (σ × Vector (CMvPolynomial width F) 16)
   /-- The columns whose cells must be nonzero. -/
   count : List (Fin width)
 
@@ -274,14 +153,14 @@ interactions as flushes, on the side `dir` names for the channel, with the separ
 names; and as count columns, the coordinate-`1` variables of the interactions on the channels
 `counted` selects, in column order and each once. -/
 def _root_.Air.Flat.Component.toM3 (c : Component F) (sep : RawChannel F → F)
-    (dir : RawChannel F → Direction) (counted : RawChannel F → Bool) : M3Table F where
+    (dir : RawChannel F → σ) (counted : RawChannel F → Bool) : M3Table F σ where
   width := c.width
   constraints := c.rowOperations.constraints.map (·.toCMvPolynomial c.width)
   flushes := c.rowOperations.interactions.map fun i ↦ (dir i.channel, flushPolys sep c.width i)
   count := (List.finRange c.width).filter fun k ↦
     c.rowOperations.interactions.any fun i ↦ counted i.channel && countVar c.width i == some k
 
-variable (c : Component F) (sep : RawChannel F → F) (dir : RawChannel F → Direction)
+variable (c : Component F) (sep : RawChannel F → F) (dir : RawChannel F → σ)
   (counted : RawChannel F → Bool)
 
 /-- On a row of `c.width` cells, the constraint polynomials vanish exactly when Clean's
@@ -365,14 +244,4 @@ theorem msg_one_of_countVar {n : ℕ} {i : AbstractInteraction F} {k : Fin n}
     simp [Expression.eval, Environment.fromArray, Array.getElem?_ofFn, hn]
   · exact absurd h (by simp)
 
-/-! ## leanISA's bus tuples -/
-
-/-- With leanISA's separators, the tuple of an interaction is its bus tuple (`busTuple`). -/
-theorem flushTuple_channelSep (i : Interaction LeanerVM.Parameters.K) :
-    flushTuple channelSep i = busTuple i.channel i.msg.toList := by
-  apply Vector.ext
-  intro k hk
-  rw [busTuple_getElem]
-  simp [flushTuple, List.getD_eq_getElem?_getD]
-
-end LeanerVM.Arithmetization
+end LeanerVM.Protocol

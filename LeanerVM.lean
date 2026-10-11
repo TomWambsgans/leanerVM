@@ -2,7 +2,6 @@ import LeanerVM.Arithmetization.Basic
 import LeanerVM.Arithmetization.Boundary
 import LeanerVM.Arithmetization.Bytecode
 import LeanerVM.Arithmetization.Channels
-import LeanerVM.Arithmetization.M3
 import LeanerVM.Arithmetization.Statement
 import LeanerVM.Arithmetization.Tables.Basic
 import LeanerVM.Arithmetization.Tables.Blake2s
@@ -77,6 +76,8 @@ import LeanerVM.Protocol.ToArkLib.SumcheckRound
 import LeanerVM.Protocol.ToArkLib.TranscriptMap
 import LeanerVM.Protocol.ToArkLib.WeightBatch
 import LeanerVM.Protocol.ToArkLib.WeightCombination
+import LeanerVM.Protocol.ToClean.ComponentPolynomial
+import LeanerVM.Protocol.ToClean.ExpressionPolynomial
 import LeanerVM.Protocol.ToCompPoly.AmbientStacking
 import LeanerVM.Protocol.ToCompPoly.BitProductTable
 import LeanerVM.Protocol.ToCompPoly.Frobenius
