@@ -137,10 +137,7 @@ tower product's three lanes. Returns the pushed successor `(g·pc, fp)`. -/
 def mulTable : GeneralFormalCircuit K MulRow Regs where
   main r := do
     let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-    StatePull.pull ⟨r.pc, r.fp⟩
-    StatePush.push next
-    bytecodeRead r.pc r.rbc (Expression.const Opcode.mulNative.code)
-      #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
+    instructionStep r.pc r.fp r.rbc next .mulNative #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
     memRead (r.fp * r.oA) r.rA r.vA
     memRead (r.fp * r.oB) r.rB r.vB
     -- `TOWER_LANES` (`tables.rs:45-49`), lane by lane, pair by pair.
@@ -154,7 +151,7 @@ def mulTable : GeneralFormalCircuit K MulRow Regs where
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The row refines the relation over the data's image, to the pushed successor.
   Spec := MulSpec
@@ -164,7 +161,7 @@ def mulTable : GeneralFormalCircuit K MulRow Regs where
   ProverAssumptions r data _ := ∃ next, MulSpec r next data
   soundness := by
     circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      memRead, bytecodeRead]
+      instructionStep, memRead, bytecodeRead]
     -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
     obtain ⟨-, hA, hB, hC⟩ := h_holds
     obtain ⟨_, _, _, _, _, hvA, hvB, _, _, _, _⟩ := h_input
@@ -175,7 +172,7 @@ def mulTable : GeneralFormalCircuit K MulRow Regs where
     · simpa only [mul_limbs, Vector.getElem_map] using hC
   completeness := by
     circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      memRead, bytecodeRead]
+      instructionStep, memRead, bytecodeRead]
     -- The four pull guarantees, from the semantic premise: the tuple `main` emits decodes
     -- (Layer 4), and the result read carries the limbs of the product a valid execution reads
     -- (`mul_limbs`).
@@ -222,7 +219,8 @@ theorem mul_exec_complete {data : ProverData K} {pc fp oA oB oC : K} {next : Reg
         0) :=
   (mulTable.completeness 0 (rowEnv data) (const _)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, mulTable, memRead, bytecodeRead, -BitVec.reduceNeg]) _
+    (by simp only [circuit_norm, mulTable, instructionStep, memRead, bytecodeRead,
+      -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover ⟨_, mulRowOf_refines hexec rA rB rC rbc⟩).1
 
 end LeanerVM.Arithmetization
