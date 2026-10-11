@@ -244,10 +244,9 @@ theorem lagrangeBasis_cubeIndex {k m : ℕ} (w : Vector R (k + m)) (i : Fin (2 ^
 def boolVec {m : ℕ} (j : Fin (2 ^ m)) : Vector R m :=
   Vector.ofFn fun b ↦ if j.val.testBit b then 1 else 0
 
-/-- One step of `boolIndex` stays on the cube: a bit plus twice an index of `{0,1}^m`. -/
-theorem ite_add_two_mul_lt {m n : ℕ} {c : Prop} [Decidable c] (h : n < 2 ^ (m + 1 - 1)) :
+/-- A bit plus twice an index of `{0,1}^m` is an index of `{0,1}^(m+1)`. -/
+theorem ite_add_two_mul_lt_two_pow_succ {m n : ℕ} {c : Prop} [Decidable c] (h : n < 2 ^ m) :
     (if c then 1 else 0) + 2 * n < 2 ^ (m + 1) := by
-  simp only [Nat.add_sub_cancel] at h
   rw [pow_succ]
   split <;> omega
 
@@ -256,7 +255,7 @@ that is not `1` reads as `0`. The inverse of `boolVec` on the cube (`boolIndex_b
 def boolIndex [DecidableEq R] : {m : ℕ} → Vector R m → Fin (2 ^ m)
   | 0, _ => 0
   | m + 1, p => ⟨(if p[0] = 1 then 1 else 0) + 2 * (boolIndex p.tail).val,
-      ite_add_two_mul_lt (boolIndex p.tail).isLt⟩
+      ite_add_two_mul_lt_two_pow_succ (boolIndex p.tail).isLt⟩
 
 /-- The all-ones index of the cube `{0,1}^m`. -/
 def onesIndex (m : ℕ) : Fin (2 ^ m) :=

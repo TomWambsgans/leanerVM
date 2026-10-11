@@ -116,11 +116,10 @@ def Source.tuple (q : Column I.μ) : (src : Source I) → Fin (2 ^ src.κ) → V
   | .flush j f, x => (flushPolys j f).map fun P ↦ P.eval (I.row q j x)
   | .count j c, x => Vector.ofFn fun i ↦ if i.val = 0 then (I.column q ⟨j, c⟩).values.get x else 0
 
-/-- A block's leaf at row `x`: `β − π_α(t)` for the row's tuple `t`, or the count cell. -/
+/-- A block's leaf at row `x`: the count cell, or `β − π_α(t)` for the row's tuple `t`. -/
 def Source.leaf (α : Fin 4 → E) (β : E) (q : Column I.μ) : (src : Source I) → Fin (2 ^ src.κ) → E
-  | .boundary b, x => β - fingerprint α ((Source.boundary b).tuple q x)
-  | .flush j f, x => β - fingerprint α ((Source.flush j f).tuple q x)
   | .count j c, x => ofK ((I.column q ⟨j, c⟩).values.get x)
+  | src, x => β - fingerprint α (src.tuple q x)
 
 variable (I)
 
@@ -164,15 +163,11 @@ def blocks (k : Fin 3) : Blocks where
   size b := ((sorted I k)[b]).κ
   descending := sorted_antitone I k
 
-/-- A side's blocks' leaves, one table per block. -/
-def tables (k : Fin 3) (α : Fin 4 → E) (β : E) (q : Column I.μ) : (blocks I k).Tables E :=
-  fun b ↦ Vector.ofFn (((sorted I k)[b]).leaf α β q)
-
-/-- A side's leaf stack: its blocks stacked largest first at aligned offsets, padded with `1`,
-on the push side's depth `μ_bus`. -/
+/-- A side's leaf stack: its blocks' leaves stacked largest first at aligned offsets, padded
+with `1`, on the push side's depth `μ_bus`. -/
 def sideLeaves (k : Fin 3) (α : Fin 4 → E) (β : E) (q : Column I.μ) :
     CMlPolynomialEval E I.μBus :=
-  (blocks I k).stackAt (tables I k α β q) I.μBus 1
+  (blocks I k).stackAt (fun b ↦ Vector.ofFn (((sorted I k)[b]).leaf α β q)) I.μBus 1
 
 /-- The bus phase's side conditions: the degree bound is at least one, a table with a constraint
 fits in the leaf stacks' depth, and the pull and count sides fit in it. -/
@@ -684,26 +679,38 @@ def Source.boundaryValue (α : Fin 4 → E) (β : E) (vals : Vector E I.busClaim
   | .flush _ _, _ => 0
   | .count _ _, _ => 0
 
+/-- The constant `1` is within every degree bound. -/
+theorem totalDegree_one_le (j : Fin I.ntab) :
+    (1 : CMvPolynomial (I.width j) K).totalDegree ≤ I.d := by
+  rw [totalDegree_equiv (S := K), CPoly.map_one, MvPolynomial.totalDegree_one]
+  omega
+
+/-- A flush's coordinate polynomials are within the degree bound. -/
+theorem flushPolys_totalDegree_le (j : Fin I.ntab) (f : Fin (I.flushes j).length) (i : Fin 16) :
+    (flushPolys j f)[i].totalDegree ≤ I.d := by
+  simpa [flushPolys, Vector.get_eq_getElem] using I.flushes_degree j _ (List.getElem_mem f.isLt) i
+
+/-- A variable is within a degree bound of at least one. -/
+theorem totalDegree_X_le (hd : 1 ≤ I.d) (j : Fin I.ntab) (c : Fin (I.width j)) :
+    (CMvPolynomial.X c : CMvPolynomial (I.width j) K).totalDegree ≤ I.d := by
+  rw [totalDegree_equiv (S := K), CMvPolynomial.fromCMvPolynomial_X, MvPolynomial.totalDegree_X]
+  exact hd
+
 /-- The constant row polynomial `1`. -/
-def oneRow (j : Fin I.ntab) : I.RowPoly j :=
-  ⟨1, by rw [totalDegree_equiv (S := K), CPoly.map_one, MvPolynomial.totalDegree_one]; omega⟩
+def oneRow (j : Fin I.ntab) : I.RowPoly j := ⟨1, totalDegree_one_le j⟩
 
 /-- A flush block's terms on its table, at the block's weight `w`: `w·β` against `1`, and
 `−w·eq(α, i)` against coordinate `i`'s polynomial. -/
 def flushForm (j : Fin I.ntab) (f : Fin (I.flushes j).length) (w : E) (α : Fin 4 → E) (β : E) :
     I.Form j :=
   let tw := fingerprintWeights α
-  (w * β, oneRow j) :: (List.finRange 16).map fun i ↦ (-(w * tw[i.val]),
-    ⟨(flushPolys j f)[i], by
-      simpa [flushPolys, Vector.get_eq_getElem] using
-        I.flushes_degree j _ (List.getElem_mem f.isLt) i⟩)
+  (w * β, oneRow j) :: (List.finRange 16).map fun i ↦
+    (-(w * tw[i.val]), ⟨(flushPolys j f)[i], flushPolys_totalDegree_le j f i⟩)
 
 /-- A count column's term on its table, at the block's weight `w`: `w` against the column's
 variable. -/
 def countForm (hd : 1 ≤ I.d) (j : Fin I.ntab) (c : Fin (I.width j)) (w : E) : I.Form j :=
-  [(w, ⟨CMvPolynomial.X c, by
-    rw [totalDegree_equiv (S := K), CMvPolynomial.fromCMvPolynomial_X, MvPolynomial.totalDegree_X]
-    exact hd⟩)]
+  [(w, ⟨CMvPolynomial.X c, totalDegree_X_le hd j c⟩)]
 
 /-- A block's terms on table `j`: its flush's or count column's if it is table `j`'s, none
 otherwise. -/

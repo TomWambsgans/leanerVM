@@ -103,13 +103,8 @@ namespace LeanIsa
 /-! ## The components -/
 
 /-- The six opcode tables, in the ensemble's order. -/
-def opcodeComponent : Fin 6 → Component K
-  | 0 => ⟨xorTable⟩
-  | 1 => ⟨mulTable⟩
-  | 2 => ⟨setTable⟩
-  | 3 => ⟨derefTable⟩
-  | 4 => ⟨jumpTable⟩
-  | 5 => ⟨blake2sTable⟩
+def opcodeComponent : Fin 6 → Component K :=
+  ![⟨xorTable⟩, ⟨mulTable⟩, ⟨setTable⟩, ⟨derefTable⟩, ⟨jumpTable⟩, ⟨blake2sTable⟩]
 
 /-- The channels whose coordinate `1` is a read count: the memory and bytecode pulls (§6.2). -/
 def counted (c : RawChannel K) : Bool := c.name = MemPull.name || c.name = BytecodePull.name
@@ -186,16 +181,12 @@ theorem opcode_flushes_degreeBound :
 
 /-- Every constraint has total degree at most two. -/
 theorem constraints_degree : ∀ j, ∀ C ∈ constraints j, C.totalDegree ≤ 2
-  | ⟨0, _⟩ => by simp [constraints]
-  | ⟨1, _⟩ => by simp [constraints]
-  | ⟨2, _⟩ => by simp [constraints]
+  | ⟨0, _⟩ | ⟨1, _⟩ | ⟨2, _⟩ => by simp [constraints]
   | ⟨j + 3, h⟩ => toM3_constraints_degree _ _ _ _ (opcode_constraints_degreeBound ⟨j, by omega⟩)
 
 /-- Every flush coordinate has total degree at most two. -/
 theorem flushes_degree : ∀ j, ∀ f ∈ flushes j, ∀ k, (f.2.get k).totalDegree ≤ 2
-  | ⟨0, _⟩ => by simp [flushes]
-  | ⟨1, _⟩ => by simp [flushes]
-  | ⟨2, _⟩ => by simp [flushes]
+  | ⟨0, _⟩ | ⟨1, _⟩ | ⟨2, _⟩ => by simp [flushes]
   | ⟨j + 3, h⟩ => by
     intro f hf k
     obtain ⟨f', hf', rfl⟩ := List.mem_map.mp hf
@@ -474,14 +465,14 @@ theorem width_memTable : (⟨memTable⟩ : Component K).width = 5 := by decide +
 theorem width_bytecodeTable : (⟨bytecodeTable⟩ : Component K).width = 10 := by decide +kernel
 
 /-- The rows of opcode table `j` have its width. -/
-theorem opcodeRows_size (j : Fin 6) :
+theorem size_of_mem_opcodeRows (j : Fin 6) :
     ∀ r ∈ opcodeRows F prog s q j, r.size = (opcodeComponent j).width := by
   simp only [opcodeRows, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
   exact Array.size_ofFn
 
 /-- The memory block's rows have its width. -/
-theorem memBlockRowsOf_size :
+theorem size_of_mem_memBlockRowsOf :
     ∀ r ∈ memBlockRowsOf F prog s q, r.size = (⟨memTable⟩ : Component K).width := by
   simp only [memBlockRowsOf, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
@@ -489,7 +480,7 @@ theorem memBlockRowsOf_size :
   rfl
 
 /-- The bytecode block's rows have its width. -/
-theorem bytecodeBlockRowsOf_size :
+theorem size_of_mem_bytecodeBlockRowsOf :
     ∀ r ∈ bytecodeBlockRowsOf F prog s q, r.size = (⟨bytecodeTable⟩ : Component K).width := by
   simp only [bytecodeBlockRowsOf, List.mem_ofFn, forall_exists_index]
   rintro _ x rfl
@@ -507,11 +498,11 @@ columns, the public input from the first two cells of `MEM_LO` and `MEM_HI`. -/
 def witnessOf : EnsembleWitness (leanIsaEnsemble prog) :=
   let data := dataOf (imageRows F prog s q)
   let op (j : Fin 6) : Air.Flat.Table K :=
-    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data (opcodeRows_size F prog s q j)
+    tableOf (opcodeComponent j) (opcodeRows F prog s q j) data (size_of_mem_opcodeRows F prog s q j)
   { tables := [op 0, op 1, op 2, op 3, op 4, op 5,
-      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data (memBlockRowsOf_size F prog s q),
+      tableOf ⟨memTable⟩ (memBlockRowsOf F prog s q) data (size_of_mem_memBlockRowsOf F prog s q),
       tableOf ⟨bytecodeTable⟩ (bytecodeBlockRowsOf F prog s q) data
-        (bytecodeBlockRowsOf_size F prog s q)]
+        (size_of_mem_bytecodeBlockRowsOf F prog s q)]
     data := data
     publicInput := publicInputOf F prog s q
     same_length := rfl
