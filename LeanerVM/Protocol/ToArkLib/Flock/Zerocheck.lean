@@ -126,14 +126,6 @@ def drawPointComplete (j : ℕ) :
     simp only [P.pointPartial_push]
     exact restrictedZero_update_of_none (h.2.1 i) (P.pointPartial_next _) x, h.2.2⟩⟩
 
-/-- Completeness of the point's draws, from an input relation that gives the residuals and the
-constant position. -/
-def pointDrawsComplete (relIn : Set ((S × ∀ i, O i) × W))
-    (hIn : ∀ s o w, ((s, o), w) ∈ relIn → (((s, #v[]), o), w) ∈ pointRel P C z side 0) :
-    (j : ℕ) → Component.Complete (Component.drawPushes O F j) relIn (pointRel P C z side j)
-  | 0 => Component.passThroughComplete O _ hIn
-  | j + 1 => (pointDrawsComplete relIn hIn j).append (drawPointComplete P C z side j)
-
 /-! ## The univariate skip -/
 
 /-- The prover's first message, from the point and the oracles: `P` on the coset. -/

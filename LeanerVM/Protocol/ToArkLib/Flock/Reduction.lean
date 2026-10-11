@@ -181,13 +181,14 @@ def flockComplete
     (hbool : ∀ o i (u : Fin (2 ^ (P.m + P.κ))), (z o i)[u] = 0 ∨ (z o i)[u] = 1)
     (hread : ∀ o p, eval₂Mle (col o) φ p = eval₂Mle (stack o) φ (lift p)) :
     Component.Complete (flock P C z side s' φ g lift finish (W := W)) relIn relOut :=
-  (pointDrawsComplete P C z side relIn (fun s o w h ↦ by
+  (Component.drawPushesComplete O F (pointRel P C z side) P.nRand (fun s o w h ↦ by
       obtain ⟨hside, hholds⟩ := hIn s o w h
       obtain ⟨herr, hconst⟩ := (batchHolds_iff C P.cpos (z o)).mp hholds
       refine ⟨hside, fun i b ↦ ?_, hconst⟩
       rw [evalMle_eq_sum]
       exact Finset.sum_eq_zero fun u _ ↦ by rw [herr i u, zero_mul])
-    P.nRand).append (skipMsgComplete P C z side) |>.append
+    (fun j _ ↦ drawPointComplete P C z side j) P.nRand le_rfl).append
+    (skipMsgComplete P C z side) |>.append
     (skipDrawComplete P C z side hnodes) |>.append (zcRoundsLowComplete P C z side) |>.append
     (zcRoundsHighComplete P C z side) |>.append (zcEndComplete P C z side) |>.append
     (alphaDrawComplete P C z side) |>.append (linRoundsComplete P C z side) |>.append

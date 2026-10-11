@@ -570,11 +570,7 @@ def ringStartSecurity
       have herr := hinj _ (fun k hk ↦ h.2 k (by simpa using hk)) i
       simp only [ringStages, List.ofFn_zero, frobMap, sliceError, sub_eq_zero] at herr
       exact herr⟩)
-    fun st o _ h ↦ ⟨h.1, fun k _ ↦ by
-      have herr : ∀ i, sliceError P z o st i = 0 := fun i ↦ by
-        rw [sliceError, h.2 i, sub_self]
-      simp only [ringStages, List.ofFn_zero, frobMap, frobPair, herr]
-      simp⟩
+    fun _ _ _ h ↦ ringRel_zero_of_outRel P z side s' φ g h
 
 omit [DecidableEq F] [SampleableType F] [Finite F] [∀ i, OracleInterface (O i)] [CharP F 2] in
 /-- Before the last stage the `π`s run below `2 · 2 ^ (s' - p)`. -/

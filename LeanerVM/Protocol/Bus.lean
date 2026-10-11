@@ -677,8 +677,7 @@ def Source.boundaryValue (α : Fin 4 → E) (β : E) (vals : Vector E I.busClaim
   | .boundary b, z =>
     let w := fingerprintWeights α
     β - ∑ i : Fin 16, w[i.val] * coordValue vals b.coords[i] z
-  | .flush _ _, _ => 0
-  | .count _ _, _ => 0
+  | .flush _ _, _ | .count _ _, _ => 0
 
 /-- The constant `1` is within every degree bound. -/
 private theorem totalDegree_one_le (j : Fin I.ntab) :
