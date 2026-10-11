@@ -311,9 +311,10 @@ theorem memTable_messages (idx cnt a b c : K) (data : ProverData K) :
         (fun i ↦ (i.channel.name, i.msg)) =
       [(MemPush.name, #[idx, 1, a, b, c]), (MemPull.name, #[idx, cnt, a, b, c])] := by
   rw [Air.Flat.Component.interactionsValues_eq]
-  simp [Operations.interactionValues, Air.Flat.Component.rowOperations, memTable, circuit_norm,
-    AbstractInteraction.eval, explicit_provable_type, MemPush, MemPull, -BitVec.reduceNeg,
-    ProvableStruct.componentsToElements, ProvableStruct.toComponents, toComponents]
+  simp [Operations.interactionValues, Air.Flat.Component.rowOperations, memTable, memMain,
+    circuit_norm, AbstractInteraction.eval, explicit_provable_type, MemPush, MemPull,
+    -BitVec.reduceNeg, ProvableStruct.componentsToElements, ProvableStruct.toComponents,
+    toComponents]
   refine ⟨Array.ext (by simp) fun i h1 _ ↦ ?_, Array.ext (by simp) fun i h1 _ ↦ ?_⟩ <;>
     simp only [Array.size_map, Vector.size_toArray] at h1 <;>
     simp only [Array.getElem_map, Vector.getElem_toArray] <;> interval_cases i <;> rfl
@@ -328,7 +329,7 @@ theorem bytecodeTable_messages (idx cnt opc o₁ o₂ o₃ o₄ o₅ o₆ o₇ :
         (BytecodePull.name, #[idx, cnt, opc, o₁, o₂, o₃, o₄, o₅, o₆, o₇])] := by
   rw [Air.Flat.Component.interactionsValues_eq]
   simp only [Operations.interactionValues, Air.Flat.Component.rowOperations, bytecodeTable,
-    circuit_norm, -BitVec.reduceNeg]
+    bytecodeMain, circuit_norm, -BitVec.reduceNeg]
   simp only [List.cons.injEq, Prod.mk.injEq, true_and, and_true, AbstractInteraction.eval]
   simp only [Vector.mapRange_succ, Vector.mapRange_zero, Nat.add_zero, Vector.push_mk,
     Nat.reduceAdd, Array.push_empty, ChannelInteraction.toRaw_channel, Channel.toRaw_arity, size,

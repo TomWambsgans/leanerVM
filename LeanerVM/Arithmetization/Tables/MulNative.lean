@@ -131,27 +131,66 @@ def MulSpec (r : MulRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `MUL_NATIVE` table (specification §7.2; `tables.rs:436-521`): state step, bytecode read
-of `(MUL, o_A, o_B, o_C, 0, 0, 0, 0)`, the two operand reads, and the result read carrying the
-tower product's three lanes. Returns the pushed successor `(g·pc, fp)`. -/
+/-- The circuit of one row of the `MUL_NATIVE` table (specification §7.2; `tables.rs:436-521`):
+state step, bytecode read of `(MUL, o_A, o_B, o_C, 0, 0, 0, 0)`, the two operand reads, and the
+result read carrying the tower product's three lanes. Returns the pushed successor `(g·pc, fp)`. -/
+def mulMain (r : Var MulRow K) : Circuit K (Var Regs K) := do
+  let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
+  instructionStep r.pc r.fp r.rbc next .mulNative #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
+  memRead (r.fp * r.oA) r.rA r.vA
+  memRead (r.fp * r.oB) r.rB r.vB
+  -- `TOWER_LANES` (`tables.rs:45-49`), lane by lane, pair by pair.
+  memRead (r.fp * r.oC) r.rC
+    #v[r.vA[0] * r.vB[0] + r.vA[1] * r.vB[2] + r.vA[2] * r.vB[1],
+       r.vA[0] * r.vB[1] + r.vA[1] * r.vB[0] + r.vA[1] * r.vB[2] + r.vA[2] * r.vB[1] +
+         r.vA[2] * r.vB[2],
+       r.vA[0] * r.vB[2] + r.vA[1] * r.vB[1] + r.vA[2] * r.vB[0] + r.vA[2] * r.vB[2]]
+  pure next
+
+@[reducible]
+instance : ElaboratedCircuit K MulRow Regs mulMain := by
+  elaborate_circuit
+
+/-- `mulMain` is sound for `MulSpec`. -/
+theorem mulMain_soundness :
+    GeneralFormalCircuit.Soundness K mulMain (fun _ _ ↦ True) MulSpec := by
+  circuit_proof_start [mulMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
+  obtain ⟨-, hA, hB, hC⟩ := h_holds
+  obtain ⟨_, _, _, _, _, hvA, hvB, _, _, _, _⟩ := h_input
+  subst hvA hvB
+  refine (mul_refines_iff _ _ _).mpr ⟨⟨?_, ?_⟩, ?_, rfl⟩
+  · simpa only [Vector.getElem_map] using hA
+  · simpa only [Vector.getElem_map] using hB
+  · simpa only [mul_limbs, Vector.getElem_map] using hC
+
+/-- `mulMain` is complete for the honest prover's row. -/
+theorem mulMain_completeness :
+    GeneralFormalCircuit.Completeness K mulMain (fun r data _ ↦ ∃ next, MulSpec r next data)
+      (fun _ _ _ ↦ True) := by
+  circuit_proof_start [mulMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  -- The four pull guarantees, from the semantic premise: the tuple `main` emits decodes
+  -- (Layer 4), and the result read carries the limbs of the product a valid execution reads
+  -- (`mul_limbs`).
+  obtain ⟨next, h⟩ := h_assumptions
+  obtain ⟨⟨hA, hB⟩, hC, -⟩ := (mul_refines_iff _ _ _).mp h
+  rw [mul_limbs] at hC
+  obtain ⟨_, _, _, _, _, hvA, hvB, _, _, _, _⟩ := h_input
+  subst hvA hvB
+  simp only [Vector.getElem_map] at hA hB hC ⊢
+  exact ⟨⟨_, decode_entry (.mulNative _ _ _)⟩, hA, hB, hC⟩
+
+/-- The `MUL_NATIVE` table: the component of `mulMain`, sound for `MulSpec` and complete for
+the honest row. -/
 def mulTable : GeneralFormalCircuit K MulRow Regs where
-  main r := do
-    let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-    instructionStep r.pc r.fp r.rbc next .mulNative #v[r.oA, r.oB, r.oC, 0, 0, 0, 0]
-    memRead (r.fp * r.oA) r.rA r.vA
-    memRead (r.fp * r.oB) r.rB r.vB
-    -- `TOWER_LANES` (`tables.rs:45-49`), lane by lane, pair by pair.
-    memRead (r.fp * r.oC) r.rC
-      #v[r.vA[0] * r.vB[0] + r.vA[1] * r.vB[2] + r.vA[2] * r.vB[1],
-         r.vA[0] * r.vB[1] + r.vA[1] * r.vB[0] + r.vA[1] * r.vB[2] + r.vA[2] * r.vB[1] +
-           r.vA[2] * r.vB[2],
-         r.vA[0] * r.vB[2] + r.vA[1] * r.vB[1] + r.vA[2] * r.vB[0] + r.vA[2] * r.vB[2]]
-    pure next
+  main := mulMain
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, mulMain, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The row refines the relation over the data's image, to the pushed successor.
   Spec := MulSpec
@@ -159,30 +198,8 @@ def mulTable : GeneralFormalCircuit K MulRow Regs where
   -- instruction. Proved of the row built from any valid execution by `mulRowOf_refines`; see
   -- `mul_exec_complete`.
   ProverAssumptions r data _ := ∃ next, MulSpec r next data
-  soundness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
-    obtain ⟨-, hA, hB, hC⟩ := h_holds
-    obtain ⟨_, _, _, _, _, hvA, hvB, _, _, _, _⟩ := h_input
-    subst hvA hvB
-    refine (mul_refines_iff _ _ _).mpr ⟨⟨?_, ?_⟩, ?_, rfl⟩
-    · simpa only [Vector.getElem_map] using hA
-    · simpa only [Vector.getElem_map] using hB
-    · simpa only [mul_limbs, Vector.getElem_map] using hC
-  completeness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    -- The four pull guarantees, from the semantic premise: the tuple `main` emits decodes
-    -- (Layer 4), and the result read carries the limbs of the product a valid execution reads
-    -- (`mul_limbs`).
-    obtain ⟨next, h⟩ := h_assumptions
-    obtain ⟨⟨hA, hB⟩, hC, -⟩ := (mul_refines_iff _ _ _).mp h
-    rw [mul_limbs] at hC
-    obtain ⟨_, _, _, _, _, hvA, hvB, _, _, _, _⟩ := h_input
-    subst hvA hvB
-    simp only [Vector.getElem_map] at hA hB hC ⊢
-    exact ⟨⟨_, decode_entry (.mulNative _ _ _)⟩, hA, hB, hC⟩
+  soundness := mulMain_soundness
+  completeness := mulMain_completeness
 
 /-! ## Rows from executions -/
 
@@ -219,7 +236,7 @@ theorem mul_exec_complete {data : ProverData K} {pc fp oA oB oC : K} {next : Reg
         0) :=
   (mulTable.completeness 0 (rowEnv data) (const _)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, mulTable, instructionStep, memRead, bytecodeRead,
+    (by simp only [circuit_norm, mulTable, mulMain, instructionStep, memRead, bytecodeRead,
       -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover ⟨_, mulRowOf_refines hexec rA rB rC rbc⟩).1
 

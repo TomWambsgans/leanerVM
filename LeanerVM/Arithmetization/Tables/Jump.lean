@@ -188,30 +188,68 @@ def JumpSpec (r : JumpRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `JUMP` table (specification §7.5; `tables.rs:688-810`): the witnesses `w`, `b`, the two
-residual constraints, the state pull and the push of the derived successor, the bytecode read
-of `(JMP, o_c, o_d, o_f, 0, 0, 0, 0)`, and the three single-limb reads. Returns the pushed
-successor. -/
+/-- The circuit of one row of the `JUMP` table (specification §7.5; `tables.rs:688-810`): the
+witnesses `w`, `b`, the two residual constraints, the state pull and the push of the derived
+successor, the bytecode read of `(JMP, o_c, o_d, o_f, 0, 0, 0, 0)`, and the three single-limb reads.
+Returns the pushed successor. -/
+def jumpMain (r : Var JumpRow K) : Circuit K (Var Regs K) := do
+  -- The honest inverse `w = v_cond⁻¹` (`0` when `v_cond = 0`) and the indicator `b`.
+  let w ← witness (.ite (r.vcond =? 0) 0 r.vcond⁻¹)
+  let b ← witness (.ite (r.vcond =? 0) 0 1)
+  assertZero (b + r.vcond * w)
+  assertZero (r.vcond * (b + 1))
+  let next : Var Regs K :=
+    ⟨b * r.vpc + b * (Expression.const g * r.pc) + Expression.const g * r.pc,
+      b * r.vfp + b * r.fp + r.fp⟩
+  instructionStep r.pc r.fp r.rbc next .jump #v[r.oc, r.od, r.of, 0, 0, 0, 0]
+  memRead (r.fp * r.oc) r.rc #v[r.vcond, 0, 0]
+  memRead (r.fp * r.od) r.rd #v[r.vpc, 0, 0]
+  memRead (r.fp * r.of) r.rf #v[r.vfp, 0, 0]
+  pure next
+
+@[reducible]
+instance : ElaboratedCircuit K JumpRow Regs jumpMain := by
+  elaborate_circuit
+
+/-- `jumpMain` is sound for `JumpSpec`. -/
+theorem jumpMain_soundness :
+    GeneralFormalCircuit.Soundness K jumpMain (fun _ _ ↦ True) JumpSpec := by
+  circuit_proof_start [jumpMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
+  obtain ⟨hw, hb, -, hc, hd, hf⟩ := h_holds
+  have hind := flags_sound hw hb
+  refine (jump_refines_iff _ _ _).mpr ⟨⟨hc, hd, hf⟩, ?_⟩
+  split_ifs at hind ⊢ with hc0
+  · -- Not taken: `b = 0`, the successor is `(g·pc, fp)`.
+    simp only [hind, zero_mul, zero_add, Regs.next]
+  · -- Taken: `b = 1`, the successor is `(v_pc, v_fp)` since `x + x = 0`.
+    simp only [hind, one_mul, add_assoc, CharTwo.add_self_eq_zero, add_zero]
+
+/-- `jumpMain` is complete for the honest prover's row. -/
+theorem jumpMain_completeness :
+    GeneralFormalCircuit.Completeness K jumpMain (fun r data _ ↦ ∃ next, JumpSpec r next data)
+      (fun _ _ _ ↦ True) := by
+  circuit_proof_start [jumpMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  -- The four pull guarantees are the bindings of the semantic premise, the tuple `main`
+  -- emits decodes (Layer 4), and the two residuals hold of the honest witnesses.
+  obtain ⟨next, h⟩ := h_assumptions
+  obtain ⟨hc, hd, hf⟩ := h.bindings
+  obtain ⟨hw, hb⟩ := h_env
+  rw [hw, hb]
+  exact ⟨(flags_complete _).1, (flags_complete _).2, ⟨_, decode_entry (.jump _ _ _)⟩,
+    hc, hd, hf⟩
+
+/-- The `JUMP` table: the component of `jumpMain`, sound for `JumpSpec` and complete for the
+honest row. -/
 def jumpTable : GeneralFormalCircuit K JumpRow Regs where
-  main r := do
-    -- The honest inverse `w = v_cond⁻¹` (`0` when `v_cond = 0`) and the indicator `b`.
-    let w ← witness (.ite (r.vcond =? 0) 0 r.vcond⁻¹)
-    let b ← witness (.ite (r.vcond =? 0) 0 1)
-    assertZero (b + r.vcond * w)
-    assertZero (r.vcond * (b + 1))
-    let next : Var Regs K :=
-      ⟨b * r.vpc + b * (Expression.const g * r.pc) + Expression.const g * r.pc,
-        b * r.vfp + b * r.fp + r.fp⟩
-    instructionStep r.pc r.fp r.rbc next .jump #v[r.oc, r.od, r.of, 0, 0, 0, 0]
-    memRead (r.fp * r.oc) r.rc #v[r.vcond, 0, 0]
-    memRead (r.fp * r.od) r.rd #v[r.vpc, 0, 0]
-    memRead (r.fp * r.of) r.rf #v[r.vfp, 0, 0]
-    pure next
+  main := jumpMain
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, jumpMain, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The row refines the relation over the data's image, to the pushed successor.
   Spec := JumpSpec
@@ -219,29 +257,8 @@ def jumpTable : GeneralFormalCircuit K JumpRow Regs where
   -- instruction (the bindings alone, by `jump_refines_iff`). Proved of the row built from any
   -- valid execution by `jumpRowOf_refines`; see `jump_exec_complete`.
   ProverAssumptions r data _ := ∃ next, JumpSpec r next data
-  soundness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    -- The bytecode guarantee, that the tuple decodes, is unused (see `XOR`).
-    obtain ⟨hw, hb, -, hc, hd, hf⟩ := h_holds
-    have hind := flags_sound hw hb
-    refine (jump_refines_iff _ _ _).mpr ⟨⟨hc, hd, hf⟩, ?_⟩
-    split_ifs at hind ⊢ with hc0
-    · -- Not taken: `b = 0`, the successor is `(g·pc, fp)`.
-      simp only [hind, zero_mul, zero_add, Regs.next]
-    · -- Taken: `b = 1`, the successor is `(v_pc, v_fp)` since `x + x = 0`.
-      simp only [hind, one_mul, add_assoc, CharTwo.add_self_eq_zero, add_zero]
-  completeness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    -- The four pull guarantees are the bindings of the semantic premise, the tuple `main`
-    -- emits decodes (Layer 4), and the two residuals hold of the honest witnesses.
-    obtain ⟨next, h⟩ := h_assumptions
-    obtain ⟨hc, hd, hf⟩ := h.bindings
-    obtain ⟨hw, hb⟩ := h_env
-    rw [hw, hb]
-    exact ⟨(flags_complete _).1, (flags_complete _).2, ⟨_, decode_entry (.jump _ _ _)⟩,
-      hc, hd, hf⟩
+  soundness := jumpMain_soundness
+  completeness := jumpMain_completeness
 
 /-! ## The witness discipline -/
 
@@ -265,7 +282,7 @@ theorem jump_env_iff (env : ProverEnvironment K) (offset : ℕ) (r : Var JumpRow
   -- with `ite_feq` reading the witness programs' `Bool` conditions back as propositions before
   -- the descent (E7).
   obtain ⟨pc, fp, oc, od, of, vcond, vpc, vfp, rc, rd, rf, rbc⟩ := r
-  dsimp only [jumpTable]
+  dsimp only [jumpTable, jumpMain]
   simp only [↓ite_feq, circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
   -- The two sides differ only in the instance paths of `K`'s field structure.
   exact Iff.rfl

@@ -188,64 +188,81 @@ def DerefSpec (r : DerefRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `DEREF` table (specification §7.4; `tables.rs:586-682`): state step, bytecode read of
-`(DRF, o₁, o₂, o₃, f_pc, f_fp, 0, 0)`, the pointer read `(p, 0, 0)` at `fp·o₁`, the local read
-at `fp·o₃`, and the target read at `p·o₂` carrying the flag-selected source. Returns the
-pushed successor `(g·pc, fp)`. -/
+/-- The circuit of one row of the `DEREF` table (specification §7.4; `tables.rs:586-682`): state
+step, bytecode read of `(DRF, o₁, o₂, o₃, f_pc, f_fp, 0, 0)`, the pointer read `(p, 0, 0)` at
+`fp·o₁`, the local read at `fp·o₃`, and the target read at `p·o₂` carrying the flag-selected source.
+Returns the pushed successor `(g·pc, fp)`. -/
+def derefMain (r : Var DerefRow K) : Circuit K (Var Regs K) := do
+  let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
+  -- `f̄ = 1 + f_pc + f_fp`: `1` at the three store modes' flags in `cell` mode, `0` otherwise.
+  let fbar : Expression K := 1 + r.fpc + r.ffp
+  instructionStep r.pc r.fp r.rbc next .deref #v[r.o1, r.o2, r.o3, r.fpc, r.ffp, 0, 0]
+  memRead (r.fp * r.o1) r.r1 #v[r.p, 0, 0]
+  memRead (r.fp * r.o3) r.r3 r.v3
+  memRead (r.p * r.o2) r.r2
+    #v[fbar * r.v3[0] + r.fpc * (Expression.const (g ^ 2) * r.pc) + r.ffp * r.fp,
+       fbar * r.v3[1], fbar * r.v3[2]]
+  pure next
+
+@[reducible]
+instance : ElaboratedCircuit K DerefRow Regs derefMain := by
+  elaborate_circuit
+
+/-- `derefMain` is sound for `DerefSpec`. -/
+theorem derefMain_soundness :
+    GeneralFormalCircuit.Soundness K derefMain (fun _ _ ↦ True) DerefSpec := by
+  circuit_proof_start [derefMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  obtain ⟨⟨ins, hdec⟩, h1, h3, h2⟩ := h_holds
+  obtain ⟨_, _, _, _, _, _, _, _, hv3, _, _, _, _⟩ := h_input
+  subst hv3
+  -- The pulled tuple is an instruction (Layer 4): `DEREF` with the row's operands, the flags
+  -- a store mode's. The one use a table makes of the bytecode guarantee.
+  obtain ⟨mode, rfl, hflags⟩ := decode_deref_eq_some_iff.mp hdec
+  obtain ⟨h4, h5⟩ := Prod.ext_iff.mp hflags
+  subst h4 h5
+  simp only [Vector.getElem_map] at h3 h2
+  rw [storeCoords_eval] at h2
+  refine (deref_refines_iff _ _ _).mpr ⟨mode, ⟨rfl, h1, ?_⟩, ?_, rfl⟩
+  · simpa only [Vector.getElem_map] using h3
+  · simpa only [Vector.getElem_map] using h2
+
+/-- `derefMain` is complete for the honest prover's row. -/
+theorem derefMain_completeness :
+    GeneralFormalCircuit.Completeness K derefMain (fun r data _ ↦ ∃ next, DerefSpec r next data)
+      (fun _ _ _ ↦ True) := by
+  circuit_proof_start [derefMain, StatePull, StatePush, MemPull, MemPush, BytecodePull,
+    BytecodePush, instructionStep, memRead, bytecodeRead]
+  -- The four pull guarantees, from the semantic premise: the tuple `main` emits decodes
+  -- (Layer 4), and the target read carries the coordinates of the mode's source
+  -- (`storeCoords_eval`).
+  obtain ⟨next, h⟩ := h_assumptions
+  obtain ⟨mode, ⟨hflags, h1, h3⟩, h2, -⟩ := (deref_refines_iff _ _ _).mp h
+  obtain ⟨_, _, _, _, _, _, _, _, hv3, _, _, _, _⟩ := h_input
+  subst hv3
+  obtain ⟨h4, h5⟩ := Prod.ext_iff.mp hflags
+  subst h4 h5
+  rw [← storeCoords_eval] at h2
+  simp only [Vector.getElem_map] at h3 h2 ⊢
+  exact ⟨⟨_, decode_entry (.deref _ _ _ mode)⟩, h1, h3, h2⟩
+
+/-- The `DEREF` table: the component of `derefMain`, sound for `DerefSpec` and complete for the
+honest row. -/
 def derefTable : GeneralFormalCircuit K DerefRow Regs where
-  main r := do
-    let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
-    -- `f̄ = 1 + f_pc + f_fp`: `1` at the three store modes' flags in `cell` mode, `0` otherwise.
-    let fbar : Expression K := 1 + r.fpc + r.ffp
-    instructionStep r.pc r.fp r.rbc next .deref #v[r.o1, r.o2, r.o3, r.fpc, r.ffp, 0, 0]
-    memRead (r.fp * r.o1) r.r1 #v[r.p, 0, 0]
-    memRead (r.fp * r.o3) r.r3 r.v3
-    memRead (r.p * r.o2) r.r2
-      #v[fbar * r.v3[0] + r.fpc * (Expression.const (g ^ 2) * r.pc) + r.ffp * r.fp,
-         fbar * r.v3[1], fbar * r.v3[2]]
-    pure next
+  main := derefMain
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
+    simp only [circuit_norm, derefMain, instructionStep, memRead, bytecodeRead, -BitVec.reduceNeg]
     tauto
   -- The row refines the relation over the data's image, to the pushed successor.
   Spec := DerefSpec
   -- The honest prover's row: written from a valid step, it is bound and executes its
   -- instruction. Proved of the row built from any valid execution by `derefRowOf_refines`.
   ProverAssumptions r data _ := ∃ next, DerefSpec r next data
-  soundness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    obtain ⟨⟨ins, hdec⟩, h1, h3, h2⟩ := h_holds
-    obtain ⟨_, _, _, _, _, _, _, _, hv3, _, _, _, _⟩ := h_input
-    subst hv3
-    -- The pulled tuple is an instruction (Layer 4): `DEREF` with the row's operands, the flags
-    -- a store mode's. The one use a table makes of the bytecode guarantee.
-    obtain ⟨mode, rfl, hflags⟩ := decode_deref_eq_some_iff.mp hdec
-    obtain ⟨h4, h5⟩ := Prod.ext_iff.mp hflags
-    subst h4 h5
-    simp only [Vector.getElem_map] at h3 h2
-    rw [storeCoords_eval] at h2
-    refine (deref_refines_iff _ _ _).mpr ⟨mode, ⟨rfl, h1, ?_⟩, ?_, rfl⟩
-    · simpa only [Vector.getElem_map] using h3
-    · simpa only [Vector.getElem_map] using h2
-  completeness := by
-    circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
-      instructionStep, memRead, bytecodeRead]
-    -- The four pull guarantees, from the semantic premise: the tuple `main` emits decodes
-    -- (Layer 4), and the target read carries the coordinates of the mode's source
-    -- (`storeCoords_eval`).
-    obtain ⟨next, h⟩ := h_assumptions
-    obtain ⟨mode, ⟨hflags, h1, h3⟩, h2, -⟩ := (deref_refines_iff _ _ _).mp h
-    obtain ⟨_, _, _, _, _, _, _, _, hv3, _, _, _, _⟩ := h_input
-    subst hv3
-    obtain ⟨h4, h5⟩ := Prod.ext_iff.mp hflags
-    subst h4 h5
-    rw [← storeCoords_eval] at h2
-    simp only [Vector.getElem_map] at h3 h2 ⊢
-    exact ⟨⟨_, decode_entry (.deref _ _ _ mode)⟩, h1, h3, h2⟩
+  soundness := derefMain_soundness
+  completeness := derefMain_completeness
 
 /-! ## Rows from executions -/
 
@@ -284,7 +301,7 @@ theorem deref_exec_complete {data : ProverData K} {pc fp o1 o2 o3 : K} {mode : D
         (const (derefRowOf (imageOf data).2 pc fp o1 o2 o3 mode r1 r2 r3 rbc))).operations 0) :=
   (derefTable.completeness 0 (rowEnv data) (const _)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, derefTable, instructionStep, memRead, bytecodeRead,
+    (by simp only [circuit_norm, derefTable, derefMain, instructionStep, memRead, bytecodeRead,
       -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover ⟨_, derefRowOf_refines hexec r1 r2 r3 rbc⟩).1
 

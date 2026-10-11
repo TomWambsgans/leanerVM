@@ -155,32 +155,50 @@ structure MemBindings {κ : ℕ} (mem : MemImage κ) (r : MemRow K) : Prop where
 def MemSpec (r : MemRow K) (data : ProverData K) : Prop :=
   MemBindings (imageOf data).2 r
 
-/-- The memory block (specification §6.2, seed and finalize; `layout.rs:359-382`): push
-`(idx, 1, m)`, pull `(idx, cntFin, m)`. -/
+/-- The circuit of one row of the memory block (specification §6.2, seed and finalize;
+`layout.rs:359-382`): push `(idx, 1, m)`, pull `(idx, cntFin, m)`. -/
+def memMain (r : Var MemRow K) : Circuit K Unit := do
+  MemPush.push ⟨r.idx, 1, r.m⟩
+  MemPull.pull ⟨r.idx, r.cntFin, r.m⟩
+
+@[reducible]
+instance : ElaboratedCircuit K MemRow unit memMain := by
+  elaborate_circuit
+
+/-- `memMain` is sound for `MemSpec`. -/
+theorem memMain_soundness :
+    GeneralFormalCircuit.Soundness K (Output := unit) memMain (fun _ _ ↦ True)
+      (fun r _ data ↦ MemSpec r data) := by
+  circuit_proof_start [memMain, MemPull, MemPush]
+  obtain ⟨_, _, hm⟩ := h_input
+  subst hm
+  exact ⟨by simpa only [Vector.getElem_map] using h_holds⟩
+
+/-- `memMain` is complete for a row bound to the image. -/
+theorem memMain_completeness :
+    GeneralFormalCircuit.Completeness K (Output := unit) memMain (fun r data _ ↦ MemSpec r data)
+      (fun _ _ _ ↦ True) := by
+  circuit_proof_start [memMain, MemPull, MemPush]
+  obtain ⟨_, _, hm⟩ := h_input
+  subst hm
+  simpa only [Vector.getElem_map] using h_assumptions.word_eq
+
+/-- The memory block: the component of `memMain`, sound for `MemSpec` and complete for a bound
+row. -/
 def memTable : GeneralFormalCircuit K MemRow unit where
-  main r := do
-    MemPush.push ⟨r.idx, 1, r.m⟩
-    MemPull.pull ⟨r.idx, r.cntFin, r.m⟩
+  main := memMain
   -- The push channel: its requirement is vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [MemPush.toRaw]
   requirementsChannelsLawful input offset := by
     -- Without core's `BitVec.reduceNeg` simproc, which misreads `-1 : K` (finding E6).
-    simp only [circuit_norm, -BitVec.reduceNeg]
+    simp only [circuit_norm, memMain, -BitVec.reduceNeg]
     tauto
   Spec r _ data := MemSpec r data
   -- The honest prover's row: a word of the image. Proved of the row of every word by
   -- `memRowOf_bindings`; see `mem_word_complete`.
   ProverAssumptions r data _ := MemSpec r data
-  soundness := by
-    circuit_proof_start [MemPull, MemPush]
-    obtain ⟨_, _, hm⟩ := h_input
-    subst hm
-    exact ⟨by simpa only [Vector.getElem_map] using h_holds⟩
-  completeness := by
-    circuit_proof_start [MemPull, MemPush]
-    obtain ⟨_, _, hm⟩ := h_input
-    subst hm
-    simpa only [Vector.getElem_map] using h_assumptions.word_eq
+  soundness := memMain_soundness
+  completeness := memMain_completeness
 
 /-- The seed row of word `i` of the image `mem`, with finalize count `cntFin`: the address `g^i`
 and the word's limbs. -/
@@ -202,7 +220,7 @@ theorem mem_word_complete {data : ProverData K} (i : Fin (2 ^ (imageOf data).1))
       ((memTable.main (const (memRowOf (imageOf data).2 i cntFin))).operations 0) :=
   (memTable.completeness 0 (rowEnv data) (const _)
     -- No witness slot: the row environment uses the local witnesses vacuously.
-    (by simp only [circuit_norm, memTable, -BitVec.reduceNeg]) _
+    (by simp only [circuit_norm, memTable, memMain, -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover
     (memRowOf_bindings (lt_of_le_of_lt (Nat.min_le_right _ _) (by decide)) _ _ _)).1
 
@@ -237,32 +255,50 @@ structure BytecodeBindings (prog : Program) (r : BytecodeRow K) : Prop where
   /-- The program fetches at `idx` the instruction the row's entry decodes to. -/
   entry_eq : ∃ ins, prog.fetch r.idx = some ins ∧ decode (#v[r.opcode] ++ r.op) = some ins
 
-/-- The bytecode block (specification §6.2 and §6.4, seed and finalize; `layout.rs:383-395`):
-push `(idx, 1, opcode, op)`, pull `(idx, cntFin, opcode, op)`. Program-free: the entry columns
-are the program's by Layer 8's conjunct, not by anything here. -/
+/-- The circuit of one row of the bytecode block (specification §6.2 and §6.4, seed and finalize;
+`layout.rs:383-395`): push `(idx, 1, opcode, op)`, pull `(idx, cntFin, opcode, op)`. Program-free:
+the entry columns are the program's by Layer 8's conjunct, not by anything here. -/
+def bytecodeMain (r : Var BytecodeRow K) : Circuit K Unit := do
+  BytecodePush.push ⟨r.idx, 1, r.opcode, r.op⟩
+  BytecodePull.pull ⟨r.idx, r.cntFin, r.opcode, r.op⟩
+
+@[reducible]
+instance : ElaboratedCircuit K BytecodeRow unit bytecodeMain := by
+  elaborate_circuit
+
+/-- `bytecodeMain` is sound for `BytecodeDecodes`. -/
+theorem bytecodeMain_soundness :
+    GeneralFormalCircuit.Soundness K (Output := unit) bytecodeMain (fun _ _ ↦ True)
+      (fun r _ _ ↦ BytecodeDecodes r) := by
+  circuit_proof_start [bytecodeMain, BytecodePull, BytecodePush]
+  obtain ⟨_, _, _, hop⟩ := h_input
+  subst hop
+  exact ⟨h_holds⟩
+
+/-- `bytecodeMain` is complete for a row whose entry decodes. -/
+theorem bytecodeMain_completeness :
+    GeneralFormalCircuit.Completeness K (Output := unit) bytecodeMain
+      (fun r _ _ ↦ BytecodeDecodes r) (fun _ _ _ ↦ True) := by
+  circuit_proof_start [bytecodeMain, BytecodePull, BytecodePush]
+  obtain ⟨_, _, _, hop⟩ := h_input
+  subst hop
+  exact h_assumptions.entry_eq
+
+/-- The bytecode block: the component of `bytecodeMain`, sound and complete for
+`BytecodeDecodes`. -/
 def bytecodeTable : GeneralFormalCircuit K BytecodeRow unit where
-  main r := do
-    BytecodePush.push ⟨r.idx, 1, r.opcode, r.op⟩
-    BytecodePull.pull ⟨r.idx, r.cntFin, r.opcode, r.op⟩
+  main := bytecodeMain
   -- The push channel: its requirement is vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [BytecodePush.toRaw]
   requirementsChannelsLawful input offset := by
-    simp only [circuit_norm, -BitVec.reduceNeg]
+    simp only [circuit_norm, bytecodeMain, -BitVec.reduceNeg]
     tauto
   Spec r _ _ := BytecodeDecodes r
   -- The honest prover's row: a slot of the program, whose entry decodes. Proved of the row of
   -- every slot by `bytecodeRowOf_decodes`; see `bytecode_entry_complete`.
   ProverAssumptions r _ _ := BytecodeDecodes r
-  soundness := by
-    circuit_proof_start [BytecodePull, BytecodePush]
-    obtain ⟨_, _, _, hop⟩ := h_input
-    subst hop
-    exact ⟨h_holds⟩
-  completeness := by
-    circuit_proof_start [BytecodePull, BytecodePush]
-    obtain ⟨_, _, _, hop⟩ := h_input
-    subst hop
-    exact h_assumptions.entry_eq
+  soundness := bytecodeMain_soundness
+  completeness := bytecodeMain_completeness
 
 /-! ## Proof helpers -/
 
@@ -301,7 +337,7 @@ theorem bytecode_entry_complete {data : ProverData K} (prog : Program)
     ConstraintsHold.Completeness (rowEnv data)
       ((bytecodeTable.main (const (bytecodeRowOf prog i cntFin))).operations 0) :=
   (bytecodeTable.completeness 0 (rowEnv data) (const _)
-    (by simp only [circuit_norm, bytecodeTable, -BitVec.reduceNeg]) _
+    (by simp only [circuit_norm, bytecodeTable, bytecodeMain, -BitVec.reduceNeg]) _
     ProvableType.eval_const_prover (bytecodeRowOf_decodes _ _ _)).1
 
 /-! ## The verifier -/
