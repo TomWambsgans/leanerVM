@@ -1,14 +1,17 @@
 /-
   LeanerVM.Protocol.ToClean.ComponentPolynomial
 
-  A flat Clean component as one table of the M3 model: its constraint polynomials, its bus
-  flushes and its count columns. A candidate for Clean.
+  A Clean expression as a computable polynomial, and a flat Clean component as one table of the
+  M3 model: its constraint polynomials, its bus flushes and its count columns. A candidate for
+  Clean.
 -/
 
 module
 
 public import LeanerVM.Protocol.ToClean.ExpressionPolynomial
 public import Clean.Air.FlatComponent
+public import CompPoly.Multivariate.Eval
+public import CompPoly.Multivariate.MvPolyEquiv.Eval
 
 @[expose] public section
 
@@ -20,6 +23,21 @@ that vanishes on every row, and a flush is a side of the bus with sixteen coordi
 polynomials, a domain separator first. Clean writes the same table as a component whose circuit
 records, per row, `assert` expressions and channel interactions. This module is the
 translation, generic over the field, the component and the type of bus sides.
+
+It is written over Clean's interface for expressions as polynomials: the syntactic degree
+`Expression.degreeBound`, the width claim `Expression.WithinWidth n e` (every variable of `e` is
+below `n`; decidable) and the Mathlib polynomial `Expression.toBoundedPolynomial`. A Mathlib
+polynomial is noncomputable, and the polynomials of a table are data a verifier evaluates, so the
+translation is CompPoly's, proved equal to Clean's.
+
+* `Expression.toCMvPolynomial n e` is `e` as a CompPoly polynomial in `n` variables: variable
+  `i` is `X i` when `i < n` and `0` otherwise, constants are constants, sum and product are sum
+  and product. `fromCMvPolynomial_toCMvPolynomial`: within width `n` it is Clean's
+  `toBoundedPolynomial`. `eval_toCMvPolynomial`: it evaluates, at a row of `n` cells, to
+  Clean's evaluation of `e` on that row; Clean reads a missing cell as `0`, which is what the
+  translation makes of a variable at or beyond `n`. `totalDegree_toCMvPolynomial_le` bounds its
+  total degree by `degreeBound`. Within width `n`, Clean's evaluation reads only the first `n`
+  cells of a row (`eval_fromArray_truncate`).
 
 * `Component.toM3 c sep dir counted` is the component `c` as one table of width `c.width`: its
   constraints are its `assert` expressions as polynomials; its flushes are its interactions,
@@ -42,14 +60,100 @@ translation, generic over the field, the component and the type of bus sides.
 
 Written from the M3 model of leanVM's specification (§5.1 "The bus", §5.5 "The zerocheck") and
 Clean's semantics of a flat component at `42fe4b26` (`Clean/Air/FlatComponent.lean`,
-`Clean/Circuit/Operations.lean`).
+`Clean/Circuit/Operations.lean`). Clean's polynomial interface is imported from the local copy
+`ToClean/ExpressionPolynomial.lean` until the pin contains it; nothing else changes then.
 
 ## Wrong readings excluded
 
+* A variable at or beyond the width is not a free variable of the polynomial: it is `0`, as
+  Clean's `Environment.fromArray` reads a missing cell.
+* The degree bound is syntactic and can exceed the polynomial's degree (`x · y + x · y` is
+  `2 · x · y`, `x · y - x · y` is `0`); it is an upper bound, never the degree.
 * A flush carries no multiplicity: the side is the channel's (`dir`), never the sign of a
   multiplicity, which carries none in characteristic two.
 * A message longer than fifteen coordinates is truncated by the sixteen-slot tuple.
 -/
+
+namespace Expression
+
+open CPoly
+
+variable {F : Type} [Field F] [DecidableEq F]
+
+/-- The expression as a polynomial in `n` variables: variable `i` is `X i` when `i < n` and `0`
+otherwise, as Clean reads a missing cell. -/
+def toCMvPolynomial (n : ℕ) : Expression F → CMvPolynomial n F
+  | var v => if h : v.index < n then CMvPolynomial.X ⟨v.index, h⟩ else 0
+  | const c => CMvPolynomial.C c
+  | add x y => x.toCMvPolynomial n + y.toCMvPolynomial n
+  | mul x y => x.toCMvPolynomial n * y.toCMvPolynomial n
+
+/-- The polynomial evaluates, at a row of `n` cells, to Clean's evaluation of the expression on
+that row, over any prover data. -/
+theorem eval_toCMvPolynomial {n : ℕ} (row : Fin n → F) (data : ProverData F)
+    (e : Expression F) :
+    (e.toCMvPolynomial n).eval row = e.eval (Environment.fromArray (Array.ofFn row) data) := by
+  induction e with
+  | var v =>
+    simp only [toCMvPolynomial, eval]
+    split_ifs with h
+    · simp [CMvPolynomial.eval_X, h]
+    · simp [CMvPolynomial.eval_zero, h]
+  | const c => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_C]
+  | add x y hx hy => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_add, hx, hy]
+  | mul x y hx hy => simp only [toCMvPolynomial, eval, CMvPolynomial.eval_mul, hx, hy]
+
+/-- For an expression within width `n`, the translation is Clean's polynomial of the
+expression over `n` variables, read as a Mathlib polynomial. -/
+theorem fromCMvPolynomial_toCMvPolynomial {n : ℕ} (e : Expression F) (h : e.WithinWidth n) :
+    fromCMvPolynomial (e.toCMvPolynomial n) = e.toBoundedPolynomial n h := by
+  induction e with
+  | var v =>
+    simp only [toCMvPolynomial, toBoundedPolynomial, show v.index < n from h, dite_true]
+    exact CMvPolynomial.fromCMvPolynomial_X _
+  | const c => exact CMvPolynomial.fromCMvPolynomial_C c
+  | add x y hx hy =>
+    simp only [toCMvPolynomial, toBoundedPolynomial, CPoly.map_add, hx h.1, hy h.2]
+  | mul x y hx hy =>
+    simp only [toCMvPolynomial, toBoundedPolynomial, CPoly.map_mul, hx h.1, hy h.2]
+
+/-- Clean's syntactic degree bounds the polynomial's total degree. -/
+theorem totalDegree_toCMvPolynomial_le (n : ℕ) (e : Expression F) :
+    (e.toCMvPolynomial n).totalDegree ≤ e.degreeBound := by
+  rw [CPoly.totalDegree_equiv (S := F)]
+  induction e with
+  | var v =>
+    simp only [toCMvPolynomial, degreeBound]
+    split_ifs
+    · rw [CMvPolynomial.fromCMvPolynomial_X]
+      rw [MvPolynomial.totalDegree_X]
+    · rw [CPoly.map_zero, MvPolynomial.totalDegree_zero]
+      exact Nat.zero_le _
+  | const c =>
+    rw [toCMvPolynomial, CMvPolynomial.fromCMvPolynomial_C, MvPolynomial.totalDegree_C]
+    exact Nat.zero_le _
+  | add x y hx hy =>
+    rw [toCMvPolynomial, CPoly.map_add]
+    exact (MvPolynomial.totalDegree_add _ _).trans (max_le_max hx hy)
+  | mul x y hx hy =>
+    rw [toCMvPolynomial, CPoly.map_mul]
+    exact (MvPolynomial.totalDegree_mul _ _).trans (Nat.add_le_add hx hy)
+
+omit [DecidableEq F] in
+/-- An expression within width `n` reads only the first `n` cells of a row: its evaluation on
+the row is its evaluation on those cells, a missing one `0`. -/
+theorem eval_fromArray_truncate {n : ℕ} (row : Array F) (data : ProverData F)
+    {e : Expression F} (h : e.WithinWidth n) :
+    e.eval (Environment.fromArray row data) =
+      e.eval (Environment.fromArray (Array.ofFn fun i : Fin n ↦ row[(i : ℕ)]?.getD 0) data) := by
+  induction e with
+  | var v =>
+    simp [eval, show v.index < n from h]
+  | const c => rfl
+  | add x y hx hy => simp only [eval, hx h.1, hy h.2]
+  | mul x y hx hy => simp only [eval, hx h.1, hy h.2]
+
+end Expression
 
 namespace LeanerVM.Protocol
 

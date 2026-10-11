@@ -5,8 +5,9 @@ import LeanerVM.Arithmetization.Statement
 # Tests: Clean components as polynomials
 
 A classic test for kernel evaluation. An expression with a degree-two constraint is translated
-and evaluated on a satisfying and a failing row; a variable at the width reads `0`, as Clean
-reads a missing cell; the syntactic degree bounds but need not equal the degree.
+and evaluated on a satisfying and a failing row, and is Clean's polynomial of it; a variable at
+the width reads `0`, as Clean reads a missing cell; the syntactic degree bounds but need not
+equal the degree.
 
 The six opcode tables and the two blocks of leanISA are translated with leanISA's separators,
 directions and counted channels (the memory and bytecode pulls), and the result is checked
@@ -40,6 +41,10 @@ example : xy.degreeBound = 2 := rfl
 example (row : Fin 2 → K) (data : ProverData K) :
     (xy.toCMvPolynomial 2).eval row = xy.eval (Environment.fromArray (Array.ofFn row) data) :=
   Expression.eval_toCMvPolynomial row data xy
+
+/-- Within the width, the translation is Clean's polynomial of the expression. -/
+example : fromCMvPolynomial (xy.toCMvPolynomial 2) = xy.toBoundedPolynomial 2 (by decide) :=
+  Expression.fromCMvPolynomial_toCMvPolynomial xy _
 
 /-- A variable at the width is `0`, as Clean reads a missing cell. -/
 example : (Expression.var ⟨2⟩ : Expression K).toCMvPolynomial 2 = 0 := rfl
