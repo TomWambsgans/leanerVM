@@ -131,3 +131,8 @@ import LeanerVM.Semantics.RunTrace
 import LeanerVM.Semantics.Step
 import LeanerVM.Semantics.TraceInput
 import LeanerVM.Protocol.ToCompPoly.Fingerprint
+import LeanerVM.Protocol.Compile.Prog
+import LeanerVM.Protocol.Compile.Run
+import LeanerVM.Protocol.ToVCVio.Rom.Potential
+import LeanerVM.Protocol.ToVCVio.Rom.LoggedOracle
+import LeanerVM.Protocol.ToVCVio.Rom.Bounds

@@ -73,6 +73,7 @@ import LeanerVMTests.Semantics.PaddedRun
 import LeanerVMTests.Semantics.PaddedTrace
 import LeanerVMTests.Semantics.RustExport
 import LeanerVMTests.Semantics.TraceInput
+import LeanerVMTests.Protocol.Rom.Potential
 
 /-!
 # leanerVM test aggregate
