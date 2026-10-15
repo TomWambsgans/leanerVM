@@ -224,3 +224,5 @@ import LeanerVM.Protocol.EndToEnd.Front.RingFidelity
 import LeanerVM.Protocol.EndToEnd.Front.RingMultilinear
 import LeanerVM.Protocol.Whir.Params.Check
 import LeanerVM.Protocol.Whir.Params.Deployed
+import LeanerVM.Protocol.EndToEnd.Front.WalkFaithfulWords
+import LeanerVM.Protocol.EndToEnd.Front.WalkFaithful

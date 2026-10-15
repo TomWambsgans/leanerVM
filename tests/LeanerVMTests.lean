@@ -92,6 +92,7 @@ import LeanerVMTests.Protocol.Whir.Complete.Opening
 import LeanerVMTests.Protocol.Whir.Sound.Spec
 import LeanerVMTests.Protocol.EndToEnd.Front.FlockBridge
 import LeanerVMTests.Protocol.Whir.Params.Deployed
+import LeanerVMTests.Protocol.EndToEnd.Front.WalkFaithful
 
 /-!
 # leanerVM test aggregate
