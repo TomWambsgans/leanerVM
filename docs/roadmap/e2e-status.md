@@ -22,7 +22,7 @@ adversary making at most `Q_A` queries, with the compiled verifier making at mos
 (`Verifier/Cost.lean`):
 
 * `leanVm_romSound`: the verifier accepts while its run is doomed with probability at most
-  `(Q_A + 13300)·(2^-128 + 4·(Q_A + 13300)/2^256)` (`failBound` with two seeding steps);
+  `(Q_A + 13300)·(2^-128 + 6·(Q_A + 13300)/2^256)` (`failBound`: `(4 + k)·N/2^256` with `k = 2` seeding steps);
 * `leanVm_knowledge`: the same bound for "the verifier accepts and the extractor (reading the
   announced sizes and the stack's commitment off the oracle's log, then picking a stack of the
   Johnson list satisfying the relation; a classical choice) returns no stack satisfying
