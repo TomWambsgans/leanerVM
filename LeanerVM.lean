@@ -252,3 +252,15 @@ import LeanerVM.Protocol.EndToEnd.Complete.Ring
 import LeanerVM.Protocol.EndToEnd.Complete.Assemble
 import LeanerVM.Protocol.EndToEnd.Complete.Theorem
 import LeanerVM.Protocol.EndToEnd.Completeness
+import LeanerVM.Protocol.EndToEnd.Front.BusComponent
+import LeanerVM.Protocol.EndToEnd.Front.BusDoom
+import LeanerVM.Protocol.EndToEnd.Front.BusSpec
+import LeanerVM.Protocol.EndToEnd.Front.BusGkrArk
+import LeanerVM.Protocol.EndToEnd.Front.BusGkr
+import LeanerVM.Protocol.EndToEnd.Front.BusPhase
+import LeanerVM.Protocol.EndToEnd.Front.BusStack
+import LeanerVM.Protocol.EndToEnd.Front.BusForms
+import LeanerVM.Protocol.EndToEnd.Front.TableArk
+import LeanerVM.Protocol.EndToEnd.Front.TableTerms
+import LeanerVM.Protocol.EndToEnd.Front.TablePhase
+import LeanerVM.Protocol.EndToEnd.Front.BusTable
