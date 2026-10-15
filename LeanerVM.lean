@@ -25,7 +25,9 @@ import LeanerVM.Parameters.Field
 import LeanerVM.Parameters.Flock
 import LeanerVM.Parameters.Generator
 import LeanerVM.Parameters.Isa
+import LeanerVM.Parameters.Whir
 import LeanerVM.Protocol.Blake2sCircuit
+import LeanerVM.Protocol.Blake2sHash
 import LeanerVM.Protocol.Bus
 import LeanerVM.Protocol.BusSecurity
 import LeanerVM.Protocol.ClaimWeights
@@ -41,6 +43,7 @@ import LeanerVM.Protocol.LeanIsa.Complete
 import LeanerVM.Protocol.LeanIsa.Read
 import LeanerVM.Protocol.LeanIsa.Relation
 import LeanerVM.Protocol.LeanIsa.Sound
+import LeanerVM.Protocol.Merkle
 import LeanerVM.Protocol.Opening
 import LeanerVM.Protocol.Padding
 import LeanerVM.Protocol.Piop
@@ -76,6 +79,7 @@ import LeanerVM.Protocol.ToArkLib.GuardedVerdict
 import LeanerVM.Protocol.ToArkLib.InnerProduct
 import LeanerVM.Protocol.ToArkLib.KeepOracles
 import LeanerVM.Protocol.ToArkLib.KnowledgeAppend
+import LeanerVM.Protocol.ToArkLib.Merkle
 import LeanerVM.Protocol.ToArkLib.Oracles
 import LeanerVM.Protocol.ToArkLib.PassThrough
 import LeanerVM.Protocol.ToArkLib.QueryCheck
