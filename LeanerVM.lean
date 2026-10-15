@@ -264,3 +264,11 @@ import LeanerVM.Protocol.EndToEnd.Front.TableArk
 import LeanerVM.Protocol.EndToEnd.Front.TableTerms
 import LeanerVM.Protocol.EndToEnd.Front.TablePhase
 import LeanerVM.Protocol.EndToEnd.Front.BusTable
+import LeanerVM.Protocol.EndToEnd.Sound.Frame
+import LeanerVM.Protocol.EndToEnd.Sound.Glue
+import LeanerVM.Protocol.EndToEnd.Sound.Moves
+import LeanerVM.Protocol.EndToEnd.Sound.Returns
+import LeanerVM.Protocol.EndToEnd.Sound.BusDepth
+import LeanerVM.Protocol.EndToEnd.Sound.Runs
+import LeanerVM.Protocol.EndToEnd.Sound.Assemble
+import LeanerVM.Protocol.EndToEnd.Sound.Theorem
