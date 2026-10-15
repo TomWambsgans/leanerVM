@@ -58,8 +58,10 @@ open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Protocol.Blake2sHash
 /-- Byte strings, the hash's inputs. -/
 abbrev Bytes : Type := List UInt8
 
-/-- Digests are finite: the uniform distribution of the random oracle ranges over them. -/
-instance instFintypeDigest : Fintype Digest :=
+/-- Digests are finite: the uniform distribution of the random oracle ranges over them. A proof
+object only: its element list has `2^256` entries, and compiled code would build it when the
+program starts (a closed constant is evaluated at initialization), so it is `noncomputable`. -/
+noncomputable instance instFintypeDigest : Fintype Digest :=
   Fintype.ofEquiv (Fin 8 → UInt32)
     { toFun := Vector.ofFn, invFun := fun v i ↦ v[i]
       left_inv := fun _ ↦ funext fun _ ↦ Vector.getElem_ofFn _

@@ -1,0 +1,27 @@
+import LeanerVM.Protocol.Verifier.Load
+
+/-!
+# `leanvm-verify`: the deployed verifier on the Python CLI's four files
+
+`lake exe leanvm-verify <bytecode> <public input> <stream> <openings>` runs
+`LeanerVM.Protocol.Verifier.verifyFiles`, the Lean transcription of `python-verifier/verifier.py`
+at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`, compiled, and prints the verdict in the
+Python CLI's words; the exit code is `0` on acceptance. It imports the production verifier only.
+-/
+
+open LeanerVM.Protocol.Verifier
+
+/-- The driver. -/
+def main (args : List String) : IO UInt32 := do
+  match args with
+  | [bytecode, publicInput, stream, openings] =>
+    let read := fun (p : String) => do return (← IO.FS.readBinFile p).toList
+    if verifyFiles (← read bytecode) (← read publicInput) (← read stream) (← read openings) then
+      IO.println "verification succeeded"
+      return 0
+    else
+      IO.println "verification failed"
+      return 1
+  | _ =>
+    IO.eprintln "usage: leanvm-verify <bytecode> <public input> <stream> <openings>"
+    return 2

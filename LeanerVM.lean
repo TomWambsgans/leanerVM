@@ -163,6 +163,7 @@ import LeanerVM.Protocol.Verifier.TableSumcheck
 import LeanerVM.Protocol.Verifier.Flock
 import LeanerVM.Protocol.Verifier.Whir
 import LeanerVM.Protocol.Verifier.Verify
+import LeanerVM.Protocol.Verifier.Load
 import LeanerVM.Protocol.EndToEnd.Candidates
 import LeanerVM.Protocol.EndToEnd.Claims
 import LeanerVM.Protocol.Compile.Rom.Encoding
