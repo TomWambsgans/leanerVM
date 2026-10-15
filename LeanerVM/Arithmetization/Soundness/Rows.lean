@@ -162,9 +162,10 @@ theorem deref_opRow (env : Environment K) : OpRow ⟨derefTable⟩ env := by
   have hx : eval env (varFromOffset DerefRow 0) = r := eval_varFromOffset_valueFromOffset ..
   refine ⟨⟨r.pc, r.fp, ⟨g * r.pc, r.fp⟩, r.rbc,
     #v[Opcode.deref.code, r.o1, r.o2, r.o3, r.fpc, r.ffp, 0, 0],
-    [(r.fp * r.o1, r.r1, #v[r.p, 0, 0]), (r.fp * r.o3, r.r3, r.v3),
+    [(r.fp * r.o1, r.r1, #v[r.p, 0, 0]),
      (r.p * r.o2, r.r2, #v[(1 + r.fpc + r.ffp) * r.v3[0] + r.fpc * (g ^ 2 * r.pc) + r.ffp * r.fp,
-          (1 + r.fpc + r.ffp) * r.v3[1], (1 + r.fpc + r.ffp) * r.v3[2]])]⟩,
+          (1 + r.fpc + r.ffp) * r.v3[1], (1 + r.fpc + r.ffp) * r.v3[2]]),
+     (r.fp * r.o3, r.r3, r.v3)]⟩,
     ?_, by simp, ?_⟩
   · rw [rowSends_mk, deref_sends_gen _ _ _ _ hx]
     simp [RowRec.sends, sendsOf, memMsgOf, bcMsgOf]

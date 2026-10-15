@@ -189,9 +189,10 @@ def DerefSpec (r : DerefRow K) (next : Regs K) (data : ProverData K) : Prop :=
 /-! ## The table -/
 
 /-- The `DEREF` table (specification §7.4; `tables.rs:586-682`): state step, bytecode read of
-`(DRF, o₁, o₂, o₃, f_pc, f_fp, 0, 0)`, the pointer read `(p, 0, 0)` at `fp·o₁`, the local read
-at `fp·o₃`, and the target read at `p·o₂` carrying the flag-selected source. Returns the
-pushed successor `(g·pc, fp)`. -/
+`(DRF, o₁, o₂, o₃, f_pc, f_fp, 0, 0)`, the pointer read `(p, 0, 0)` at `fp·o₁`, the target read
+at `p·o₂` carrying the flag-selected source, and the local read at `fp·o₃`, in the order of
+`tables.rs:637-642` and of the Python verifier's `_flushes_deref`, which fixes the order of the
+bus blocks. Returns the pushed successor `(g·pc, fp)`. -/
 def derefTable : GeneralFormalCircuit K DerefRow Regs where
   main r := do
     let next : Var Regs K := ⟨Expression.const g * r.pc, r.fp⟩
@@ -202,10 +203,10 @@ def derefTable : GeneralFormalCircuit K DerefRow Regs where
     bytecodeRead r.pc r.rbc (Expression.const Opcode.deref.code)
       #v[r.o1, r.o2, r.o3, r.fpc, r.ffp, 0, 0]
     memRead (r.fp * r.o1) r.r1 #v[r.p, 0, 0]
-    memRead (r.fp * r.o3) r.r3 r.v3
     memRead (r.p * r.o2) r.r2
       #v[fbar * r.v3[0] + r.fpc * (Expression.const (g ^ 2) * r.pc) + r.ffp * r.fp,
          fbar * r.v3[1], fbar * r.v3[2]]
+    memRead (r.fp * r.o3) r.r3 r.v3
     pure next
   -- The push channels: their requirements are vacuous (Layer 5), the obligation is `Spec`.
   channelsWithRequirements := [StatePush.toRaw, MemPush.toRaw, BytecodePush.toRaw]
@@ -221,7 +222,7 @@ def derefTable : GeneralFormalCircuit K DerefRow Regs where
   soundness := by
     circuit_proof_start [StatePull, StatePush, MemPull, MemPush, BytecodePull, BytecodePush,
       memRead, bytecodeRead]
-    obtain ⟨⟨ins, hdec⟩, h1, h3, h2⟩ := h_holds
+    obtain ⟨⟨ins, hdec⟩, h1, h2, h3⟩ := h_holds
     obtain ⟨_, _, _, _, _, _, _, _, hv3, _, _, _, _⟩ := h_input
     subst hv3
     -- The pulled tuple is an instruction (Layer 4): `DEREF` with the row's operands, the flags
@@ -248,7 +249,7 @@ def derefTable : GeneralFormalCircuit K DerefRow Regs where
     subst h4 h5
     rw [← storeCoords_eval] at h2
     simp only [Vector.getElem_map] at h3 h2 ⊢
-    exact ⟨⟨_, decode_entry (.deref _ _ _ mode)⟩, h1, h3, h2⟩
+    exact ⟨⟨_, decode_entry (.deref _ _ _ mode)⟩, h1, h2, h3⟩
 
 /-! ## Rows from executions -/
 

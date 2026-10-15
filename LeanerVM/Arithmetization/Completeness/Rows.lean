@@ -92,13 +92,13 @@ theorem rowSends_mk {Input Output : TypeMap} [ProvableType Input] [ProvableType 
 /-! ## The cells an instruction reads -/
 
 /-- The cells an instruction reads, in the order its row's reads carry them (the circuits'
-order): the operand cells, and for `DEREF` the pointer's target `p·o₂`, `p` the low limb of the
-word at `fp·o₁`. -/
+order): the operand cells, and for `DEREF` the pointer cell `fp·o₁`, the pointer's target `p·o₂`
+(`p` the low limb of the word at `fp·o₁`) and the local cell `fp·o₃`. -/
 noncomputable def readAddrs {κ : ℕ} (mem : MemImage κ) (fp : K) : Instr → List K
   | .xor oA oB oC => [fp * oA, fp * oB, fp * oC]
   | .mulNative oA oB oC => [fp * oA, fp * oB, fp * oC]
   | .setConstant o _ => [fp * o]
-  | .deref o1 o2 o3 _ => [fp * o1, fp * o3, (mem.limbsAt (fp * o1))[0] * o2]
+  | .deref o1 o2 o3 _ => [fp * o1, (mem.limbsAt (fp * o1))[0] * o2, fp * o3]
   | .jump oc od of => [fp * oc, fp * od, fp * of]
   | .blake2s om ocv oout omd =>
       [fp * om 0, fp * om 1, fp * om 2, fp * om 3, fp * ocv, fp * (g * ocv), fp * oout,
@@ -166,15 +166,16 @@ theorem set_exec_sends {κ : ℕ} {mem : MemImage κ} {pc fp o : K} {k : E} {nex
   simp [sendsOf, memMsgOf, bcMsgOf, entry, Regs.next]
 
 /-- The `DEREF` row of an execution sends the `DEREF` messages: the pointer cell carries
-`(p, 0, 0)`, the local cell its word, and the target `p·o₂` the limbs of the mode's source. -/
+`(p, 0, 0)`, the target `p·o₂` the limbs of the mode's source, and the local cell its word. -/
 theorem deref_exec_sends {κ : ℕ} {mem : MemImage κ} {pc fp o1 o2 o3 : K} {mode : DerefMode}
     {next : Regs K} (hexec : execute mem ⟨pc, fp⟩ (.deref o1 o2 o3 mode) = some next)
     (r1 r2 r3 rbc : K) (data : ProverData K) :
     rowSends ⟨derefTable⟩
         (Environment.fromArray (rawRow (derefRowOf mem pc fp o1 o2 o3 mode r1 r2 r3 rbc)) data) =
       sendsOf pc fp next rbc (entry (.deref o1 o2 o3 mode))
-        [(fp * o1, r1, mem.limbsAt (fp * o1)), (fp * o3, r3, mem.limbsAt (fp * o3)),
-          ((mem.limbsAt (fp * o1))[0] * o2, r2, mem.limbsAt ((mem.limbsAt (fp * o1))[0] * o2))] := by
+        [(fp * o1, r1, mem.limbsAt (fp * o1)),
+          ((mem.limbsAt (fp * o1))[0] * o2, r2, mem.limbsAt ((mem.limbsAt (fp * o1))[0] * o2)),
+          (fp * o3, r3, mem.limbsAt (fp * o3))] := by
   obtain ⟨mode', ⟨hflags, h1, h3⟩, h2, rfl⟩ :=
     (deref_refines_iff _ _ _).mp (derefRowOf_refines hexec r1 r2 r3 rbc)
   rw [rowSends_mk, deref_sends_gen _ _ _ _ (eval_rowVar _ data)]
@@ -310,7 +311,7 @@ theorem readAddrs_valid {κ : ℕ} {mem : MemImage κ} {pc fp : K} {ins : Instr}
       (deref_refines_iff _ _ _).mp (derefRowOf_refines hexec 1 1 1 1)
     simp only [readAddrs, List.mem_cons, List.not_mem_nil, or_false]
     rintro a (rfl | rfl | rfl)
-    exacts [⟨_, h1⟩, ⟨_, h3⟩, ⟨_, h2⟩]
+    exacts [⟨_, h1⟩, ⟨_, h2⟩, ⟨_, h3⟩]
   | jump oc od of =>
     obtain ⟨⟨hc, hd, hf⟩, -⟩ := (jump_refines_iff _ _ _).mp (jumpRowOf_refines hexec 1 1 1 1)
     simp only [readAddrs, List.mem_cons, List.not_mem_nil, or_false]
@@ -356,7 +357,7 @@ noncomputable def rowOf {κ : ℕ} (mem : MemImage κ) (pc fp : K) (cnt : ℕ �
   | .mulNative oA oB oC => rawRow (mulRowOf mem pc fp oA oB oC (cnt 0) (cnt 1) (cnt 2) rbc)
   | .setConstant o k => rawRow (setRowOf pc fp o k (cnt 0) rbc)
   | .deref o1 o2 o3 mode =>
-      rawRow (derefRowOf mem pc fp o1 o2 o3 mode (cnt 0) (cnt 2) (cnt 1) rbc)
+      rawRow (derefRowOf mem pc fp o1 o2 o3 mode (cnt 0) (cnt 1) (cnt 2) rbc)
   | .jump oc od of =>
       jumpRaw (jumpRowOf mem pc fp oc od of (cnt 0) (cnt 1) (cnt 2) rbc)
         (if (mem.limbsAt (fp * oc))[0] = 0 then 0 else ((mem.limbsAt (fp * oc))[0])⁻¹)
