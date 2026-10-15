@@ -153,3 +153,4 @@ import LeanerVM.Arithmetization.Soundness.MemChannel
 import LeanerVM.Arithmetization.Soundness.BytecodeChannel
 import LeanerVM.Arithmetization.Soundness.StateWalk
 import LeanerVM.Arithmetization.Soundness.Theorem
+import LeanerVM.Protocol.EndToEnd.Execution
