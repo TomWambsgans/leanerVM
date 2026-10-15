@@ -90,6 +90,7 @@ import LeanerVMTests.Protocol.Compile.Spec
 import LeanerVMTests.Protocol.Verifier.Cost
 import LeanerVMTests.Protocol.Whir.Complete.Opening
 import LeanerVMTests.Protocol.Whir.Sound.Spec
+import LeanerVMTests.Protocol.EndToEnd.Front.FlockBridge
 
 /-!
 # leanerVM test aggregate
