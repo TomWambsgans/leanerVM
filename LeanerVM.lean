@@ -155,3 +155,11 @@ import LeanerVM.Arithmetization.Soundness.StateWalk
 import LeanerVM.Arithmetization.Soundness.Theorem
 import LeanerVM.Protocol.EndToEnd.Execution
 import LeanerVM.Protocol.Compile.Spec
+import LeanerVM.Protocol.Verifier.Arith
+import LeanerVM.Protocol.Verifier.Layout
+import LeanerVM.Protocol.Verifier.Sumcheck
+import LeanerVM.Protocol.Verifier.Bus
+import LeanerVM.Protocol.Verifier.TableSumcheck
+import LeanerVM.Protocol.Verifier.Flock
+import LeanerVM.Protocol.Verifier.Whir
+import LeanerVM.Protocol.Verifier.Verify
