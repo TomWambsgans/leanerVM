@@ -182,3 +182,7 @@ import LeanerVM.Protocol.Compile.SpecRules.Leaves
 import LeanerVM.Protocol.Compile.SpecRules.Cert
 import LeanerVM.Protocol.Compile.Cost
 import LeanerVM.Protocol.Verifier.Cost
+import LeanerVM.Protocol.Whir.Complete.Script
+import LeanerVM.Protocol.Whir.Complete.Tables
+import LeanerVM.Protocol.Whir.Complete.Encoding
+import LeanerVM.Protocol.Whir.Complete.Opening
