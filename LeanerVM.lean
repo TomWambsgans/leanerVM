@@ -251,3 +251,4 @@ import LeanerVM.Protocol.EndToEnd.Complete.FlockRounds
 import LeanerVM.Protocol.EndToEnd.Complete.Ring
 import LeanerVM.Protocol.EndToEnd.Complete.Assemble
 import LeanerVM.Protocol.EndToEnd.Complete.Theorem
+import LeanerVM.Protocol.EndToEnd.Completeness
