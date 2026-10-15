@@ -165,3 +165,14 @@ import LeanerVM.Protocol.Verifier.Whir
 import LeanerVM.Protocol.Verifier.Verify
 import LeanerVM.Protocol.EndToEnd.Candidates
 import LeanerVM.Protocol.EndToEnd.Claims
+import LeanerVM.Protocol.Compile.Rom.Encoding
+import LeanerVM.Protocol.Compile.Rom.Log
+import LeanerVM.Protocol.Compile.Rom.Extract
+import LeanerVM.Protocol.Compile.Rom.Decode
+import LeanerVM.Protocol.Compile.Rom.Potential
+import LeanerVM.Protocol.Compile.Rom.Step
+import LeanerVM.Protocol.Compile.Rom.History
+import LeanerVM.Protocol.Compile.Rom.Known
+import LeanerVM.Protocol.Compile.Rom.Final
+import LeanerVM.Protocol.Compile.Rom.Bridge
+import LeanerVM.Protocol.Compile.Rom.Sound
