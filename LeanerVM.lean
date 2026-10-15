@@ -222,3 +222,5 @@ import LeanerVM.Protocol.EndToEnd.Front.FlockBridge
 import LeanerVM.Protocol.EndToEnd.Front.RingSwitch
 import LeanerVM.Protocol.EndToEnd.Front.RingFidelity
 import LeanerVM.Protocol.EndToEnd.Front.RingMultilinear
+import LeanerVM.Protocol.Whir.Params.Check
+import LeanerVM.Protocol.Whir.Params.Deployed
