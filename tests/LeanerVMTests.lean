@@ -86,6 +86,7 @@ import LeanerVMTests.Protocol.Verifier.Helpers
 import LeanerVMTests.Protocol.Verifier.Compiled
 import LeanerVMTests.Protocol.Verifier.Replay
 import LeanerVMTests.Protocol.Compile.RomSound
+import LeanerVMTests.Protocol.Compile.Spec
 
 /-!
 # leanerVM test aggregate

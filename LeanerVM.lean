@@ -176,3 +176,7 @@ import LeanerVM.Protocol.Compile.Rom.Known
 import LeanerVM.Protocol.Compile.Rom.Final
 import LeanerVM.Protocol.Compile.Rom.Bridge
 import LeanerVM.Protocol.Compile.Rom.Sound
+import LeanerVM.Protocol.Compile.SpecRules.Basic
+import LeanerVM.Protocol.Compile.SpecRules.Bind
+import LeanerVM.Protocol.Compile.SpecRules.Leaves
+import LeanerVM.Protocol.Compile.SpecRules.Cert
