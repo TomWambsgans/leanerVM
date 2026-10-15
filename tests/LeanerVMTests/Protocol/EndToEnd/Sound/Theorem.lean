@@ -9,7 +9,6 @@ import LeanerVM.Protocol.EndToEnd.Sound.Theorem
 * **What is load-bearing.**
   - The stack's shape is "the stack's commitment is the only one": a second commitment breaks it.
   - The error arithmetic: `2^64/|E|` is within `2^-128`, `2^65/|E|` is not.
-  - The table sumcheck's identities are a hypothesis of every statement (`TableFidHyp`).
 -/
 
 namespace LeanerVMTests.Protocol.EndToEnd.Sound.Theorem
@@ -24,22 +23,22 @@ open scoped ENNReal
 
 /-! ## Statement locks -/
 
-noncomputable example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input) :
+noncomputable example (prog : Program) (input : PublicInput) :
     Spec (leanVmProgram (bytecodeWords prog) (publicDigest input)) (fun _ ↦ False)
       (fun b _ ↦ b = false) ((2 : ℝ≥0∞)⁻¹ ^ 128) 0 0 :=
-  leanVmSpec prog input fid
+  leanVmSpec prog input
 
-example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
+example (prog : Program) (input : PublicInput)
     (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
-      Doomed (leanVmCert prog input fid) (leanVmSeed (bytecodeWords prog) (publicDigest input))
+      Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input))
         z.1.1 z.2] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
-  leanVm_romSound prog input fid A QA hA
+  leanVm_romSound prog input A QA hA
 
-example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
+example (prog : Program) (input : PublicInput)
     (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
@@ -49,9 +48,9 @@ example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
           M3Holds (leanIsaInstance Blake2sFlock.blake2sFlockSpec prog s) input q] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
-  leanVm_knowledge prog input fid A QA hA
+  leanVm_knowledge prog input A QA hA
 
-example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
+example (prog : Program) (input : PublicInput)
     (hwf : WellFormedBytecode prog) (A : OracleComp HashSpec Proof) (QA : ℕ)
     (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
@@ -62,7 +61,7 @@ example (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
           ValidExecution prog input t] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
-  leanVm_execution prog input fid hwf A QA hA
+  leanVm_execution prog input hwf A QA hA
 
 example (bytecode : List K) (publicInput : Digest) (QA : ℕ) (hQ : QA ≤ 2 ^ 64) :
     ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +

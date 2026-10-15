@@ -39,8 +39,8 @@ and the verifier's `13300` (`isTotalQueryBound_leanVm`). With `N = QA + 13300`:
   probability.
 * `leanVm_bound_le`: for `QA ≤ 2^64` the bound is at most `2^-63`.
 
-Every statement takes the table sumcheck's identities for leanISA, `fid : TableFidHyp prog
-input`, as a hypothesis (`LeanerVM.Protocol.EndToEnd.Sound.Assemble`).
+No statement takes a hypothesis beyond the adversary's query bound (and, for executions,
+well-formed bytecode): the table sumcheck's fidelity is `tableFid_leanIsa`.
 -/
 
 namespace LeanerVM.Protocol.EndToEnd.Sound
@@ -58,16 +58,16 @@ open scoped ENNReal
 /- The enumeration of `Digest` must never be unfolded by unification. -/
 attribute [local irreducible] instFintypeDigest
 
-variable (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
+variable (prog : Program) (input : PublicInput)
 
 /-! ## The doom bound -/
 
 /-- Doom never holds at the empty history: the announced sizes are not at stake. -/
-theorem leanVmSpec_D_nil : ¬ (leanVmSpec prog input fid).D [] [] := by
+theorem leanVmSpec_D_nil : ¬ (leanVmSpec prog input).D [] [] := by
   intro hD
   have hs : (verifyExecution (bytecodeWords prog) (publicDigest input)).retSplit [] = none :=
     retSplit_eq_none_of_after rfl (verifyExecution_ne_ret _ _)
-  have h1 : (veSpec prog input fid).D [] [] := (Spec.bindD_none hs).1 hD
+  have h1 : (veSpec prog input).D [] [] := (Spec.bindD_none hs).1 hD
   have hs' : (readSizes (bytecodeWords prog)).retSplit [] = none :=
     retSplit_eq_none_of_after rfl (readSizes_ne_ret _)
   exact (Spec.bindD_none hs').1 h1
@@ -75,10 +75,10 @@ theorem leanVmSpec_D_nil : ¬ (leanVmSpec prog input fid).D [] [] := by
 /-- **The certificate's bound**: every escape bound of `leanVmCert`, discounted by the proof of
 work before its group (`2^-min(b, 64)`), is at most `2^-128`. -/
 theorem leanVmCert_bound (h : List Ev) :
-    (2 : ℝ≥0∞)⁻¹ ^ min (grindBits h) 64 * (leanVmCert prog input fid).ε h ≤ εLean := by
+    (2 : ℝ≥0∞)⁻¹ ^ min (grindBits h) 64 * (leanVmCert prog input).ε h ≤ εLean := by
   by_cases hr : (leanVmProgram (bytecodeWords prog) (publicDigest input)).Reachable h
   · rw [min_eq_left (grindBits_le_of_reachable _ _ hr)]
-    exact Spec.toCert_bound _ (fun hD ↦ absurd hD (leanVmSpec_D_nil prog input fid)) h
+    exact Spec.toCert_bound _ (fun hD ↦ absurd hD (leanVmSpec_D_nil prog input)) h
   · simp only [leanVmCert, Spec.toCert_ε, hr, false_and, ↓reduceIte, mul_zero, zero_le]
 
 /-- **The random-oracle theorem of the leanVM verifier.** An adversary of `QA` queries makes the
@@ -89,11 +89,11 @@ theorem leanVm_romSound (A : OracleComp HashSpec Proof) (QA : ℕ)
     (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
-      Doomed (leanVmCert prog input fid) (leanVmSeed (bytecodeWords prog) (publicDigest input))
+      Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input))
         z.1.1 z.2] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
-  have h := romSound _ (leanVmCert prog input fid) _ εLean (leanVmCert_bound prog input fid) A QA
+  have h := romSound _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input) A QA
     hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
   rwa [leanVmQueryBound_eq] at h
 
@@ -101,16 +101,16 @@ theorem leanVm_romSound (A : OracleComp HashSpec Proof) (QA : ℕ)
 
 /-- The doom of `verify_execution` after the announced sizes, at good sizes, right after the
 stack's root: the root's postcondition. -/
-theorem realSpec_D {s : Sizes} {ρ : ℕ} (hadm : s.Admissible prog)
+theorem realSpec_D {s : Sizes} {ρ : ℕ}
     (hw : Whir.Admissible (verifierLayout prog s).stackLog ρ)
     (hlb : LayoutBounds (verifierLayout prog s)) {l₁ : List Ev} {e : Ev}
     (hce : (commitStack (verifierLayout prog s).stackLog ρ).after [e] = some (.ret ()))
     (hpost : CommitPost prog input (verifierLayout prog s, ρ) () (l₁ ++ [e])) :
-    (realSpec input fid hadm hw hlb).D l₁ [e] := by
+    (realSpec input hw hlb).D l₁ [e] := by
   refine (Spec.bindD_some (Prog.retSplit_self hce)).2 ⟨fun _ ↦ ?_, ?_⟩
   · obtain ⟨q₀, rest, hc, -⟩ := Whir.Complete.exists_ladder hw
     exact (commitSpec_D _ _ hc l₁ e).2 hpost
-  · exact (restSpec input fid hadm hw hlb).start_D _ hpost
+  · exact (restSpec input hw hlb).start_D _ hpost
 
 /-- **After the stack's root, the certificate's doom is the root's postcondition**: along a
 history where `readSizes` returned a good value `a` and the root was committed by `e`, the
@@ -121,7 +121,7 @@ theorem leanVmSpec_D_commit {l₁ : List Ev} {a : Verifier.Layout × ℕ}
     (hg : Good prog a s) {e : Ev}
     (hce : (commitStack a.1.stackLog a.2).after [e] = some (.ret ()))
     (hpost : CommitPost prog input a () (l₁ ++ [e])) :
-    (leanVmSpec prog input fid).D [] (l₁ ++ [e]) := by
+    (leanVmSpec prog input).D [] (l₁ ++ [e]) := by
   obtain ⟨lay, ρ⟩ := a
   have hve : (verifyExecution (bytecodeWords prog) (publicDigest input)).after (l₁ ++ [e]) =
       some ((verifyBusBalance lay).bind fun bus ↦ (tablePhase lay bus).bind fun cl ↦
@@ -141,7 +141,7 @@ theorem leanVmSpec_D_commit {l₁ : List Ev} {a : Verifier.Layout × ℕ}
   have hex : ∃ s, Good prog (lay, ρ) s := ⟨s, hg⟩
   have hlay : lay = verifierLayout prog hex.choose := hex.choose_spec.1
   simp only [bodySpec, hex, ↓reduceDIte, Spec.congr_D]
-  refine realSpec_D prog input fid _ _ _ (by rw [← hlay]; exact hce) ?_
+  refine realSpec_D prog input _ _ (by rw [← hlay]; exact hce) ?_
   rw [← hlay]
   exact hpost
 
@@ -224,7 +224,7 @@ theorem doomed_of_not_extracted {c : HashSpec.QueryCache} {π : Proof}
     (hv : Rom.verify (fun x ↦ c x) (leanVmSeed (bytecodeWords prog) (publicDigest input))
       (leanVmProgram (bytecodeWords prog) (publicDigest input)) π = some true)
     (hne : ¬ Extracted prog input c π) :
-    Doomed (leanVmCert prog input fid) (leanVmSeed (bytecodeWords prog) (publicDigest input)) π
+    Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input)) π
       c := by
   set hist := extractedHistory (fun x ↦ c x) (leanVmSeed (bytecodeWords prog) (publicDigest input))
     (leanVmProgram (bytecodeWords prog) (publicDigest input)) π with hhist
@@ -276,12 +276,11 @@ theorem doomed_of_not_extracted {c : HashSpec.QueryCache} {π : Proof}
         M3Holds (leanIsaInstance F₀ prog s) input q := ⟨q, hq, hM⟩
     refine ⟨s, hq'.choose, ?_, hg.2.1, hq'.choose_spec.2⟩
     simp only [extractStack, ← hhist, hann, hfw', hq', ↓reduceDIte]
-  exact ⟨l₁ ++ [e], hpre, by simp [Boundary, he], (leanVmSpec_D_commit prog input fid hl₁ hg
+  exact ⟨l₁ ++ [e], hpre, by simp [Boundary, he], (leanVmSpec_D_commit prog input hl₁ hg
     (by cases v; exact hce) ⟨hdoom, hshape⟩)⟩
 
 /-! ## Knowledge soundness -/
 
-include fid in
 /-- **Knowledge soundness of the leanVM verifier in the random-oracle model.** An adversary of
 `QA` queries makes the deployed verifier, with BLAKE2s a random oracle, accept a proof from
 which `extractStack` does not extract admissible sizes `s` and a stack satisfying
@@ -297,13 +296,12 @@ theorem leanVm_knowledge (A : OracleComp HashSpec Proof) (QA : ℕ)
         M3Holds (leanIsaInstance F₀ prog s) input q] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
-  have h := romSound_of_imp _ (leanVmCert prog input fid) _ εLean (leanVmCert_bound prog input fid)
+  have h := romSound_of_imp _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input)
     A QA hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
     (fun π c ↦ ¬ Extracted prog input c π)
-    (fun _ _ hv hb ↦ doomed_of_not_extracted prog input fid hv hb)
+    (fun _ _ hv hb ↦ doomed_of_not_extracted prog input hv hb)
   rwa [leanVmQueryBound_eq] at h
 
-include fid in
 /-- **The extracted witness represents a valid execution.** For well-formed bytecode, an
 adversary of `QA` queries makes the deployed verifier accept a proof from which `extractStack`
 does not extract sizes `s` and a stack `q` whose witness `witnessOf blake2sFlockSpec prog s q`
@@ -318,12 +316,12 @@ theorem leanVm_execution (hwf : WellFormedBytecode prog) (A : OracleComp HashSpe
         ∃ t, AssignmentRepresents (witnessOf F₀ prog s q) t ∧ ValidExecution prog input t] ≤
       ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
-  have h := romSound_of_imp _ (leanVmCert prog input fid) _ εLean (leanVmCert_bound prog input fid)
+  have h := romSound_of_imp _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input)
     A QA hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
     (fun π c ↦ ¬ ∃ (s : Sizes) (q : Column (leanIsaμ prog s)),
         extractStack prog input c π = some ⟨s, q⟩ ∧
         ∃ t, AssignmentRepresents (witnessOf F₀ prog s q) t ∧ ValidExecution prog input t)
-    (fun _ _ hv hb ↦ doomed_of_not_extracted prog input fid hv fun ⟨s, q, hx, hs, hM⟩ ↦
+    (fun _ _ hv hb ↦ doomed_of_not_extracted prog input hv fun ⟨s, q, hx, hs, hM⟩ ↦
       hb ⟨s, q, hx, execution_of_extracted F₀ hwf hs hM⟩)
   rwa [leanVmQueryBound_eq] at h
 

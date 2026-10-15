@@ -12,6 +12,7 @@ public import LeanerVM.Protocol.EndToEnd.Sound.Glue
 public import LeanerVM.Protocol.EndToEnd.Sound.Moves
 public import LeanerVM.Protocol.EndToEnd.Sound.Returns
 public import LeanerVM.Protocol.EndToEnd.Sound.BusDepth
+public import LeanerVM.Protocol.EndToEnd.Front.TableFidLeanIsa
 public import LeanerVM.Protocol.EndToEnd.Front.WalkFaithful
 public import LeanerVM.Protocol.EndToEnd.Front.LayoutSizes
 public import LeanerVM.Protocol.EndToEnd.Complete.Public
@@ -21,7 +22,7 @@ public import LeanerVM.Protocol.Compile.SpecRules.Cert
 /-!
 # The specification of the leanVM verifier
 
-`leanVmSpec prog input fid` is a specification of `leanVmProgram (bytecodeWords prog)
+`leanVmSpec prog input` is a specification of `leanVmProgram (bytecodeWords prog)
 (publicDigest input)` (`LeanerVM.Protocol.Verifier.Verify`, leanVM
 `a386121f84292f6fa663aaa3e570c15bc0240ea2`) from no doom, with postcondition rejection, at
 `εmax = 2^-128` and lead `0`; `leanVmCert` is its doom certificate (`Spec.toCert`). It composes,
@@ -34,15 +35,16 @@ with `Spec.bind'`:
 3. the stack's root (`commitSpec`), creating `CommitPost`: no candidate of the committed word at
    level 0's Johnson threshold satisfies `M3Holds` of the leanISA instance at `s`
    (`CommitDoom`), and the commitments so far are exactly the stack's, of level 0's shape;
-4. the bus and the table sumcheck (`busTableSpec`), the public input (`pubPhaseSpec`), Flock
+4. the bus and the table sumcheck (`busTableSpec_leanIsa`), the public input (`pubPhaseSpec`), Flock
    (`flockBridgeSpec`) and ring switching (`ringBridgeSpec`), each framed (`Spec.frame`) with the
    shape of the commitments, which they keep since they commit nothing (`MovesOK.reach_commits`),
    and the first two with the bound on the number of claims they return (`Spec.retInv`);
 5. the stacked opening (`stackedSpec`) with the deployed codes (`deployed_spec_hyps`), from ring
    switching's postcondition (`stackedPre_of_ringPost`).
 
-The table sumcheck's identities are a hypothesis, `TableFidHyp prog input`, discharged for leanISA
-separately; it enters `busTableSpec` in one place (`restSpec`).
+The deployed table sumcheck's computations are the model's at leanISA (`tableFid_leanIsa`, for a
+bus read with four fingerprint challenges, which `busTableSpec_leanIsa` carries); nothing is
+assumed.
 
 The errors are those of `phase_errors` (`L₀ = 2^18` candidates, the level-0 list bound of
 `deployed_spec_hyps`): every group's escape is at most `2^-128`.
@@ -65,13 +67,6 @@ abbrev F₀ : FlockSpec := Blake2sFlock.blake2sFlockSpec
 
 /-- **The per-group error**, `2^-128`. -/
 noncomputable abbrev εLean : ℝ≥0∞ := (2 : ℝ≥0∞)⁻¹ ^ 128
-
-/-- **The table sumcheck's identities for leanISA** at every admissible size (`TableFid`): the
-hypothesis of the bus-and-table phase's specification. -/
-def TableFidHyp (prog : Program) (input : PublicInput) : Prop :=
-  ∀ s : Sizes, s.Admissible prog → ∀ w : BusWit, w.Shaped (leanIsaInstance F₀ prog s) →
-    TableFid (leanIsaInstance F₀ prog s) (leanIsa_conditions F₀ prog s) input
-      (verifierLayout prog s) pyCol w
 
 /-- The deployed codes of level `0` of the ladder `(μ, R)`. -/
 noncomputable abbrev code₀ (μ R : ℕ) : LevelCode := Whir.Params.deployedCodes μ R 0
@@ -327,9 +322,9 @@ theorem movesOK_busTable (layout : Verifier.Layout) :
 
 open Classical in
 /-- **Everything after the stack's root**: the bus and the table sumcheck, from the root's doom,
-given the table sumcheck's identities; then the public input, Flock, ring switching and the
+then the public input, Flock, ring switching and the
 opening. -/
-noncomputable def restSpec (fid : TableFidHyp prog input) (hadm : s.Admissible prog)
+noncomputable def restSpec
     (hw : Whir.Admissible (verifierLayout prog s).stackLog ρ)
     (hlb : LayoutBounds (verifierLayout prog s)) :
     Spec ((verifyBusBalance (verifierLayout prog s)).bind fun bus ↦
@@ -345,11 +340,9 @@ noncomputable def restSpec (fid : TableFidHyp prog input) (hadm : s.Admissible p
   have he := phase_errors (leanIsaInstance F₀ prog s) (μBus_le prog s hlb)
     (B_leanIsa_le F₀ prog s)
   Spec.congr (Prog.bind_assoc _ _ _) <|
-    ((Spec.frame (Spec.retInv (busTableSpec (leanIsaInstance F₀ prog s)
-        (leanIsa_conditions F₀ prog s) (candsOf F₀ prog s ρ thrOf) input (verifierLayout prog s)
-        pyCol (fid s hadm) (d_leanIsa_le F₀ prog s) (fun W ↦ (candsOf_bound hw W).1)
-        (fun W ↦ (candsOf_bound hw W).2) (μBus_leanIsa_ne_zero F₀ prog s)
-        (busLayout_depth_leanIsa F₀ prog s) he.2.1 he.2.2.1 he.2.2.2.1 he.2.2.2.2.1
+    ((Spec.frame (Spec.retInv (busTableSpec_leanIsa F₀ prog s input
+        (candsOf F₀ prog s ρ thrOf) (fun W ↦ (candsOf_bound hw W).1)
+        (fun W ↦ (candsOf_bound hw W).2) he.2.1 he.2.2.1 he.2.2.2.1 he.2.2.2.2.1
         he.2.2.2.2.2.1 he.2.2.2.2.2.2.1 (he.2.2.2.2.2.2.2.1 _))
         (fun cl ↦ cl.length ≤ 227) (retOK_busTable _))
       _ (stackShape_keep (movesOK_busTable _) _ _)).mono
@@ -364,7 +357,7 @@ noncomputable def restSpec (fid : TableFidHyp prog input) (hadm : s.Admissible p
 
 /-- **`verify_execution` after the announced sizes**, at good sizes: the stack's root, then
 `restSpec`. -/
-noncomputable def realSpec (fid : TableFidHyp prog input) (hadm : s.Admissible prog)
+noncomputable def realSpec
     (hw : Whir.Admissible (verifierLayout prog s).stackLog ρ)
     (hlb : LayoutBounds (verifierLayout prog s)) :
     Spec (veBody (publicDigest input) (verifierLayout prog s) ρ) (fun _ ↦ False)
@@ -373,7 +366,7 @@ noncomputable def realSpec (fid : TableFidHyp prog input) (hadm : s.Admissible p
       (verifierLayout prog s).stackLog ρ
       (phase_errors (leanIsaInstance F₀ prog s) (μBus_le prog s hlb)
         (B_leanIsa_le F₀ prog s)).1).bind' fun _ ↦
-    restSpec input fid hadm hw hlb
+    restSpec input hw hlb
 
 end Phases
 
@@ -381,7 +374,7 @@ end Phases
 
 section Whole
 
-variable (prog : Program) (input : PublicInput) (fid : TableFidHyp prog input)
+variable (prog : Program) (input : PublicInput)
 
 open Classical in
 /-- `verify_execution` after the announced value `a`: `realSpec` at good sizes, dead
@@ -389,7 +382,7 @@ otherwise. -/
 noncomputable def bodySpec (a : Verifier.Layout × ℕ) :
     Spec (veBody (publicDigest input) a.1 a.2) (fun _ ↦ False) (fun _ _ ↦ False) εLean 0 0 :=
   if h : ∃ s, Good prog a s then
-    (realSpec (s := h.choose) (ρ := a.2) input fid h.choose_spec.2.1
+    (realSpec (prog := prog) (s := h.choose) (ρ := a.2) input
       (by rw [← h.choose_spec.1]; exact h.choose_spec.2.2.1)
       (by rw [← h.choose_spec.1]; exact h.choose_spec.2.2.2)).congr
       (by rw [h.choose_spec.1])
@@ -399,7 +392,7 @@ noncomputable def bodySpec (a : Verifier.Layout × ℕ) :
 noncomputable def veSpec :
     Spec (verifyExecution (bytecodeWords prog) (publicDigest input)) (fun _ ↦ False)
       (fun _ _ ↦ False) εLean 0 0 :=
-  (readSizesSpec (bytecodeWords prog) (fun _ _ ↦ False)).bind' (bodySpec prog input fid)
+  (readSizesSpec (bytecodeWords prog) (fun _ _ ↦ False)).bind' (bodySpec prog input)
 
 /-- **The specification of the leanVM verifier program**: from no doom, rejecting where it
 returns in doom, every group's escape at most `2^-128` (discounted by its proof of work), lead
@@ -407,13 +400,13 @@ returns in doom, every group's escape at most `2^-128` (discounted by its proof 
 noncomputable def leanVmSpec :
     Spec (leanVmProgram (bytecodeWords prog) (publicDigest input)) (fun _ ↦ False)
       (fun b _ ↦ b = false) εLean 0 0 :=
-  (veSpec prog input fid).bind' fun _ ↦
+  (veSpec prog input).bind' fun _ ↦
     (Spec.ret (Post := fun b _ ↦ b = false) true).mono (fun _ h ↦ h.elim) (fun _ _ h ↦ h)
       le_rfl le_rfl le_rfl
 
 /-- **The doom certificate of the leanVM verifier.** -/
 noncomputable def leanVmCert : Cert (leanVmProgram (bytecodeWords prog) (publicDigest input)) :=
-  (leanVmSpec prog input fid).toCert
+  (leanVmSpec prog input).toCert
 
 end Whole
 
