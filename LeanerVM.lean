@@ -136,3 +136,8 @@ import LeanerVM.Protocol.Compile.Run
 import LeanerVM.Protocol.ToVCVio.Rom.Potential
 import LeanerVM.Protocol.ToVCVio.Rom.LoggedOracle
 import LeanerVM.Protocol.ToVCVio.Rom.Bounds
+import LeanerVM.Protocol.ToArkLib.Whir.Interleaved
+import LeanerVM.Protocol.ToArkLib.Whir.Johnson
+import LeanerVM.Protocol.ToArkLib.Whir.Fold
+import LeanerVM.Protocol.ToArkLib.Whir.Ood
+import LeanerVM.Protocol.ToArkLib.Whir.Counting

@@ -74,6 +74,11 @@ import LeanerVMTests.Semantics.PaddedTrace
 import LeanerVMTests.Semantics.RustExport
 import LeanerVMTests.Semantics.TraceInput
 import LeanerVMTests.Protocol.Rom.Potential
+import LeanerVMTests.Protocol.Whir.Interleaved
+import LeanerVMTests.Protocol.Whir.Johnson
+import LeanerVMTests.Protocol.Whir.Fold
+import LeanerVMTests.Protocol.Whir.Ood
+import LeanerVMTests.Protocol.Whir.Counting
 
 /-!
 # leanerVM test aggregate
