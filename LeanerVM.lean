@@ -180,3 +180,5 @@ import LeanerVM.Protocol.Compile.SpecRules.Basic
 import LeanerVM.Protocol.Compile.SpecRules.Bind
 import LeanerVM.Protocol.Compile.SpecRules.Leaves
 import LeanerVM.Protocol.Compile.SpecRules.Cert
+import LeanerVM.Protocol.Compile.Cost
+import LeanerVM.Protocol.Verifier.Cost
