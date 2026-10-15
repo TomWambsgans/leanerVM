@@ -141,3 +141,6 @@ import LeanerVM.Protocol.ToArkLib.Whir.Johnson
 import LeanerVM.Protocol.ToArkLib.Whir.Fold
 import LeanerVM.Protocol.ToArkLib.Whir.Ood
 import LeanerVM.Protocol.ToArkLib.Whir.Counting
+import LeanerVM.Protocol.Whir.Subspace
+import LeanerVM.Protocol.Whir.NovelBasis
+import LeanerVM.Protocol.Whir.ColumnWeight
