@@ -80,6 +80,7 @@ import LeanerVMTests.Protocol.Whir.Fold
 import LeanerVMTests.Protocol.Whir.Ood
 import LeanerVMTests.Protocol.Whir.Counting
 import LeanerVMTests.Protocol.Whir.NovelBasis
+import LeanerVMTests.Protocol.Compile.Prover
 
 /-!
 # leanerVM test aggregate

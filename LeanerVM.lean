@@ -144,3 +144,4 @@ import LeanerVM.Protocol.ToArkLib.Whir.Counting
 import LeanerVM.Protocol.Whir.Subspace
 import LeanerVM.Protocol.Whir.NovelBasis
 import LeanerVM.Protocol.Whir.ColumnWeight
+import LeanerVM.Protocol.Compile.Prover
