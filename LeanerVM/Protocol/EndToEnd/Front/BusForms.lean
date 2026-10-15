@@ -32,7 +32,7 @@ open LeanerVM.Parameters LeanerVM.Protocol.Verifier
 /-- The value of a monomial term at the columns: the coefficient times the columns' product. -/
 def termVal (column : ℕ → E) (t : List ℕ × E) : E := t.2 * (t.1.map column).prod
 
-theorem foldl_mul_eq (column : ℕ → E) (m : List ℕ) (c : E) :
+theorem foldl_mul_eq_column (column : ℕ → E) (m : List ℕ) (c : E) :
     m.foldl (fun acc i ↦ acc * column i) c = c * (m.map column).prod := by
   induction m generalizing c with
   | nil => simp
@@ -43,7 +43,7 @@ theorem Form.evaluate_eq (f : Form) (column : ℕ → E) :
     f.evaluate column = (f.terms.map (termVal column)).sum := by
   rw [Form.evaluate, sumE_eq_sum]
   congr 1
-  exact List.map_congr_left fun t _ ↦ foldl_mul_eq column t.1 t.2
+  exact List.map_congr_left fun t _ ↦ foldl_mul_eq_column column t.1 t.2
 
 /-- Adding a term adds its value. -/
 theorem sum_addTerm (column : ℕ → E) (ts : List (List ℕ × E)) (m : List ℕ) (c : E) :
