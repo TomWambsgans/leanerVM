@@ -202,3 +202,19 @@ with probability at most `L₀ · ε^X_m`, and the phases chain through the seam
 `toFun_empty` of the next). The work is the decoding `decode_X` of the DSL program's reads and
 samples into the phase's ArkLib transcript, and the equality of the DSL program's checks with the
 phase's guarded verifier on decoded transcripts.
+
+## As built (corrections to the note above)
+
+* `romSound` (`Compile/Rom/Sound.lean`) is the theorem: for a certificate with
+  `2^-min(grindBits h, 64) · ε h ≤ εmax`, an adversary of `Q_A` queries and a verifier of `Q_V`,
+  `Pr[accept ∧ Doomed] ≤ (Q_A + Q_V)·(εmax + (4 + k)(Q_A + Q_V)/2^256)`, `k` the seeding steps,
+  on VCVio's `randomOracle`.
+* A plain group's term is created at the entry that creates its boundary state (a scalar, the
+  second root half, the seed), not at the first squeeze: a group with no squeeze (openings only)
+  would otherwise escape without a term.
+* The root rule also excludes the new entry's own input; seeding steps are injective
+  (`prefix ++ digestBytes d ++ suffix`).
+* The proof-of-work discount is `2^-min(b, 64)`: `powOk` tests one 64-bit word.
+* Specifications (`Compile/Spec.lean`) fold the follower's lead into the potential
+  (`retDoom`); a first formulation charged it through a return probability in `bound`, which
+  double-counted returns outside doom and made `Spec.bind` false.
