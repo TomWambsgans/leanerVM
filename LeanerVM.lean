@@ -145,3 +145,11 @@ import LeanerVM.Protocol.Whir.Subspace
 import LeanerVM.Protocol.Whir.NovelBasis
 import LeanerVM.Protocol.Whir.ColumnWeight
 import LeanerVM.Protocol.Compile.Prover
+import LeanerVM.Arithmetization.Soundness.Lookup
+import LeanerVM.Arithmetization.Soundness.Walk
+import LeanerVM.Arithmetization.Soundness.Rows
+import LeanerVM.Arithmetization.Soundness.Bus
+import LeanerVM.Arithmetization.Soundness.MemChannel
+import LeanerVM.Arithmetization.Soundness.BytecodeChannel
+import LeanerVM.Arithmetization.Soundness.StateWalk
+import LeanerVM.Arithmetization.Soundness.Theorem

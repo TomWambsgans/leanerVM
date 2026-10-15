@@ -81,6 +81,7 @@ import LeanerVMTests.Protocol.Whir.Ood
 import LeanerVMTests.Protocol.Whir.Counting
 import LeanerVMTests.Protocol.Whir.NovelBasis
 import LeanerVMTests.Protocol.Compile.Prover
+import LeanerVMTests.Arithmetization.Soundness.Theorem
 
 /-!
 # leanerVM test aggregate
