@@ -39,9 +39,11 @@ table over ArkLib's proved Johnson-range MCA; the weakest shape, μ = 16 at rate
 `2^-128.43`, and `2^-129` is not reachable with the deployed query table). The front phases'
 groups are below `2^-150`.
 
-**Open input**: the theorems are parametric in `TableFidHyp prog input`, the equality of the
-deployed table sumcheck's computations with the ArkLib model's for leanISA; being discharged
-(`Front/TableFidLeanIsa*.lean`).
+**No open input.** The theorems take no hypothesis beyond the adversary's query bound (and, for
+`leanVm_execution`, well-formed bytecode). The deployed computations of every phase are proved
+equal to the analysed protocol's: the bus and the table sumcheck (`Front/TableFidLeanIsa*.lean`),
+the public input, Flock and ring switching (`Front/{Pub,Flock,Ring}*.lean`), the BLAKE2s circuit
+walk row for row (`Front/WalkFaithful.lean`), and WHIR (`Whir/Sound/`).
 
 ## Completeness (`LeanerVM/Protocol/EndToEnd/Completeness.lean`)
 
@@ -73,6 +75,10 @@ deployed table sumcheck's computations with the ArkLib model's for leanISA; bein
   counterexample); fixed by folding the follower's lead into the potential. Three gaps of the ROM
   design note (groups without a squeeze, the root's own entry, seeding injectivity) were fixed
   as built.
+* **Proof interface**: an intermediate hypothesis (`TableFidHyp`) quantified over bus reads with
+  any number of fingerprint challenges and was false (with five, the Python's slot weights differ
+  from the model's); the deployed verifier always draws four, which the bus specification now
+  carries. Found before it reached the final theorems as anything but a parameter.
 * No soundness or completeness bug of the deployed verifier was found: the WHIR gluing order, the
   OOD and query ordering, the Flock walk (row for row), the public-input check and the bus and
   table computations all match the analysed protocol.
