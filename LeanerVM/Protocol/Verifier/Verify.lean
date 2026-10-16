@@ -13,6 +13,7 @@ public import LeanerVM.Protocol.Verifier.Bus
 public import LeanerVM.Protocol.Verifier.TableSumcheck
 public import LeanerVM.Protocol.Verifier.Flock
 public import LeanerVM.Protocol.Verifier.Whir
+public import LeanerVM.Protocol.Verifier.Fast.Hash
 
 /-!
 # The leanVM verifier
@@ -41,6 +42,10 @@ hash of `"leanvm" ‖ u64le(32) ‖ R1CS_DIGEST ‖ H(bytecode)`, the bytecode h
 little-endian words. `seedWith H` computes it with any hash; `verifyWith H` is the compiled
 reading at `H`; `verify` is the deployed verifier, the `Id` instance at `blake2sBytes`
 (`verifyWith_blake2sBytes`, by `rfl`).
+
+**Compilation.** `LeanerVM.Protocol.Verifier.Fast.Hash` compiles `blake2sBytes` with the rotation
+on machine words, as `LeanerVM.Parameters.FieldWords` compiles the field arithmetic. Both are
+`@[csimp]` lemmas: the definitions here, and the theorems about them, are unchanged.
 -/
 
 namespace LeanerVM.Protocol.Verifier

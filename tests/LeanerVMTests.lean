@@ -13,6 +13,7 @@ import LeanerVMTests.Imports
 import LeanerVMTests.Parameters.Blake2s
 import LeanerVMTests.Parameters.CleanField
 import LeanerVMTests.Parameters.Field
+import LeanerVMTests.Parameters.FieldWords
 import LeanerVMTests.Parameters.Generator
 import LeanerVMTests.Parameters.Isa
 import LeanerVMTests.Parameters.Whir
@@ -82,6 +83,7 @@ import LeanerVMTests.Protocol.Whir.Counting
 import LeanerVMTests.Protocol.Whir.NovelBasis
 import LeanerVMTests.Protocol.Compile.Prover
 import LeanerVMTests.Arithmetization.Soundness.Theorem
+import LeanerVMTests.Protocol.Verifier.FastHash
 import LeanerVMTests.Protocol.Verifier.Helpers
 import LeanerVMTests.Protocol.Verifier.Compiled
 import LeanerVMTests.Protocol.Verifier.Replay
