@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Protocol.LeanIsa
-public import LeanerVM.Protocol.Verifier.Layout
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The Python tables are the instance's

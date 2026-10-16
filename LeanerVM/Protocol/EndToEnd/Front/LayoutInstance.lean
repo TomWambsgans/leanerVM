@@ -10,7 +10,7 @@ module
 
 public import LeanerVM.Protocol.EndToEnd.Front.LayoutStack
 public import LeanerVM.Protocol.LeanIsa
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The verifier's layout is the instance's

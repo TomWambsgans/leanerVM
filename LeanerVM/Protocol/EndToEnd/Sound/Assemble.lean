@@ -23,7 +23,7 @@ public import LeanerVM.Protocol.Compile.SpecRules.Cert
 # The specification of the leanVM verifier
 
 `leanVmSpec prog input` is a specification of `leanVmProgram (bytecodeWords prog)
-(publicDigest input)` (`LeanerVM.Protocol.Verifier.Verify`, leanVM
+(publicDigest input)` (`LeanerVM.Protocol.Verifier`, leanVM
 `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) from no doom, with postcondition rejection, at
 `εmax = 2^-128` and lead `0`; `leanVmCert` is its doom certificate (`Spec.toCert`). It composes,
 with `Spec.bind'`:

@@ -10,7 +10,7 @@
 module
 
 public import LeanerVM.Protocol.Compile.SpecRules.Leaves
-public import LeanerVM.Protocol.Verifier.Whir
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.ToArkLib.Whir.Ood
 
 /-!

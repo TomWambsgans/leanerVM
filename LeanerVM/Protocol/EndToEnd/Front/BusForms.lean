@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Front.BusSpec
-public import LeanerVM.Protocol.Verifier.Bus
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # Forms as values

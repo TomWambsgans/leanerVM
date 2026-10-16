@@ -8,7 +8,7 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Front.BusSpec
-public import LeanerVM.Protocol.Verifier.TableSumcheck
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The table sumcheck's final values

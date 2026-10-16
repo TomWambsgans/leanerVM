@@ -11,7 +11,7 @@ module
 
 public import LeanerVM.Protocol.Compile.SpecRules.Leaves
 public import LeanerVM.Protocol.Compile.Prover
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # Frame rules for the end-to-end assembly

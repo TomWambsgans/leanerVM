@@ -1,4 +1,4 @@
-import LeanerVM.Protocol.Verifier.Verify
+import LeanerVM.Protocol.Verifier
 
 /-!
 # Verifier helper tests: differential against the Python verifier

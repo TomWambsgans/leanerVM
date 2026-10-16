@@ -9,12 +9,12 @@
 module
 
 public import LeanerVM.Protocol.Compile.Cost
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The query cost of the leanVM verifier
 
-`leanVmProgram bytecode publicInput` (`LeanerVM.Protocol.Verifier.Verify`) is costed in the
+`leanVmProgram bytecode publicInput` (`LeanerVM.Protocol.Verifier`) is costed in the
 calculus of `LeanerVM.Protocol.Compile.Cost`, phase by phase. A run's shape depends on the sizes
 the proof announces, but a run that is not rejected has sizes inside the window the program
 checks: memory and table log-heights at most `32`, a bytecode of at most `2^36` words, a stack

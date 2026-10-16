@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Protocol.Compile.Spec
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The prover moves of the leanVM verifier
@@ -24,7 +24,7 @@ and it composes through `bind` (`MovesOK.bind`, `MovesOK.seq`) and survives alon
 * `MovesOK.grindBits_le`: on a program whose proofs of work have at most `B` bits, every reachable
   history ends with a proof of work of at most `B` bits.
 
-The instances follow the phases of `leanVmProgram` (`LeanerVM.Protocol.Verifier.Verify`) with the
+The instances follow the phases of `leanVmProgram` (`LeanerVM.Protocol.Verifier`) with the
 unfoldings and inductions of `LeanerVM.Protocol.Verifier.Cost`: the sizes, the bus, the table
 sumcheck, the public input, Flock and ring switching make no prover move other than reads; the
 stack's root is the one commitment outside WHIR; the stacked opening commits WHIR's levels and

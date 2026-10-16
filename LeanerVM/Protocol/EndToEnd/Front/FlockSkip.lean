@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Protocol.Flock
-public import LeanerVM.Protocol.Verifier.Flock
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.EndToEnd.Front.FlockSumcheck
 
 /-!

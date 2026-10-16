@@ -46,7 +46,7 @@ Semantic changes, each visible to the verifier, and what they change here:
 
 1. *The GKR combiner* (40bdeac6). Each layer draws its combiner first; nothing is drawn after the
    roots or after the last layer, one challenge fewer per run (`verifier.py:438-452`,
-   `crates/verifier/src/bus.rs:21`). The transcription (`Verifier/Bus.lean`), the oracle protocol's
+   `crates/verifier/src/bus.rs:21`). The transcription (`Verifier.lean`), the oracle protocol's
    schedule (`gkrSpec`, without its trailing combiner; `gkrError`'s total is unchanged, the
    trailing combiner having been charged `0`), the grand product (`gkr`, `gkrComplete`,
    `gkrSecurity`), the program's doom (`EndToEnd/Front/BusGkr.lean`: a step goes from the layer

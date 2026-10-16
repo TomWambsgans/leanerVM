@@ -10,7 +10,7 @@ module
 
 public import LeanerVM.Protocol.Whir.Complete.Script
 public import LeanerVM.Protocol.Whir.Complete.Tables
-public import LeanerVM.Protocol.Verifier.Sumcheck
+public import LeanerVM.Protocol.Verifier
 public import Mathlib.Algebra.Polynomial.Degree.Operations
 public import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.BigOperators

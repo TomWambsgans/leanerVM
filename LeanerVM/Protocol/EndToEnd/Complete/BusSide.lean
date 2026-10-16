@@ -11,7 +11,7 @@ module
 
 public import LeanerVM.Protocol.EndToEnd.Complete.BusStack
 public import LeanerVM.Protocol.EndToEnd.Complete.Facts
-public import LeanerVM.Protocol.Verifier.Bus
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # One side of the leaf decomposition

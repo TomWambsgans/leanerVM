@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Protocol.Verifier.Arith
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.EndToEnd.Claims
 
 /-!
@@ -17,7 +17,7 @@ public import LeanerVM.Protocol.EndToEnd.Claims
 The honest WHIR prover holds two value tables on the cube `{0,1}^m` (index `i` is the cube point
 `boolPoint m i`, bit `0` first): the message `g` and the weight `W` of the running claim
 `Σ_x W(x)·g(x)`. Everything the verifier computes about them is a function of
-`LeanerVM.Protocol.Verifier.Arith` on lists, and this module proves what those functions compute.
+`LeanerVM.Protocol.Verifier` on lists, and this module proves what those functions compute.
 
 * `foldPairs r t` fixes the first coordinate at `r`; `foldAll t r` fixes the first `|r|`
   coordinates (`getD_foldAll`: entry `x` is `Σ_j eq(j, r)·t[j + 2^|r|·x]`), so `multilinearEval t p`

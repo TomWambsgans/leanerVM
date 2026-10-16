@@ -11,7 +11,7 @@ module
 public import LeanerVM.Protocol.EndToEnd.Complete.TableMath
 public import LeanerVM.Protocol.EndToEnd.Complete.Facts
 public import LeanerVM.Protocol.EndToEnd.Complete.Flushes
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The table phase

@@ -10,7 +10,7 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Front.FlockMech
-public import LeanerVM.Protocol.Verifier.Sumcheck
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.ToArkLib.SumcheckRound
 public import LeanerVM.Protocol.Spine.Errors
 

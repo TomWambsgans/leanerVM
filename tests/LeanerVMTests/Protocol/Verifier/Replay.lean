@@ -1,4 +1,4 @@
-import LeanerVM.Protocol.Verifier.Verify
+import LeanerVM.Protocol.Verifier
 
 /-!
 # The verifier program, replayed against the Python verifier

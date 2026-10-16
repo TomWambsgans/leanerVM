@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Protocol.Verifier.Verify
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.EndToEnd.Candidates
 public import LeanerVM.Protocol.EndToEnd.Claims
 public import LeanerVM.Protocol.EndToEnd.Front.PubEscape

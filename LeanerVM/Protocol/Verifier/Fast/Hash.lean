@@ -22,7 +22,7 @@ A `@[csimp]` lemma acts where code is compiled, and `mix`, `round`, `compress`, 
 `blake2sBytes` were compiled with the definitions above. Each is restated here, word for word,
 so that it is compiled with the replacements, and the lemma equating it with its restatement
 (`rfl`, or an induction for the recursive `absorb`) compiles `blake2sBytes` as the restatement
-in every module that imports this one. The verifier (`LeanerVM.Protocol.Verifier.Verify`) does.
+in every module that imports this one. The verifier (`LeanerVM.Protocol.Verifier`) does.
 Nothing here transcribes a source.
 -/
 

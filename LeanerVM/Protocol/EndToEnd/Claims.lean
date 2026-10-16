@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Protocol.Verifier.Layout
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.Field
 
 /-!

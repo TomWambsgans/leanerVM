@@ -10,7 +10,7 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Complete.Sumcheck
-public import LeanerVM.Protocol.Verifier.TableSumcheck
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # Multilinear facts for the table sumcheck

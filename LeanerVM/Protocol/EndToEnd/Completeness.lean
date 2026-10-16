@@ -13,7 +13,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.WalkFaithful
 /-!
 # End-to-end completeness
 
-The deployed verifier is `Verifier.verify` (`LeanerVM/Protocol/Verifier/Verify.lean`), the
+The deployed verifier is `Verifier.verify` (`Verifier.lean`), the
 compiled reading at BLAKE2s of `leanVmProgram`, a transcription of `python-verifier/verifier.py`
 at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The statements here are those of
 `EndToEnd.Complete` with their one fidelity hypothesis, that the verifier's walk of the BLAKE2s

@@ -104,7 +104,7 @@ theorem claimSum_encStack {μ : ℕ} (hμ : laneBits ≤ μ) (w : List E → E) 
   have hrot : rotL laneBits (bitsL u ++ bitsL x) = bitsL x ++ bitsL u := by
     simp [rotL, List.drop_left' (length_bitsL u), List.take_left' (length_bitsL u)]
   rw [hrot, ← bitsL_append, ← boolPoint_bitsToNat, bitsToNat_append]
-  simp [blockOf, bitsEquiv_val]
+  simp [EndToEnd.blockOf, bitsEquiv_val]
 
 /-! ## The starting doom -/
 

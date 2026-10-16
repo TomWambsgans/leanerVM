@@ -20,7 +20,7 @@ property of the program alone, with no probability, and it composes through `bin
 returns.
 
 The instances bound the column claims the front phases of `leanVmProgram`
-(`LeanerVM.Protocol.Verifier.Verify`) return, with the unfoldings and inductions of
+(`LeanerVM.Protocol.Verifier`) return, with the unfoldings and inductions of
 `LeanerVM.Protocol.Verifier.Cost`:
 
 * `retOK_verifyBusBalance`: the bus phase returns at most five framework claims (the three memory

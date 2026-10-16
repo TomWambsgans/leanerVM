@@ -1,4 +1,4 @@
-import LeanerVM.Protocol.Verifier.Verify
+import LeanerVM.Protocol.Verifier
 
 /-!
 # The compiled verifier: the Fiat–Shamir chain against the Python's, and garbage rejected

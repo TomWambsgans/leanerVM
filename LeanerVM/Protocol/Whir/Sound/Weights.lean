@@ -11,7 +11,7 @@ module
 public import LeanerVM.Protocol.Whir.Sound.Code
 public import LeanerVM.Protocol.Whir.ColumnWeight
 public import LeanerVM.Protocol.EndToEnd.Claims
-public import LeanerVM.Protocol.Verifier.Whir
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # The verifier's weights

@@ -13,7 +13,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.BusDoom
 public import LeanerVM.Protocol.EndToEnd.Front.CommitDoom
 public import LeanerVM.Protocol.ToArkLib.SumcheckRound
 public import LeanerVM.Protocol.Spine.Instance
-public import LeanerVM.Protocol.Verifier.Sumcheck
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # Building blocks with doom on a relation

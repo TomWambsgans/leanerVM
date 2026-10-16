@@ -16,7 +16,7 @@ public import LeanerVM.Protocol.FlockSpec
 
 `walkFaithful_blake2sFlockSpec : WalkFaithful blake2sFlockSpec`: for every column-weight vector
 `w` of the block's size, the deployed verifier's forward walk `blake2sRowValues w` (the
-transcription in `Verifier/Flock.lean` of `blake2s_row_values`,
+transcription in `Verifier.lean` of `blake2s_row_values`,
 `python-verifier/verifier.py:1179-1288` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 returns, row by row, the left and right products `(A w, B w)` of the R1CS of `blake2sFlockSpec`,
 that is of `blake2sCircuit.toBlockR1CS E`. With `terminalFaithful` this discharges the one

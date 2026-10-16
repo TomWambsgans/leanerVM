@@ -9,12 +9,12 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Complete.Sumcheck
-public import LeanerVM.Protocol.Verifier.Bus
+public import LeanerVM.Protocol.Verifier
 
 /-!
 # Completeness of the batched GKR
 
-The verifier is `verifyGkrGrandProducts` (`LeanerVM.Protocol.Verifier.Bus`,
+The verifier is `verifyGkrGrandProducts` (`LeanerVM.Protocol.Verifier`,
 `python-verifier/verifier.py:432-455` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`). It
 reads one root shared by the first two trees and the third tree's root, then walks the three trees
 from the root to the leaves, one level first when the remaining depth is odd and two at a time

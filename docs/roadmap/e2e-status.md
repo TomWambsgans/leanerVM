@@ -23,7 +23,9 @@ everything on one page, over the semantic types `Program`, `PublicInput`, `Valid
 
 ## The verifier the theorems are about
 
-`verifier` is `LeanerVM.Protocol.Verifier.verifyWith` (`Verifier/Verify.lean`), the compiled
+`verifier` is `LeanerVM.Protocol.Verifier.verifyWith`. The whole verifier is one file,
+[`LeanerVM/Protocol/Verifier.lean`](../../LeanerVM/Protocol/Verifier.lean), in the sections of
+`verifier.py` (about 1700 lines against the Python's 1433). It is the compiled
 reading of `leanVmProgram`, a transcription of `python-verifier/verifier.py` at the pin in the
 verifier language `Compile/Prog.lean` (read, sample, grind, commit, query): the Fiat–Shamir chain
 with proof of work and Merkle openings. The random-oracle side is the same program,

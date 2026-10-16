@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Protocol.Verifier.Arith
+public import LeanerVM.Protocol.Verifier
 public import LeanerVM.Protocol.ToArkLib.Whir.Counting
 
 /-!

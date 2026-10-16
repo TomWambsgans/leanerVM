@@ -22,7 +22,7 @@ public import LeanerVM.Arithmetization.Completeness.Theorem
 /-!
 # Perfect completeness of the leanVM verifier
 
-The verifier is the program `leanVmProgram` (`LeanerVM.Protocol.Verifier.Verify`), the
+The verifier is the program `leanVmProgram` (`LeanerVM.Protocol.Verifier`), the
 transcription of `verify_execution` of `python-verifier/verifier.py` at leanVM
 `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Its honest prover (`honestStrategy`) is assembled
 (`Complete.Assemble`) from the phases' honest scripts: the announcement and the commitment
