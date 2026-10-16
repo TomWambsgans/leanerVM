@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Semantics.Execution
+public import LeanerVM.Semantics.Lemmas
 
 @[expose] public section
 

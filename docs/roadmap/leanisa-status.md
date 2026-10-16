@@ -47,17 +47,17 @@ define `K`, `E`, `y`, `ofK`, `E.limb`, `E.ofLimbs`, `IsInK`, `IsCanonical128`, `
 and prove `orderOf_g` and `gpow_injOn` from the seven `decide +kernel` checks; Clean's
 `FiniteField K` instance is `instFiniteFieldK` in the plain file
 `LeanerVM/Parameters/CleanField.lean`. `LeanerVM/Parameters/Blake2s.lean` and
-`LeanerVM/Semantics/Blake2s.lean` define `iv`, `sigma`, the two-flag `compress`, the cell encoding
+`Semantics.lean` define `iv`, `sigma`, the two-flag `compress`, the cell encoding
 (`cellWords`, `wordsCell`, `unpackMetadata`), and `CompressCells`, each pinned by kernel-checked
 vectors from RFC 7693, from CPython's `hashlib.blake2s`, and from the pinned Rust executor.
 `LeanerVM/Parameters/Isa.lean` defines `Opcode`, `Opcode.code` (`g^0 … g^5`), and the five caps;
-`LeanerVM/Semantics/Memory.lean` defines `gLog?` (noncomputable, the index by `Classical.choose`),
+`Semantics.lean` defines `gLog?` (noncomputable, the index by `Classical.choose`),
 `MemImage`, `MemImage.read`, and `PublicInput` with `word0`/`word1`, and proves `gLog?_spec`, the
 one statement through which the bounded logarithm is trusted, with `gLog?_eq_none_iff` and
-`gLog?_gpow_eq_none` on the failure side; `LeanerVM/Semantics/Instruction.lean` defines `DerefMode`,
-`Instr`, `Instr.opcode`, `Program`, and `Program.fetch`. `LeanerVM/Semantics/Step.lean` defines
+`gLog?_gpow_eq_none` on the failure side; `Semantics.lean` defines `DerefMode`,
+`Instr`, `Instr.opcode`, `Program`, and `Program.fetch`. `Semantics.lean` defines
 `Regs`, `Regs.next`, `derefSource`, `execute` (the six arms of specification §2's table) and `step =
-fetch >>= execute`; `LeanerVM/Semantics/Execution.lean` defines `Regs.initial`, `Program.finalPc`,
+fetch >>= execute`; `Semantics.lean` defines `Regs.initial`, `Program.finalPc`,
 `Regs.final`, `run` (the loop, with the halting test before each fetch), `Trace`,
 `HasPublicBoundary`, `ValidExecution`, and `Trace.regs`, and proves `run_add`, `run_prefix`,
 `run_intermediate` (no state before the last is at the sentinel) and `Trace.regs_length`; the plain
@@ -561,7 +561,7 @@ line.
 9. Settled 2026-09-10 (F6): both T1 theorems take `WellFormedBytecode prog`, a structure with
    the fields `sentinelSafe` and `hasFillBlocks`; further program-shape conditions the Clean
    proofs need join it as fields (roadmap Layer 10, acceptance test 20). Since PR #34 the
-   first field is Layer 3's `SentinelSafe prog` (`Semantics/Execution.lean`), not a restatement;
+   first field is Layer 3's `SentinelSafe prog` (`Semantics.lean`), not a restatement;
    the field was named `sentinelHalts` until then.
 10. Settled 2026-09-11 (Layer 6): the six tables return the state they push
     (`GeneralFormalCircuit K Row Regs`), so that every `Spec` is `step … = some next`, the

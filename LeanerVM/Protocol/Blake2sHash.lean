@@ -8,13 +8,13 @@
 
 module
 
-public import LeanerVM.Semantics.Blake2s
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # The BLAKE2s byte hasher and the digest encoding
 
 Category B. `blake2sBytes` is RFC 7693 §3.3 over the compression function `compress` of
-`LeanerVM.Semantics.Blake2s`: the unkeyed parameter block folded into the first word of `iv`,
+`LeanerVM.Semantics`: the unkeyed parameter block folded into the first word of `iv`,
 every block but the last compressed at the byte count so far with no flag, and the last block,
 zero-padded, at the total length with the last-block flag; the empty message is one zero block.
 The pinned leanVM computes exactly this (`crates/primitives/src/hash/mod.rs:75-204`,

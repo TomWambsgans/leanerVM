@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.Execution
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # The executable carrier
@@ -16,7 +16,7 @@ leanISA roadmap Layer 3 companion, at leanVM pin `127510d14c98ade4e8a97646c44fa7
 The reference semantics (`gLog?`, `MemImage.read`, `Program.fetch`, `execute`, `step`, `run`,
 `ValidExecution`) is noncomputable and is what a reader audits. This module is its computable
 carrier: one address search, `addressIndex`, replaces the chosen logarithm `gLog?`; the checked
-step `stepChecked` is `executeWith` (the reference's six arms, `LeanerVM.Semantics.Step`) at the
+step `stepChecked` is `executeWith` (the reference's six arms, `LeanerVM.Semantics`) at the
 carrier's reader; `checkWithinFuel` searches for the halting time within a budget and
 `checkTrace` checks an announced one.
 

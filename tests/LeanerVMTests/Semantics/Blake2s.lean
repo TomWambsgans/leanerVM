@@ -1,6 +1,6 @@
 module
 
-public import LeanerVM.Semantics.Blake2s
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # BLAKE2s compression and cell vectors

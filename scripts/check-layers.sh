@@ -7,14 +7,20 @@ cd "$REPO_ROOT"
 status=0
 import_prefix='^[[:space:]]*(public[[:space:]]+)?(meta[[:space:]]+)?import([[:space:]]+all)?[[:space:]]+'
 
+# A layer's modules: its directory, and its root module `LeanerVM/<Layer>.lean` when there is one.
 check_forbidden() {
   local path="$1"
   local layers="$2"
   local label="$3"
   local pattern="${import_prefix}LeanerVM\.(${layers})(\.|$)"
   local matches
+  local paths=()
 
-  if matches="$(rg --line-number --glob '*.lean' "$pattern" "$path")"; then
+  [[ -e "$path" ]] && paths+=("$path")
+  [[ -f "$path.lean" ]] && paths+=("$path.lean")
+  [[ ${#paths[@]} -eq 0 ]] && return 0
+
+  if matches="$(rg --line-number --glob '*.lean' "$pattern" "${paths[@]}")"; then
     echo "Forbidden $label dependency:" >&2
     echo "$matches" >&2
     status=1
@@ -75,7 +81,7 @@ while IFS= read -r entry; do
       echo "Unknown production layer containing Lean modules: $entry" >&2
       status=1
     fi
-  elif [[ "$entry" == *.lean ]]; then
+  elif [[ "$entry" == *.lean && ! "${name%.lean}" =~ $allowed_layers ]]; then
     echo "Production module must belong to a registered layer: $entry" >&2
     status=1
   fi

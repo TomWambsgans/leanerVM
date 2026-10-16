@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.Blake2s
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # The output of a compression
@@ -20,7 +20,7 @@ never their value. `cellWords_wordsCell` says the words of the cell holding four
 four words (Layer 1 has the other direction, `wordsCell_cellWords`), and `compressCells_exists`
 builds the two output cells from the words of the compression.
 
-The lemmas are here and not in `LeanerVM.Semantics.Blake2s` so that Layer 1 is untouched.
+The lemmas are here and not in `LeanerVM.Semantics` so that Layer 1 is untouched.
 
 ## Wrong readings excluded
 

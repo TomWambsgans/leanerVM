@@ -8,7 +8,7 @@
 module
 
 public import LeanerVM.Parameters.CleanField
-public import LeanerVM.Semantics.Step
+public import LeanerVM.Semantics.Lemmas
 public import LeanerVM.Arithmetization.Bytecode
 public import Clean.Circuit.Basic
 public import Clean.Utils.Tactics.ProvableStructDeriving

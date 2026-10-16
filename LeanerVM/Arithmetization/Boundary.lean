@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Arithmetization.Tables.Basic
-public import LeanerVM.Semantics.Execution
+public import LeanerVM.Semantics.Lemmas
 public import Clean.Circuit.Formal
 public import Clean.Utils.Tactics.CircuitProofStart
 

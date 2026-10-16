@@ -158,10 +158,10 @@ def samplePublicInput : Digest :=
 #guard (polyEval [fe 40, fe 41, fe 42, fe 43, fe 44] (fe 45)) =
     (e 0x135b962c7eb72a4d 0xa624b34b0383f4b8 0xdcf22a0b0f465e2e)
 
-#guard (gpow 5) =
+#guard (Verifier.gpow 5) =
     (e 0x20 0x0 0x0)
 
-#guard (gpow (2 ^ 32 - 1)) =
+#guard (Verifier.gpow (2 ^ 32 - 1)) =
     (e 0xae3111b3bb81428f 0x0 0x0)
 
 #guard (lagrangeWeights 64 (fe 50)) =

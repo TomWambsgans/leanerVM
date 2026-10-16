@@ -10,7 +10,7 @@ module
 
 public import LeanerVM.Parameters.Flock
 public import LeanerVM.Protocol.ToArkLib.Flock.Words
-public import LeanerVM.Semantics.Blake2s
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # The BLAKE2s compression circuit

@@ -19,7 +19,7 @@ transcribed. What the tables share beyond this file lives where it belongs: the 
 arithmetic (`add_limbs`, `mul_limbs`, `ofK_eq_ofLimbs`, `isInK_ofLimbs`, `ofLimbs_of_isInK`,
 `ofLimbs_eq_zero_iff`, `E.ofCell`) is Layer 0's (`LeanerVM.Parameters.Field`), and reading a
 word of the image back as a row's limbs (`MemImage.limbsAt`, `MemImage.cellAt`) is Layer 2's
-(`LeanerVM.Semantics.Memory`). A row's three-limb column `v` is the word
+(`LeanerVM.Semantics`). A row's three-limb column `v` is the word
 `E.ofLimbs v[0] v[1] v[2]`, spelled as Layer 5's `MemPull.Guarantees` spells it.
 
 * `rowEnv data` is the prover environment of a row of a table without local witnesses: no

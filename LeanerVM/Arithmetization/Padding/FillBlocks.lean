@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.Execution
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # Fill blocks

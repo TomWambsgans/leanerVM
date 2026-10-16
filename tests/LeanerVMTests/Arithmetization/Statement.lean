@@ -8,7 +8,7 @@ bus permutations in the kernel.
 
 **The fixture** is one hand-built witness of `SatisfiedBy` for the Layer 3 program, the executor's
 `mul_192bit_word` (`crates/leanvm_core/src/cpu/mod.rs:887-904`, `tests/LeanerVMTests/
-Semantics/Execution.lean`), extended in the shape of the compiler's fill blocks, simplified: a
+Semantics.lean`), extended in the shape of the compiler's fill blocks, simplified: a
 `JUMP` to the sentinel after the three instructions, and the fill blocks every table needs to reach
 a power-of-two height (§8.3; `crates/leanvm_core/src/cpu/filler.rs:36-87`, emitted by
 `crates/lean_compiler/src/filler.rs`; roadmap acceptance test 15): one `XOR`, one `DEREF`, eight

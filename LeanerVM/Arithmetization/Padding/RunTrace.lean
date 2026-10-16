@@ -6,7 +6,7 @@
 
 module
 
-public import LeanerVM.Semantics.Execution
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # Relational steps and finite traces

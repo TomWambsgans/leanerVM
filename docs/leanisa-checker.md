@@ -14,7 +14,7 @@ The reference semantics (`gLog?`, `MemImage.read`, `Program.fetch`, `execute`, `
 proved equal to it; its bodies may hold speedups and are not audited, only the equivalence
 statements are.
 
-- [`Step.lean`](../LeanerVM/Semantics/Step.lean) writes the six instruction arms once, in
+- [`Semantics.lean`](../LeanerVM/Semantics.lean) writes the six instruction arms once, in
   `executeWith` over a named reader; `execute L r` is `executeWith L.read r`. The carrier
   instantiates the same arms with its own reader, so there is no second copy of the semantics.
 - [`Executable.lean`](../LeanerVM/Semantics/Executable.lean) is the carrier. `addressIndex`

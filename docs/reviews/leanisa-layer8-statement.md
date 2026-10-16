@@ -96,7 +96,7 @@ pair, keeping every count. Every conjunct still holds: the constraints (none on 
 memory pair (the block's seed and finalize rows are built from the same modified image and the
 row's nine reads match it), the state and bytecode pairs (unchanged), `CountsNonzero`, `Caps`,
 the three hypotheses, the two words. So `SatisfiedBy prog input w'`. But `execute` guards
-`CompressCells` on the nine cells (`Semantics/Step.lean:136-147`), so `run` is `none` from that
+`CompressCells` on the nine cells (`Semantics.lean:136-147`), so `run` is `none` from that
 step on, and `AssignmentRepresents.image_eq` forces `t.image` to be the modified image: no `t`
 with `ValidExecution prog input t` exists. `constraintSoundness` (blueprint `:1098`) is false
 for this `prog`. leanVM rejects `w'` (`CpuError::Blake2s` or the opening).
@@ -183,7 +183,7 @@ every `tau ≤ 32` (`:161`); (6) `tau_5 ≥ n_blocks_log(1) = 3` (`:166`; `flock
 `max(1, 8) = 8 = 2^3`); (7) `validate_log_inv_rate` (`:167`); (8) the stacked size
 `mu ∈ [MIN_MU, MAX_MU] = [15, 28]` (`:174-176`; `pcs.rs:49-51`). The Lean has (4), (5), (6)
 explicitly, (3) by `Program.logSize_le` (named at `:76-77`) and (2) by
-`PublicInput.word0/word1` (`Semantics/Memory.lean:107-111`, unnamed). (7) and (8) are omitted
+`PublicInput.word0/word1` (`Semantics.lean:107-111`, unnamed). (7) and (8) are omitted
 and unnamed; (8) is the binding cap in practice at the pin (`2^28` K-elements in total, against
 `2^32` rows per table with eight or more columns each). Omitting them only weakens the soundness
 hypothesis, and they are PCS parameters rather than M3 facts, so leaving them to the protocol

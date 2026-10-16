@@ -297,7 +297,7 @@ The seven checks are separate theorems proved by `decide +kernel`; primality by 
 
 ### Layer 1: BLAKE2s compression and the cell encoding
 
-`LeanerVM/Parameters/Blake2s.lean`, `LeanerVM/Semantics/Blake2s.lean`.
+`LeanerVM/Parameters/Blake2s.lean`, `Semantics.lean`.
 
 Transcribe `iv : Vector UInt32 8` and `sigma : Vector (Vector (Fin 16) 16) 10` from RFC 7693
 §2.6–§2.7, dumped mechanically. Define the tree-mode compression, the cell packing, the metadata
@@ -325,8 +325,8 @@ it too (acceptance test 10). Tests: the RFC 7693 vectors for `compress`; one vec
 
 ### Layer 2: instructions, programs, the memory image, and the public input
 
-`LeanerVM/Parameters/Isa.lean` (the constants), `LeanerVM/Semantics/Instruction.lean`,
-`LeanerVM/Semantics/Memory.lean`.
+`LeanerVM/Parameters/Isa.lean` (the constants), `Semantics.lean`,
+`Semantics.lean`.
 
 ```lean
 inductive Opcode | xor | mulNative | setConstant | deref | jump | blake2s
@@ -380,7 +380,7 @@ for its fields; nothing in this roadmap depends on it.
 
 ### Layer 3: the step function and valid executions
 
-`LeanerVM/Semantics/Step.lean`, `LeanerVM/Semantics/Execution.lean`. Category A: written from
+`Semantics.lean`, `Semantics.lean`. Category A: written from
 specification §2 before the Rust executor is opened.
 
 ```lean

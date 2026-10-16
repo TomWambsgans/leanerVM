@@ -196,6 +196,16 @@ def test_layer_gate() -> None:
         )
         loose.unlink()
 
+        # A layer's root module beside its directory belongs to the layer, under its rules.
+        rootmod = root / "LeanerVM" / "Semantics.lean"
+        write(rootmod, "module\n\npublic import LeanerVM.Parameters.Basic\n")
+        require_pass(run(root, "check-layers.sh"), "a layer's root module")
+        write(rootmod, "module\n\npublic import LeanerVM.Protocol.Basic\n")
+        require_failure(
+            run(root, "check-layers.sh"), "a layer's root module importing upward", "Semantics"
+        )
+        rootmod.unlink()
+
         # The wall: a protocol module importing the arithmetization is rejected unless it is one
         # of the modules the allow-list names.
         wall = root / "LeanerVM" / "Protocol" / "Spine" / "Phase.lean"

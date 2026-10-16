@@ -1,6 +1,6 @@
 module
 
-public import LeanerVM.Semantics.Basic
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # Arithmetization

@@ -486,7 +486,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     is the R1CS, not any predicate an instance names). The verifier's lincheck terminal needs the
     circuit; an opaque predicate gives it nothing to evaluate.
   - `FlockSpec` (`Protocol/FlockSpec.lean`) is stated against the cell relation
-    `CompressCells` of `Semantics/Blake2s.lean` on eighteen limbs (`LimbsCompress`), in place of
+    `CompressCells` of `Semantics.lean` on eighteen limbs (`LimbsCompress`), in place of
     the sketch's leanISA `Blake2sRelation` on `Blake2sRow`, which the wall forbids above the
     adaptor. The adaptor relates the two: `Blake2sRelation r` is `LimbsCompress` of `r`'s eighteen
     value limbs in column order (`blake2sRelation_ofFn`). Its fields are the R1CS (`r1cs : BlockR1CS E 14`, matching

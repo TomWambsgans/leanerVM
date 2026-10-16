@@ -1,5 +1,5 @@
 import LeanerVM.Arithmetization.Channels
-import LeanerVM.Semantics.Execution
+import LeanerVM.Semantics.Lemmas
 import Clean.Air.Balance
 
 /-!

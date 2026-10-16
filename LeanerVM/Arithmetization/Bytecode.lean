@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.Instruction
+public import LeanerVM.Semantics.Lemmas
 
 /-!
 # The bytecode encoding

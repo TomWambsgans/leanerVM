@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.Execution
+import LeanerVM.Semantics.Lemmas
 
 /-!
 # Layer 3 tests: steps, runs, and valid executions

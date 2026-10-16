@@ -21,7 +21,7 @@ In a `module` test file, a `#guard` needs a `meta import` of the module it evalu
 core's `DecidableEq` instances for `Vector` and `Array` are not exposed, so neither `decide` nor
 the kernel can reduce an equality of vectors there (finding L1): state such checks on the word
 lists through `Vector.toList_inj`, and give production predicates over vectors a `Decidable`
-instance that compares lists, as `CompressCells` does in `LeanerVM/Semantics/Blake2s.lean`.
+instance that compares lists, as `CompressCells` does in `Semantics.lean`.
 
 A kernel check of an equality on a structure over `K` or `E` goes through that structure's
 `DecidableEq` instance, and a *derived* instance decides its later fields under `h ▸` for the
