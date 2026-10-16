@@ -25,15 +25,14 @@ example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ 
 
 example {prog : Program} {input : PublicInput} {t : Trace prog} (hfill : HasFillBlocks prog)
     (hv : ValidExecution prog input t) (hsteps : t.steps ≤ 2 ^ 19) (hmem : t.κ ≤ 23)
-    (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4)
-    (H : LeanerVM.Protocol.Compile.Bytes → LeanerVM.Protocol.Digest) (fuel : ℕ)
-    (hpow : ∀ cv, LeanerVM.Protocol.Compile.findNonce H
-      LeanerVM.Parameters.Whir.queryGrindingBits cv fuel ≠ none) :
-    ∃ proof, honestProof H prog input t ρ fuel = some proof ∧
-      verifier (m := Id) H prog input proof = true :=
-  completeness hfill hv hsteps hmem hcode hρ H fuel hpow
+    (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4) {fuel : ℕ} (hfuel : fuel ≤ 2 ^ 64) :
+    Pr{let z ← experiment prog input (honestProver prog input t ρ fuel)}[z.1.2 = false] ≤
+      completenessError fuel :=
+  completeness hfill hv hsteps hmem hcode hρ hfuel
 
-/-- The proof of work the completeness hypothesis is about has `17` bits. -/
+example : completenessError (2 ^ 25) ≤ (2 : ENNReal)⁻¹ ^ 128 := completenessError_le
+
+/-- The proofs of work have `17` bits. -/
 example : LeanerVM.Parameters.Whir.queryGrindingBits = 17 := rfl
 
 /-- info: 'LeanVM.knowledgeSoundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -43,6 +42,6 @@ example : LeanerVM.Parameters.Whir.queryGrindingBits = 17 := rfl
 #guard_msgs in #print axioms completeness
 
 /--
-info: 'LeanVM.honestProof_accepted' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'LeanVM.completenessError_le' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms honestProof_accepted
+#guard_msgs in #print axioms completenessError_le

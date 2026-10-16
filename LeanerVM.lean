@@ -175,6 +175,8 @@ import LeanerVM.Protocol.Compile.SpecRules.Leaves
 import LeanerVM.Protocol.Compile.SpecRules.Cert
 import LeanerVM.Protocol.Compile.Cost
 import LeanerVM.Protocol.Verifier.Cost
+import LeanerVM.Protocol.Compile.Rom.Prover
+import LeanerVM.Protocol.Compile.Rom.Complete
 import LeanerVM.Protocol.Whir.Complete.Script
 import LeanerVM.Protocol.Whir.Complete.Tables
 import LeanerVM.Protocol.Whir.Complete.Encoding
@@ -245,6 +247,7 @@ import LeanerVM.Protocol.EndToEnd.Complete.Assemble
 import LeanerVM.Protocol.EndToEnd.Complete.Theorem
 import LeanerVM.Protocol.EndToEnd.Completeness
 import LeanerVM.Protocol.EndToEnd.Complete.Small
+import LeanerVM.Protocol.EndToEnd.Complete.Rom
 import LeanerVM.Protocol.EndToEnd.Front.BusComponent
 import LeanerVM.Protocol.EndToEnd.Front.BusDoom
 import LeanerVM.Protocol.EndToEnd.Front.BusSpec

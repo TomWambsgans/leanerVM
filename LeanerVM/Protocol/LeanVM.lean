@@ -9,7 +9,7 @@
 module
 
 public import LeanerVM.Protocol.EndToEnd.Sound.Theorem
-public import LeanerVM.Protocol.EndToEnd.Complete.Small
+public import LeanerVM.Protocol.EndToEnd.Complete.Rom
 
 /-!
 # leanVM, end to end
@@ -40,9 +40,10 @@ most `2^-128`, certified for every admissible size and rate (`Whir.Params.Deploy
 
 **Completeness** (`completeness`): for a valid execution of at most `2^19` steps, with a memory
 of at most `2^23` words and a bytecode of at most `2^23` instructions, of a program carrying the
-fill blocks the prover pads with, the honest prover's proof is accepted by `verifier H`, for
-every hash function `H` whose 17-bit proof-of-work search succeeds within the prover's fuel. The
-honest prover (`honestProof`) is a specification, not an implementation.
+fill blocks the prover pads with, the honest prover (`honestProver`), run in the same
+random-oracle experiment, makes the verifier reject with probability at most
+`completenessError fuel`, which is below `2^-128` at a fuel of `2^25` nonces per proof of work
+(`completenessError_le`). The honest prover is a specification, not an implementation.
 
 **Scope and trust.**
 
@@ -181,36 +182,54 @@ theorem soundnessError_le {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (
 
 /-! ## Completeness -/
 
-/-- **The honest prover**: the proof of the execution `t` with the hash `H`, at the commitment's
-inverse rate `2^ρ`, its proof-of-work searches bounded by `fuel`; `none` when the execution does
-not fit the deployed parameters or a search fails. A specification: it pads the execution, takes
-a witness of leanISA's constraint system representing it (a classical choice), and runs the
-honest strategy of every phase through the Fiat–Shamir transform. -/
-noncomputable def honestProof (H : Bytes → Digest) (prog : Program) (input : PublicInput)
-    (t : Trace prog) (ρ fuel : ℕ) : Option Proof :=
-  Complete.honestProofOf H prog input t ρ fuel
+/-- **The honest prover**: the proof of the execution `t` at the commitment's inverse rate `2^ρ`,
+every hash a query to the random oracle, each proof-of-work search trying at most `fuel` nonces
+(the empty proof if one fails). A specification: it pads the execution, takes a witness of
+leanISA's constraint system representing it (a classical choice), and runs the honest strategy
+of every phase through the Fiat–Shamir transform. -/
+noncomputable def honestProver (prog : Program) (input : PublicInput) (t : Trace prog)
+    (ρ fuel : ℕ) : Adversary :=
+  Complete.honestComp prog input t ρ fuel
+
+/-- **The completeness error** at a fuel of `fuel` nonces per proof of work: each of the
+`Q` queries of the honest prover and the verifier may complete a proof of work whose nonces all
+failed, or meet a digest the oracle already gave. -/
+noncomputable def completenessError (fuel : ℕ) : ℝ≥0∞ :=
+  let Q : ℕ := 13216 + 13210 * (2 ^ 27 + fuel + 1)
+  Q * ((1 - (2 : ℝ≥0∞)⁻¹ ^ 17) ^ fuel + Q / 2 ^ 256)
+
+theorem completenessError_eq (fuel : ℕ) :
+    completenessError fuel = Complete.completenessError fuel := by
+  have hc : leanVmCost = 13210 := by decide
+  have hQ : Complete.completenessQueries fuel = 13216 + 13210 * (2 ^ 27 + fuel + 1) := by
+    rw [Complete.completenessQueries, proverFactor, costHeight, hc, leanVmQueryBound_eq]
+    ring
+  rw [completenessError, Complete.completenessError, hQ]
+  rfl
 
 /-- **Completeness.** For a valid execution of at most `2^19` steps, with a memory of at most
 `2^23` words and a bytecode of at most `2^23` instructions, of a program carrying the fill blocks,
-at an inverse rate `2^ρ` with `1 ≤ ρ ≤ 4`, and for every hash function whose 17-bit
-proof-of-work search finds a nonce below `fuel`, the honest prover returns a proof, and the
-verifier accepts it. -/
+at an inverse rate `2^ρ` with `1 ≤ ρ ≤ 4`: the verifier rejects the honest prover's proof, in the
+random-oracle experiment, with probability at most `completenessError fuel`. -/
 theorem completeness {prog : Program} {input : PublicInput} {t : Trace prog}
     (hfill : HasFillBlocks prog) (hv : ValidExecution prog input t) (hsteps : t.steps ≤ 2 ^ 19)
-    (hmem : t.κ ≤ 23) (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4)
-    (H : Bytes → Digest) (fuel : ℕ)
-    (hpow : ∀ cv, findNonce H Whir.queryGrindingBits cv fuel ≠ none) :
-    ∃ proof, honestProof H prog input t ρ fuel = some proof ∧
-      verifier (m := Id) H prog input proof = true :=
-  Complete.complete_of_small hfill hv ⟨hsteps, hmem, hcode⟩ hρ H fuel fun _ _ _ cv hg ↦
-    Sound.grind_bits_eq _ _ hg ▸ hpow cv
+    (hmem : t.κ ≤ 23) (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4) {fuel : ℕ}
+    (hfuel : fuel ≤ 2 ^ 64) :
+    Pr{let z ← experiment prog input (honestProver prog input t ρ fuel)}[z.1.2 = false] ≤
+      completenessError fuel := by
+  have hV : verifier queryH prog input =
+      verifierComp (leanVmSeed (Front.bytecodeWords prog) (Complete.publicDigest input))
+        (leanVmProgram (Front.bytecodeWords prog) (Complete.publicDigest input)) :=
+    funext fun π ↦ (verifierComp_leanVm _ _ π).symm
+  unfold experiment honestProver
+  rw [hV, completenessError_eq]
+  exact Complete.romComplete_leanVm hfill hv ⟨hsteps, hmem, hcode⟩ hρ hfuel
 
-/-- **Every proof the honest prover returns is accepted**, for every hash function. -/
-theorem honestProof_accepted {prog : Program} {input : PublicInput} {t : Trace prog}
-    {ρ fuel : ℕ} (H : Bytes → Digest) {proof : Proof}
-    (h : honestProof H prog input t ρ fuel = some proof) :
-    verifier (m := Id) H prog input proof = true :=
-  Complete.verify_honestProofOf H h
+/-- **The numbers**: at a fuel of `2^25` nonces per proof of work, the completeness error is
+below `2^-128`. -/
+theorem completenessError_le : completenessError (2 ^ 25) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 := by
+  rw [completenessError_eq]
+  exact Complete.completenessError_le
 
 end
 end LeanVM
