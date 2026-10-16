@@ -18,7 +18,11 @@
 # before the script returns. The fixtures are consumed by scripts/fuzz-verifier.py, which runs
 # the Lean and the Rust verifier on them and on mutations of them.
 #
-# Usage: scripts/export-verifier-fixtures-rust.sh <leanVM source tree at the pin> <output dir>
+# Usage: scripts/export-verifier-fixtures-rust.sh <leanVM source tree at the pin> <output dir> [--corpus]
+#
+# With `--corpus`, the fixtures are instead every program of crates/lean_compiler/tests/programs
+# that declares its public input (with its `# witness` annotations), and the chain at 16, 1000 and
+# 5000 loop steps, each at the four rates: the differential fuzzing corpus (not committed).
 #
 # The source tree is a git checkout at the pin or an export of it
 # (`git -C <leanVM> archive <pin> | tar -x -C <dir>`); either way the Python verifier's hash is
@@ -73,7 +77,7 @@ codegen-units = 1
 EOF
 
 cat > "$work/src/main.rs" <<'EOF'
-use lean_compiler::{compile, parse_with_replacements};
+use lean_compiler::{compile, parse, parse_const, parse_with_replacements};
 use leanvm_core::cpu::{Program, prove, public_input_bytes, verify};
 use primitives::field::{F64, F192, g_pow};
 use std::collections::BTreeMap;
@@ -150,17 +154,73 @@ fn fibonacci(checkout: &Path) -> (Program, [F192; 2]) {
     (compile(&ast), [out, out])
 }
 
+// A program of crates/lean_compiler/tests/programs with its `# public_input:` and `# witness`
+// annotations, read as crates/lean_compiler/tests/suite/py_source.rs reads them; `None` for a
+// program without a declared public input.
+fn suite_program(path: &Path) -> Option<(Program, [F192; 2])> {
+    let source = std::fs::read_to_string(path).expect("read suite program");
+    let header = source.lines().find_map(|line| line.trim().strip_prefix("# public_input:"))?;
+    let parts: Vec<&str> = header.split(',').collect();
+    assert_eq!(parts.len(), 2, "public input of {}", path.display());
+    let public_input = [parse_const(parts[0]).expect("public input"), parse_const(parts[1]).expect("public input")];
+    let ast = parse(&source).expect("parse suite program");
+    let mut program = compile(&ast);
+    let mut streams: BTreeMap<String, Vec<Vec<F192>>> = BTreeMap::new();
+    for rest in source.lines().filter_map(|line| line.trim().strip_prefix("# witness ")) {
+        let (name, values) = rest.split_once(':').expect("`# witness` needs `name: values`");
+        let entry = values.split(',').map(|v| parse_const(v).expect("witness value")).collect();
+        streams.entry(name.trim().to_string()).or_default().push(entry);
+    }
+    for (stream, entries) in streams {
+        program.set_witness(stream, entries);
+    }
+    Some((program, public_input))
+}
+
+// The corpus: every suite program with a declared public input, and the chain at three sizes, each
+// at the four rates.
+fn corpus(checkout: &Path) -> Vec<(String, (Program, [F192; 2]), usize)> {
+    let mut programs: Vec<(String, Box<dyn Fn() -> (Program, [F192; 2])>)> = Vec::new();
+    let directory = checkout.join("crates/lean_compiler/tests/programs");
+    let mut paths: Vec<_> = std::fs::read_dir(&directory)
+        .expect("suite programs")
+        .map(|entry| entry.expect("directory entry").path())
+        .filter(|path| path.extension().is_some_and(|x| x == "py"))
+        .collect();
+    paths.sort();
+    for path in paths {
+        if suite_program(&path).is_some() {
+            let name = path.file_stem().unwrap().to_string_lossy().replace('_', "-");
+            programs.push((name, Box::new(move || suite_program(&path).unwrap())));
+        }
+    }
+    for steps in [16usize, 1000, 5000] {
+        programs.push((format!("chain{steps}"), Box::new(move || chain(steps))));
+    }
+    let mut fixtures = Vec::new();
+    for (name, make) in &programs {
+        for rate in 1..=4usize {
+            fixtures.push((format!("{name}-rate{rate}"), make(), rate));
+        }
+    }
+    fixtures
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let checkout = Path::new(&args[1]);
     let out = Path::new(&args[2]);
-    let fixtures = [
-        ("chain4-rate1", chain(4), 1usize),
-        ("chain300-rate2", chain(300), 2),
-        ("fibonacci-rate4", fibonacci(checkout), 4),
-    ];
+    let fixtures = if args.get(3).is_some_and(|flag| flag == "--corpus") {
+        corpus(checkout)
+    } else {
+        vec![
+            ("chain4-rate1".to_string(), chain(4), 1usize),
+            ("chain300-rate2".to_string(), chain(300), 2),
+            ("fibonacci-rate4".to_string(), fibonacci(checkout), 4),
+        ]
+    };
     for (name, (program, public_input), log_inv_rate) in fixtures {
-        let directory = out.join(name);
+        let directory = out.join(&name);
         std::fs::create_dir_all(&directory).expect("create fixture directory");
         let (proof, stats) = prove(&program, public_input, log_inv_rate).expect("prove");
         let summary = verify(&program, &public_input, &proof).expect("honest proof verifies");
@@ -197,7 +257,7 @@ fn main() {
 EOF
 
 cargo run --quiet --release --manifest-path "$work/Cargo.toml" --target-dir "$checkout/target" \
-  -- "$checkout" "$out"
+  -- "$checkout" "$out" ${3:+"$3"}
 
 for directory in "$out"/*/; do
   printf '%s: ' "$(basename "$directory")"

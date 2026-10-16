@@ -23,6 +23,76 @@ open LeanerVM.Parameters
 
 @[expose] public section
 
+/-! ## Addressing -/
+
+/-- The specification of `gLog?`: on an address space of at most `2 ^ 63` cells, so that
+`2 ^ κ ≤ orderOf g`, `gLog? κ a = some i` exactly when `a = g ^ i`. -/
+theorem gLog?_spec {κ : ℕ} (hκ : κ < 64) {a : K} {i : Fin (2 ^ κ)} :
+    gLog? κ a = some i ↔ a = gpow i := by
+  unfold gLog?
+  split_ifs with h
+  · have hc := Classical.choose_spec h
+    constructor
+    · intro hi
+      obtain rfl := Option.some.inj hi
+      exact hc
+    · intro hi
+      have hbound : 2 ^ κ ≤ 2 ^ 63 := Nat.pow_le_pow_right (by norm_num) (by omega)
+      have hj : ((Classical.choose h : Fin (2 ^ κ)) : ℕ) < 2 ^ 64 - 1 := by
+        have := (Classical.choose h).isLt; omega
+      have hi' : (i : ℕ) < 2 ^ 64 - 1 := by have := i.isLt; omega
+      exact congrArg some (Fin.ext (gpow_injOn hj hi' (hc.symm.trans hi)))
+  · exact ⟨fun hi ↦ (nomatch hi), fun hi ↦ absurd ⟨i, hi⟩ h⟩
+
+/-- `gLog?` fails exactly on the addresses that are no power below `2 ^ κ`; no size bound is
+needed. -/
+theorem gLog?_eq_none_iff {κ : ℕ} {a : K} :
+    gLog? κ a = none ↔ ∀ i : Fin (2 ^ κ), a ≠ gpow i := by
+  unfold gLog?
+  split_ifs with h
+  · exact ⟨fun hn ↦ (nomatch hn), fun hn ↦ absurd h (not_exists.mpr hn)⟩
+  · exact ⟨fun _ ↦ not_exists.mp h, fun _ ↦ rfl⟩
+
+/-- `0` is never an address, whatever the size. -/
+theorem gLog?_zero (κ : ℕ) : gLog? κ 0 = none :=
+  gLog?_eq_none_iff.mpr fun i h ↦ gpow_ne_zero i h.symm
+
+/-- A power past the end is no address: `g ^ j` with `2 ^ κ ≤ j < orderOf g` has no index. -/
+theorem gLog?_gpow_eq_none {κ j : ℕ} (hj : 2 ^ κ ≤ j) (hj' : j < 2 ^ 64 - 1) :
+    gLog? κ (gpow j) = none :=
+  gLog?_eq_none_iff.mpr fun i h ↦ by
+    have hi : (i : ℕ) < 2 ^ 64 - 1 := by have := i.isLt; omega
+    have := gpow_injOn hj' hi h
+    have := i.isLt
+    omega
+
+/-! ## Readers and decision procedures -/
+
+/-- The limbs of the word at `a`, zero when there is none: `read`, as a row's three-limb column
+(the arithmetization's row builders); specified by `ofLimbs_limbsAt`. -/
+noncomputable def MemImage.limbsAt {κ : ℕ} (L : MemImage κ) (a : K) : Vector K 3 :=
+  match L.read a with
+  | some v => #v[v.limb 0, v.limb 1, v.limb 2]
+  | none => #v[0, 0, 0]
+
+/-- The two limbs of the word at `a`, zero when there is none: `read`, as a `BLAKE2S` row's cell
+column; specified by `ofCell_cellAt`. -/
+noncomputable def MemImage.cellAt {κ : ℕ} (L : MemImage κ) (a : K) : Vector K 2 :=
+  match L.read a with
+  | some v => #v[v.limb 0, v.limb 1]
+  | none => #v[0, 0]
+
+/-- Register equality is decided field by field. Not derived: the derived instance decides the
+second field under `h ▸` for the first, whose `Eq.rec` makes the kernel compare two register
+values by definitional unfolding instead of evaluation, and `g * 1 = g ^ 1` then never
+decides. -/
+instance {F : Type} [DecidableEq F] : DecidableEq (Regs F) := fun x y ↦
+  decidable_of_iff (x.pc = y.pc ∧ x.fp = y.fp) (by cases x; cases y; simp)
+
+/-- Sentinel safety is checked from the last typed instruction, without an address search. -/
+instance (prog : Program) : Decidable (SentinelSafe prog) :=
+  inferInstanceAs (Decidable (_ ≠ Opcode.jump))
+
 /-! ## Memory -/
 
 /-! ### Load-bearing lemmas -/
