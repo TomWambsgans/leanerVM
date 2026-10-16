@@ -25,7 +25,7 @@ library code.
 | --- | --- |
 | [`LeanerVM/Semantics.lean`](LeanerVM/Semantics.lean) | leanISA: memory, the six instructions, programs, one step, `ValidExecution` |
 | [`LeanerVM/Protocol/Verifier.lean`](LeanerVM/Protocol/Verifier.lean) | the verifier, `python-verifier/verifier.py` transcribed section by section, for any hash function |
-| [`LeanerVM/Protocol/LeanVM.lean`](LeanerVM/Protocol/LeanVM.lean) | the statements: knowledge soundness in the random-oracle model, and completeness |
+| [`LeanerVM/Protocol/LeanVM.lean`](LeanerVM/Protocol/LeanVM.lean) | the statements: knowledge soundness in the random-oracle model against an adversary that chooses the program, the public input and the proof, and completeness up to a negligible probability |
 
 They import the fields, the protocol's constants (`LeanerVM/Parameters/`), BLAKE2s and the
 Fiat–Shamir layer (`LeanerVM/Protocol/Compile/`). The verifier runs compiled on proofs of the Rust

@@ -16,19 +16,23 @@ The statements read over three files: the ISA,
 * `verifier H prog input proof : m Bool`: the verifier, for a hash function `H : Bytes → m Digest`
   in any monad; `verify` is the BLAKE2s instance (`m = Id`), the deployed verifier, and the
   knowledge-soundness experiment runs the same `verifier` with `H` a random-oracle query;
-* `knowledgeSoundness`: for a program whose last instruction is not a `JUMP` (`SentinelSafe`, the
-  one condition soundness needs) and an adversary of at most `Q` queries,
-  `Pr[accepted ∧ the extracted execution is not a valid execution] ≤ soundnessError Q`, with
-  `soundnessError Q = (Q + 13213)·(2^-128 + 6·(Q + 13213)/2^256)`; the extractor returns an
-  execution (`Trace`): the memory image the proof commits to, run until it halts;
+* `knowledgeSoundness`: against an adversary of at most `Q` queries that outputs a statement (a
+  program and a public input) and a proof, all chosen after querying the oracle,
+  `Pr[accepted ∧ SentinelSafe prog ∧ the extracted execution is not a valid execution of prog on
+  input] ≤ soundnessError Q` (`Breaks`), with
+  `soundnessError Q = (Q + 13213)·(2^-128 + 5·(Q + 13213)/2^256)`. `SentinelSafe` (the program's
+  last instruction is not a `JUMP`) is the one condition soundness needs. The extractor returns
+  an execution (`Trace`): the memory image the proof commits to, run until it halts;
 * `soundnessError_le`: at most `2^-63` for `Q ≤ 2^64`;
 * `completeness`: for a valid execution of at most `2^19` steps, a memory of at most `2^23` words
   and a bytecode of at most `2^23` instructions, of a program carrying the fill blocks
   (`HasFillBlocks`, the one trace of padding in a statement: the deployed prover pads its tables
-  with blocks the compiler appends to the bytecode), at a rate `1 ≤ ρ ≤ 4`, and for every hash
-  function whose 17-bit proof-of-work search succeeds within the prover's fuel, the honest
-  prover returns a proof and the verifier accepts it; `honestProof_accepted`: every proof the
-  honest prover returns is accepted.
+  with blocks the compiler appends to the bytecode), at a rate `1 ≤ ρ ≤ 4`, the honest prover
+  (`honestProver`), run as the adversary of the same random-oracle experiment with a fuel of
+  `fuel` nonces per proof of work, makes the verifier reject with probability at most
+  `completenessError fuel = Q·((1 - 2^-17)^fuel + Q/2^256)`,
+  `Q = 13216 + 13210·(2^27 + fuel + 1)`;
+* `completenessError_le`: below `2^-128` at `fuel = 2^25`.
 
 The size bounds trade against each other (`Complete.exists_admissible_witness_of_budget`:
 `8·2^κ + 2^logSize + 356·2^n ≤ 2^28` for `2^n` steps); `2^20` steps never fit the deployed
@@ -73,21 +77,31 @@ runs proven-equal code.
     the public input, Flock, ring switching, WHIR, proof of work, the announced sizes, the file
     lengths); about 11 minutes at 8 jobs.
 
-## Soundness (`LeanerVM/Protocol/EndToEnd/Sound/Theorem.lean`)
+## Soundness (`LeanerVM/Protocol/EndToEnd/Sound/Statements.lean`)
 
 In the random-oracle model for BLAKE2s-256 on byte strings (VCVio's `randomOracle`), against any
-adversary making at most `Q_A` queries:
+adversary making at most `Q_A` queries and outputting a statement and a proof:
 
-* `leanVm_romSound`: the verifier accepts while its run is doomed with probability at most
-  `(Q_A + 13213)·(2^-128 + failBound)` (`failBound`: `(4 + k)·N/2^256` with `k = 2` seeding
-  steps);
-* `leanVm_knowledge`: the same bound for "accepts and the extractor (reading the announced sizes
-  and the stack's commitment off the oracle's answers, then picking a stack of the Johnson list
-  satisfying the relation; a classical choice) returns no stack satisfying `M3Holds`";
-* `leanVm_execution`: for well-formed bytecode, the same bound for "accepts and the extracted
-  witness represents no valid execution" (through the adaptor and `constraintSoundness`); the
-  front page's `knowledgeSoundness` is this statement;
+* `leanVm_knowledge`: the verifier accepts while the extractor (reading the announced sizes and
+  the stack's commitment off the oracle's answers, then picking a stack of the Johnson list
+  satisfying the relation; a classical choice) returns no stack satisfying `M3Holds` for the
+  adversary's statement with probability at most `(Q_A + 13213)·(2^-128 + failBound)`
+  (`failBound`: `(4 + k)·N/2^256` with `k = 1` common seeding step);
+* `leanVm_execution`: the same bound for "accepts, the program is `SentinelSafe`, and the
+  extracted witness represents no valid execution" (through the adaptor and
+  `constraintSoundness`); the front page's `knowledgeSoundness` is this statement;
 * `leanVm_bound_le`: for `Q_A ≤ 2^64` the bound is at most `2^-63`.
+
+**Chosen statements.** The random-oracle theorem (`Compile/Rom/Sound.lean`, `romSound`) takes a
+family of seedings (`Seeds`, `Compile/Rom/Log.lean`), one per statement, over one verifier program
+and one doom certificate. The decoder recognizes the seed of any statement of the family by the
+input that completes its seeding (`rootAt`): the last seeding input, computed through answers
+without collisions, names the statement (`Seeds.inj`). For leanVM the program is `anyProgram`
+(read the statement's bytecode length and words and the public input's lanes, then run its
+verifier program), the root of a statement is that history of reads (`stmtHistory`, prefix-free:
+`stmt_eq_of_prefix`), and the certificate `anyCert` is `leanVmCert` of the statement past its
+root. The family needs `bytecodeWords_injective` and `publicDigest_injective`. A fixed statement
+is the special case of an adversary that outputs it.
 
 The per-query error `2^-128` is certified: every group of challenges of the deployed opening
 escapes with probability at most `2^-128` after its proof of work, at all 56 admissible (stack
@@ -125,11 +139,18 @@ Flock and ring switching (`Front/{Pub,Flock,Ring}*.lean`), the BLAKE2s circuit w
   exists when the proof-of-work searches succeed and is accepted (`complete_of_small`). The
   witness's heights come from `constraintCompleteness_heights`, which needs of the bytecode only
   its fill blocks.
+* In the random-oracle model (`EndToEnd/Complete/Rom.lean`, `Compile/Rom/Complete.lean`): the
+  honest prover is an oracle computation (`proveM`, equal to the pure prover at `Id`,
+  `proveM_id`), run as the adversary of the soundness experiment. On every outcome where it
+  returns a proof the verifier accepts (`simulateQ_id_of_look`, `runProof_prove`); it fails only
+  at a proof-of-work search whose `fuel` nonces all fail, which a potential on the oracle's log
+  bounds (`powPot`: each nonce fails with probability exactly `1 - 2^-17`, `avg_miss_eq`). The
+  rejection probability is at most `Q·((1 - 2^-17)^fuel + Q/2^256)` (`romComplete`), and
+  `(1 - 2^-b)^(2^b·k) ≤ 2^-k` (`missProb_pow_le`).
 
 ## Trust boundary
 
 * BLAKE2s-256 is modelled as a random oracle; nothing is claimed about attacks using its code.
-* The statement is non-adaptive: the program and the public input are fixed before the oracle.
 * The verifier is the Lean transcription of the Python verifier; its agreement with the Python
   and the Rust verifiers is test evidence (above).
 * Knowledge extraction is information-theoretic (a classical choice in the Johnson list).
@@ -156,14 +177,16 @@ CompPoly's types), and the source policy also rejects `decide +native`, `set_opt
 `implemented_by`, `extern` and `addDecl`, and scans `cli/`. Open, in order of relevance:
 
 1. **Pruned openings.** Prove that a pruned proof the deployed verifier accepts expands into a raw
-   proof `verifier` accepts, so that the theorems cover the format the Rust prover ships.
-2. **Adaptive soundness.** The seed binds the bytecode and the public input before any challenge,
-   so soundness against an adversary choosing the public input is likely; it is not proved.
+   proof `verifier` accepts, so that the theorems cover the format the Rust prover ships. Kept
+   out of scope for now: the statements are about the raw format.
+2. **Adaptive soundness.** Done: the adversary chooses the program, the public input and the
+   proof (`knowledgeSoundness`, above).
 3. **Encodings against Rust.** `bytecodeWords` and `publicDigest` are checked against a
    hand-transcribed table only; a test against tables generated by the Rust `bytecode_table` and
    `public_input_bytes` would close the gap.
-4. **Completeness without the PoW hypothesis**, and for runs larger than `2^19` steps that the
-   deployed parameters admit when they are not BLAKE2S-heavy (the budget form allows it).
+4. **Completeness.** Done without the proof-of-work hypothesis (probability at most
+   `completenessError fuel`). Open: runs larger than `2^19` steps that the deployed parameters
+   admit when they are not BLAKE2S-heavy (the budget form allows it).
 
 ## Findings along the way
 

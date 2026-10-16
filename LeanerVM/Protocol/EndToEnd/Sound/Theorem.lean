@@ -16,28 +16,23 @@ public import LeanerVM.Protocol.Verifier.Cost
 /-!
 # Knowledge soundness of the leanVM verifier in the random-oracle model
 
-Let `P = leanVmProgram (bytecodeWords prog) (publicDigest input)` be the deployed verifier
-program (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) and `σ = leanVmSeed …` its
-Fiat–Shamir seed, with BLAKE2s a random oracle (`romExperiment`), an adversary of `QA` queries,
-and the verifier's `13213` (`isTotalQueryBound_leanVm`). With `N = QA + 13213`:
+For one statement, `P = leanVmProgram (bytecodeWords prog) (publicDigest input)` the deployed
+verifier program (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) and `σ = leanVmSeed …` its
+Fiat–Shamir seed: the doom certificate's bound, the extractor, and the step from an accepted proof
+without a witness to doom. The probability statements, for an adversary that chooses the
+statement, are in `LeanerVM.Protocol.EndToEnd.Sound.Statements`.
 
-* `leanVm_romSound`: the verifier accepts while some boundary prefix of the extracted history is
-  doomed for `leanVmCert` with probability at most `N · (2^-128 + failBound σ N)`.
+* `leanVmCert_bound`: every escape bound of `leanVmCert`, discounted by the proof of work before
+  its group, is at most `2^-128`.
 * `extractStack prog input c π`: **the extractor**. It reads the extracted history of `π` under
   the cache `c`, the announced sizes `(s, ρ)` (the value `readSizes` returned along it; a
   classical choice, unique by `announced_eq`) and the stack's committed word `W₀` (the first
   commitment), and returns a candidate of `W₀` at level 0's Johnson threshold satisfying
   `M3Holds (leanIsaInstance blake2sFlockSpec prog s) input`, if one exists (a classical choice;
   the extractor is a specification of what is extracted, not an algorithm).
-* `leanVm_knowledge`: **knowledge soundness**. The verifier accepts while the extractor does not
-  return admissible sizes and a stack satisfying `M3Holds` with probability at most the same
-  bound. The step "accepted and no good candidate ⇒ doomed" (`doomed_of_not_extracted`): after
-  the stack's root the certificate's doom is `CommitDoom` (`leanVmSpec_D_commit`), which is
-  "no good candidate".
-* `leanVm_execution`: for well-formed bytecode, through `execution_of_extracted`, the witness read
-  off the extracted stack represents a valid execution of `prog` on `input`, except with the same
-  probability.
-* `leanVm_bound_le`: for `QA ≤ 2^64` the bound is at most `2^-63`.
+* `doomed_of_not_extracted`: a proof accepted while the extractor finds no good candidate has a
+  doomed boundary prefix: after the stack's root the certificate's doom is `CommitDoom`
+  (`leanVmSpec_D_commit`), which is "no good candidate".
 
 No statement takes a hypothesis beyond the adversary's query bound (and, for executions,
 well-formed bytecode): the table sumcheck's fidelity is `tableFid_leanIsa`.

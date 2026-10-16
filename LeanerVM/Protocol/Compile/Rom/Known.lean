@@ -22,11 +22,14 @@ facts the final inequality (`LeanerVM.Protocol.Compile.Rom.Final`) uses.
   (`known_of_set`): only an entry with output `c` could change it, and outputs are distinct.
 * `entry_read`: if `cv` is `Known` and the `j`-th entry is the chain step `cv ‖ (x, tag)`, the
   decoder reads that entry with `cv`'s decoding: its record is among the log's records, and the
-  output's decoding is `Known`. The entry comes after `cv`'s (`lt_of_chunk`), and once a digest
-  is decoded the seeding is complete (`pend_none_of_info`), so the entry is not read as seeding.
-* `seed_known`: if the seeding computes the seed `s₀` through the log's answers, some entry
-  completes it, the record `bnd [] P` of `s₀` is among the log's records, and `s₀`'s decoding is
-  `Known`. The seeding's entries come in order (`lt_of_seedInput`).
+  output's decoding is `Known`. The entry comes after `cv`'s (`lt_of_chunk`), and it is not the
+  last input of any seeding: that input would extend the digest of an earlier seeding input,
+  which has no 64 bytes, while every decoded digest is the output of a 64-byte input
+  (`info_input_length`).
+* `seed_known`: if the seeding of the statement `x` computes the seed `s₀` through the log's
+  answers, some entry completes it, the decoder reads it as `x`'s seed (`Seeds.inj`), the record
+  `bnd (root x) …` of `s₀` is among the log's records, and `s₀`'s decoding is `Known`. The
+  seeding's entries come in order (`lt_of_seedInput`, `lt_of_chunk`).
 -/
 
 namespace LeanerVM.Protocol.Compile.Rom

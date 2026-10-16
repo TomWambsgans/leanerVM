@@ -23,8 +23,10 @@ oracle, entry by entry and in order, as moves of the verifier program `P` from t
 The decoder keeps the decoded digests (`Dec.info`) and one record per entry (`Dec.kinds`). An
 entry `(t, u)` is read as follows.
 
-* **Seeding.** If the entries before it answer every input of the seeding but the last, and `t`
-  is the last (`pend`), `u` is the seed: the chain state at the empty history.
+* **Seeding.** If, for some statement `x` of the family of seedings, the entries before it answer
+  every input of `x`'s seeding but the last, and `t` is the last (`pend`, `rootAt`), `u` is the
+  seed: the chain state at `x`'s root history (`rootStep`, when that history is a root of the
+  program, `RootOk`).
 * **A chain step.** Otherwise, if `t = cv ‖ (x, tag)` (`parse`) with `cv` a decoded digest, the
   entry is read at `cv`'s decoding:
   - at a chain state at node `read`, tag `1`: `u` is the state after the prover's scalar `x`;
@@ -42,8 +44,8 @@ entry `(t, u)` is read as follows.
 
 ## The records
 
-Each entry gets a `Shape`, paired with its output in `Dec.kinds`: `bnd h p` if its output is a chain state
-after a scalar, a commitment, or the seeding, at the boundary history `h` with node `p`;
+Each entry gets a `Shape`, paired with its output in `Dec.kinds`: `bnd h p` if its output is a
+chain state after a scalar, a commitment, or the seeding, at the boundary history `h` with node `p`;
 `grd h p b cv n` if it is the state after the nonce `n` at the grind state `cv`, `h` ending in
 `Ev.grind b`; `pow h p b cv n` if it is the proof of work of that pair. The potential
 (`LeanerVM.Protocol.Compile.Rom.Potential`) gives each record a term. A nonce's pair gets only one

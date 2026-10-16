@@ -53,7 +53,9 @@ and outputs are distinct (`output_ne`).
 leanVM's seed is `H(H(ivpre) ‖ pi)`, where `ivpre` holds `H(bytecode)` between fixed bytes. The
 seeding is described by a first input and a list of steps, each step's input being fixed bytes,
 the previous digest, and fixed bytes (`Seed`). The affixes make each step injective, which the
-count needs.
+count needs. The theorem takes a family of seedings (`Seeds`), one per statement: the adversary
+chooses the statement. The failure condition reads only the steps common to the family
+(`Seeds.steps`); a step with an empty prefix is covered by the chunk condition.
 -/
 
 namespace LeanerVM.Protocol.Compile.Rom
