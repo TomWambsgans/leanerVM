@@ -45,7 +45,7 @@ most `2^-128`, certified for every admissible size and rate (`Whir.Params.Deploy
 
 **Trust.** BLAKE2s is modelled as a random oracle. The statement is non-adaptive (`prog` and
 `input` are fixed before the oracle). That `verifier` is the deployed verifier is test evidence:
-it is a transcription of the Python, it accepts the Rust prover's proofs, and on 1500 mutated
+it is a transcription of the Python, it accepts the Rust prover's proofs, and on 7500 mutated
 proofs it gives the deployed Rust verifier's verdict every time (`scripts/fuzz-verifier.py`). The
 extractor is a classical choice in the list of codewords near the committed word. Every theorem
 depends only on `propext`, `Classical.choice` and `Quot.sound`.

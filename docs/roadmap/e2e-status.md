@@ -44,9 +44,11 @@ runs proven-equal code.
   `scripts/export-verifier-fixtures-rust.sh`), accepted;
 * differential fuzzing against the deployed Rust verifier (`scripts/fuzz-verifier.py`,
   `scripts/rust-verifier-cli/`): structured and seeded random mutations of every phase's
-  scalars, the roots, the nonces, the Merkle openings, the public input and the bytecode; 1500
-  cases (two seeds, 250 per fixture), the same verdict every time, 28 distinct Rust rejection
-  reasons exercised, no Rust panic.
+  scalars, the roots, the nonces, the Merkle openings, the public input and the bytecode; 7500
+  cases (seeds 1 and 2 at 250 per fixture, seed 3 at 2000 per fixture), the same verdict every
+  time, with every Rust rejection reason the mutations reach exercised and no Rust panic. Seed 3
+  runs in about 3 minutes at 8 jobs: `python3 -I scripts/fuzz-verifier.py <leanVM tree>
+  tests/fixtures/verifier --mutations 2000 --seed 3 --jobs 8`.
 
 ## Soundness (`LeanerVM/Protocol/EndToEnd/Sound/Theorem.lean`)
 
