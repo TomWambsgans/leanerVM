@@ -13,10 +13,10 @@ public import LeanerVM.Semantics.Instruction
 # One step of the machine
 
 leanISA roadmap Layer 3 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A: written from specification §2
-(`doc/leanvm/body/02-vm-specification.tex`; the registers `:16-20`, the execution loop
-`:26-35`, the operands `:49-52`, the instruction table `:54-68`, `DEREF` `:71-81`, `JUMP`
-`:86`, `BLAKE2S` `:90-93`) before the Rust executor (`crates/lean_vm/src/cpu/execute.rs`) was
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A: written from specification §2
+(`doc/leanvm/body/02-vm-specification.tex`; the registers `:18-22`, the execution loop
+`:28-37`, the operands `:51-54`, the instruction table `:56-70`, `DEREF` `:73-83`, `JUMP`
+`:88`, `BLAKE2S` `:92-95`) before the Rust executor (`crates/leanvm_core/src/cpu/execute.rs`) was
 opened; the diff against the executor is recorded in `docs/roadmap/leanisa-status.md`. Where §2
 is silent the roadmap's pinned conventions decide: `DEREF` reads its local cell in every mode
 (specification §7.4, acceptance test 6), and the halting test that keeps the sentinel from ever

@@ -16,7 +16,7 @@ public import LeanerVM.Protocol.Verifier.Verify
 # The verifier's layout is the instance's
 
 The verifier program (`LeanerVM.Protocol.Verifier`, `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) computes its own layout (`buildLayout`) from the
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) computes its own layout (`buildLayout`) from the
 bytecode words and the announced sizes; the oracle protocol reads the stack through the leanISA
 instance's layout (`leanIsaInstance F prog s`, `LeanerVM.Protocol.LeanIsa`). This module proves
 they are one layout, for every program and every size vector:
@@ -127,7 +127,7 @@ theorem width_opIdx (j : Fin 6) : width (opIdx j) = (tables.getD j default).widt
 
 /-! ## The layout -/
 
-/-- The checks `build_layout` makes of the sizes (`verifier.py:856-864`) for the program's
+/-- The checks `build_layout` makes of the sizes (`verifier.py:858-866`) for the program's
 bytecode: the memory window `[16, 32]`, the height cap `32`, the `BLAKE2S` floor `3`. The
 bytecode's checks hold by construction (`Program.logSize_le`). -/
 def LayoutOk (s : Sizes) : Prop :=

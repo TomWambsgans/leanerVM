@@ -14,18 +14,20 @@ public import LeanerVM.Arithmetization.Bytecode
 # Fixed public columns
 
 The two columns both parties know, at leanVM revision
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`.
 
 * **The index column** holds the address `g ^ i` at cell `i`. It is the geometric table of
   `ToCompPoly/BitProductTable.lean` at the generator, so its extension is a product of one
   factor per coordinate, `∏_k (1 + ζ_k (1 + g^(2^k)))` in characteristic two. Category A:
-  specification §6.5 (`doc/leanvm/body/06-bus-interactions.tex:95-100`).
+  specification §6.5 (`doc/leanvm/body/06-bus-interactions.tex:98-103`).
 * **The bytecode column** is the program as one table on `logSize + 4` variables: the
   instruction index in the low `logSize` coordinates, the slot in the high four, low bit first.
   Category B: the layout follows specification §8.1
   (`doc/leanvm/body/08-end-to-end-protocol.tex:4-25`) and
-  `crates/lean_vm/src/leaf.rs:570-604, 627-637`; the second verifier evaluates the same table at
-  `(zeta, alpha)` (`python-verifier/verifier.py:551-566`). The content of a slot is
+  `crates/leanvm_core/src/leaf.rs:543-577`; the Rust verifier evaluates the same table at
+  `(zeta, alpha)` (`crates/verifier/src/bus.rs:140-146`, with `bytecode.rs:100-134`; the
+  prover-side `bytecode_claim`, `leaf.rs:627-637` at `a386121f`, is removed at `127510d1`), and so
+  does the second verifier (`python-verifier/verifier.py:549-558`). The content of a slot is
   `encodeSlots`, the one definition of the encoding, zero slots included.
 
 Every index of the program is encoded, the last one too: the column knows no sentinel. These

@@ -7,7 +7,7 @@ blueprint. What is wanted is the blueprint's; who is taking which hole is issue
 are in [leanvm-target.md](../leanvm-target.md#known-discrepancies-at-the-pin). Open pull requests
 are not part of `main`.
 
-The pins are those of `upstreams.json`: leanVM `a386121f`, ArkLib `7653a901`, CompPoly
+The pins are those of `upstreams.json`: leanVM `127510d1`, ArkLib `7653a901`, CompPoly
 `572f9973`, Clean `42fe4b26`, VCVio `a4232d08`, PolyFun `41d3b21d`, Lean and Mathlib `v4.34.1`
 ([dependencies.md](../dependencies.md#lean-434-port-review)).
 
@@ -163,7 +163,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
   families and its error would replace the named instances; not tried.
 - **The Flock slot sends two values after the zerocheck**, `v_a` and `v_b`: both deployed
   verifiers derive the third, `v_c`, from the running claim
-  (`crates/flock/src/zerocheck.rs:421-422`, `verifier.py:1148-1149`). The slot's exact error sum
+  (`crates/verifier/src/flock.rs:94-95`, `verifier.py:1147-1148`). The slot's exact error sum
   (`sum_flockErrorOf`) is what the blueprint's `flockError_le` only bounds.
 - **Deleted as unused**: the field instances `instOracleInterfaceE` and `instOracleInterfaceListE`
   (the message schedules carry their own interfaces) and `Phase.Guarded`.
@@ -286,9 +286,13 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
   - The side conditions are one structure, `Bus.Conditions`: the blueprint's two (`1 ≤ I.d`, a
     table with a constraint fits in the leaf stacks' depth) and that the pull and count sides fit
     in `2 ^ μ_bus`, which an instance does not guarantee since `μ_bus` is the push side's depth,
-    and without which a side would be truncated. The deployed verifier asserts the fits of its
-    layouts (`leaf.rs:130-134`; it asks the pull side's depth to equal the push side's, which
-    is stronger) and rejects a point shorter than `τ_max` (`constraints.rs:251-253`).
+    and without which a side would be truncated. At `a386121f` the deployed Rust verifier
+    asserted the fits of its layouts (`leaf.rs:130-134`; it asked the pull side's depth to equal
+    the push side's, which is stronger) and rejected a point shorter than `τ_max`
+    (`constraints.rs:251-253`). Both checks are removed from the verifier at `127510d1`
+    (`crates/verifier/src/bus.rs:116` reads only the push side's depth); the prover keeps them
+    (`crates/leanvm_core/src/leaf.rs:122-126`, called from `prove_balance` at `:628`, and the
+    `debug_assert` at `crates/leanvm_core/src/constraints.rs:147-148`).
     `τ_max ≤ μ_bus` is derived (`Conditions.τmax_le`). `leanIsaInstance` meets
     `Bus.Conditions` at every size (`leanIsa_conditions`).
   - A block of leaves is a `Bus.Source` (a boundary block, one flush of one table, one count
@@ -353,8 +357,8 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
   deployed verifiers do: the Flock phase's weighted claims first, then the column claims in
   their order, each the weighted claim at the equality kernel of its point lifted through the
   layout (`Opening.pool_weighted`, `Opening.pool_column`; specification §8.5,
-  `doc/leanvm/body/08-end-to-end-protocol.tex:94-101`, `crates/pcs/src/stack_open.rs:518-526`,
-  `python-verifier/verifier.py:1409-1413`). Where it differs from Layer 10's section, or what
+  `doc/leanvm/body/08-end-to-end-protocol.tex:98-105`, `crates/verifier/src/lib.rs:126-132`,
+  `python-verifier/verifier.py:1403-1407`). Where it differs from Layer 10's section, or what
   it leaves to the work after it:
   - `leanVmPhases` is not in `Opening.lean` but in `Protocol/Piop.lean`, on the branch that
     composes the phases after the Flock phase's: it needs every phase, which the hole's row in the
@@ -490,7 +494,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     completeness (`holds_gen`, `slots_gen`); the sketch's `Holds`/`decHolds` are the region's.
     The phase needs only the region.
   - The phase is written for every circuit; the fast circuit walks of the BLAKE2s matrices (the
-    deployed `blake2s_row_values`, `verifier.py:1180-1295`, and the Rust `marginal_walk`) are owed
+    deployed `blake2s_row_values`, `verifier.py:1179-1288`, and the Rust `marginal_walk`) are owed
     by the leanISA instance, whose region they evaluate; they enter through
     `FlockSpec.compress_of_region` and `region_holds_gen`, which need only the matrices to agree.
   - The honest run is on a tiny argument (two skipped values, two blocks of four wires): an
@@ -499,7 +503,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     region's failure are checked at leanVM's sizes, by theorems and `#guard`s.
   - The skip nodes carry their inverse Lagrange denominators (`Flock.SkipDomain`), computed once
     per node set, so no Lagrange weight inverts at run time. The deployed verifiers keep one
-    denominator (`verifier.py:1104-1124`: the skip domain is a subspace, so every node has the same
+    denominator (`verifier.py:1103-1123`: the skip domain is a subspace, so every node has the same
     one); the leanVM domain computes all 192 from the nodes (`SkipDomain.ofPts`), and the
     one-denominator form, with the theorem that it is the same, is left to the compiled verifier.
   - The zerocheck's and the lincheck's rounds are the generic round (`SumcheckRound.rounds`) on
@@ -533,7 +537,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
   - `FlockSpec`'s inhabitant, which the hole names beside `flockSecurity`, is
     `Blake2sFlock.blake2sFlockSpec` (`Protocol/FlockSpec.lean`): the R1CS of the BLAKE2s circuit
     with the naive walks (which do not run at leanVM's size), the deployed slots
-    (`hash_flock.rs:93-115`), soundness from `blake2s_sound`, and the honest column of the
+    (`hash_flock.rs:86-108`), soundness from `blake2s_sound`, and the honest column of the
     circuit's traces. Both directions are theorems. As test evidence, the executor's row and the
     RFC 7693 vector round-trip through the honest column, and the honest column of eight
     compressions equals, by digest, the region the pinned prover commits
@@ -547,7 +551,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     (`ToArkLib/Flock/Words.lean`). Clean was measured and not used for the block: its expression
     trees are traversed unmemoised and its R1CS export allocates a fresh signal per product.
   - The BLAKE2s compression circuit in it (`Protocol/Blake2sCircuit.lean`, Category B, from
-    `crates/flock/src/hash.rs` and `verifier.py:1180-1295`): `blake2sCircuit` (14720 product
+    `crates/flock/src/hash.rs` and `verifier.py:1179-1288`): `blake2sCircuit` (14720 product
     gates from 1280, then the 256 output rows) and `bounded_blake2s`, from the gate-count
     contracts. Both directions are theorems: `blake2s_sound`/`blake2s_sound_words` (a satisfying
     Boolean block with `1` at position 512 carries at its output positions `compress` of the

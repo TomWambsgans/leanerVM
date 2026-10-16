@@ -16,7 +16,7 @@ public import LeanerVM.Arithmetization.Soundness.Lookup
 # Soundness of the memory channel
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A: specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 Lemma 6.3, Theorem 6.4 and Corollary 6.5 (`doc/leanvm/body/06-bus-interactions.tex`, §6.2–§6.3)
 for the memory pair. Artifact: `mem_channel_sound`, the guarantee of the memory pull
 (`MemPull.Guarantees`, Layer 5) for every memory pull of a witness of `SatisfiedBy`. Direction:

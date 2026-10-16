@@ -10,7 +10,8 @@ computation of `"abc"`, including the working vector before and after the first 
 against digests of CPython's `hashlib.blake2s`, which wraps the BLAKE2 authors' reference
 implementation and exposes the tree-mode `last_node` flag (`scripts/dump-blake2s.py vectors`).
 The cell encoding is checked against the executor test `blake2s_computes_the_compression` of the
-pinned leanVM, reproduced by `scripts/dump-blake2s-rust.sh`. The mutations at the end pin roadmap
+pinned leanVM, reproduced by `scripts/dump-blake2s-rust.sh` at `a386121f` (the test is unchanged at
+`127510d1` but for unwrapping the now fallible `execute`). The mutations at the end pin roadmap
 acceptance tests 10–12.
 
 Vector equalities are decided on the underlying word lists (`Vector.toList_inj`), because core's
@@ -97,7 +98,7 @@ example : compress (compress paramIv longBlock0 64 0 0) longBlock1 65 flag flag 
        0x83ba75bb] :=
   Vector.toList_inj.mp (by decide +kernel)
 
-/-! ## The executor vector: `blake2s_computes_the_compression` (`cpu/mod.rs:889-917`) -/
+/-! ## The executor vector: `blake2s_computes_the_compression` (`cpu/mod.rs:808-836`) -/
 
 def rustM0 : E :=
   E.ofLimbs (K.ofBits 0x0123456789abcdef) (K.ofBits 0xfedcba9876543210) 0x0000000000000000
@@ -119,7 +120,7 @@ def rustOut1 : E :=
 /-- The four message cells in operand order. -/
 def rustM : Fin 4 → E := ![rustM0, rustM1, rustM2, rustM3]
 
-/-- The words the executor fed to the compression (`hash_flock.rs:162-185`). -/
+/-- The words the executor fed to the compression (`hash_flock.rs:155-178`). -/
 example : messageWords rustM =
     #v[0x89abcdef, 0x01234567, 0x76543210, 0xfedcba98, 0x33334444, 0x11112222, 0x77778888,
        0x55556666, 0xcafebabe, 0xdeadbeef, 0x0badf00d, 0x0badf00d, 0xbbbbcccc, 0x9999aaaa,
@@ -166,7 +167,8 @@ example : ¬ CompressCells rustM rustCv0 rustCv1 rustOut0
   decide +kernel
 
 /-- 12: so is a message cell with a nonzero top limb, whose words are unchanged
-(`blake2s_requires_zero_third_limb`, `cpu/mod.rs:919-931`). -/
+(`blake2s_requires_zero_third_limb`, `cpu/mod.rs:919-931` at `a386121f`; removed at `127510d1`,
+where the executor returns `Fault::NotCanonical` instead, `cpu/execute.rs:883-889`). -/
 example : ¬ CompressCells ![E.ofLimbs (K.ofBits 0x0123456789abcdef) (K.ofBits 0xfedcba9876543210) 1, rustM1, rustM2,
     rustM3] rustCv0 rustCv1 rustOut0 rustOut1 rustMd := by
   decide +kernel

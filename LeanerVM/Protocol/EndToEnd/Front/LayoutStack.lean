@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.LayoutArith
 # `stack_offsets` and `stack_point`
 
 Category B facts about the transcriptions of `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 286-316 (`Placement`, `stack_offsets`,
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 285-315 (`Placement`, `stack_offsets`,
 `_selector_point`), in the form the layout correspondence uses:
 
 * `stackOffsets_eq`: the order of `stack_offsets`, sorted by "larger first, ties by index", is

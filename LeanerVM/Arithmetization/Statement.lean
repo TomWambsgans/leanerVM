@@ -25,18 +25,20 @@ public import Clean.Air.FlatEnsemble
 # The constraint statement
 
 leanISA roadmap Layer 8 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A for the
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A for the
 statement itself, which is what the M3 model means by an accepted instance (specification §5,
 `doc/leanvm/body/05-arithmetization.tex:4`: "an instance is accepted exactly when every
 table's constraints hold and the bus balances", the balance being the multiset equality of
 `:14`), and Category B for what the verifier checks of an announced instance: the caps
-(`crates/lean_vm/src/cpu/mod.rs:130-178`, `read_public`; §6.2 "Instance caps",
-`06-bus-interactions.tex:80`), the nonzero count product (§6.2 "The count product", `:78`;
-`cpu/layout.rs:73`, the count channel of the six tables' read-count columns, `:397-413`), the
-public words against the committed memory (§8.2, `08-end-to-end-protocol.tex:27-33`), the
-public parts of the bus the verifier forms itself, the index column and the program's share of
-the bytecode blocks (§8.5, `:70`; §6.5, `06-bus-interactions.tex:95`), and the BLAKE2s
-validity Flock proves (§8.5 "BLAKE2s validity"; `cpu/mod.rs:759-768`). Artifact: the accept
+(`crates/verifier/src/lib.rs:208-222` and `crates/verifier/src/layout.rs:381-395`, the
+announcement checks of `walk` and `build_layout`, which replace `read_public` of `a386121f`;
+§6.2 "Instance caps", `06-bus-interactions.tex:80`), the nonzero count product (§6.2 "The count
+product", `:78`; `cpu/layout.rs:73`, the count channel of the six tables' read-count columns,
+`:396-412`), the public words against the committed memory (§8.2,
+`08-end-to-end-protocol.tex:27-37`), the public parts of the bus the verifier forms itself, the
+index column and the program's share of the bytecode blocks (§8.5, `:74`; §6.5,
+`06-bus-interactions.tex:98`), and the BLAKE2s validity Flock proves (§8.5 "BLAKE2s validity";
+`crates/verifier/src/lib.rs:266-289`). Artifact: the accept
 relation of the M3 constraint system and its ensemble. Direction: a statement, no soundness or
 completeness theorem. Boundary: leanVM at the pin above, Clean `42fe4b26`. Contribution: the
 statement surface of T1 (both directions); no target of `docs/architecture.md` is claimed.
@@ -68,19 +70,23 @@ three pairs `(StatePull, StatePush)`, `(MemPull, MemPush)`, `(BytecodePull, Byte
 
 **The verifier's checks.** `CountsNonzero w` is the nonzero count product: every read pull of
 the six tables carries a nonzero count, message index `1` (bus coordinate 2) of a memory or
-bytecode tuple (§6.2 "The count product"; `layout.rs:73` and `:397-413`, the count channel
+bytecode tuple (§6.2 "The count product"; `layout.rs:73` and `:396-412`, the count channel
 stacks the read-count columns of the six tables and nothing else, so the finalize counts of
 the two blocks are outside it, as §6.2 "Nothing checks the finalize counts" says). `Caps w` is
-the M3 part of `read_public` (`cpu/mod.rs:130-178`), which makes eight checks: (1) the
-announced sizes have zero upper limbs (`:133`, the transcript format) and (2) the two public
-words have a zero third limb (`:141-143`), both by type here (`PublicInput.word0`, `word1`);
-(3) the bytecode length is a power of two at most `2^MAX_LOG_BYTECODE` (`:158-159`),
-`Program`'s by type (Layer 2's `logSize_le`); (4) the memory log-size is within
-`[MIN_LOG_MEM, MAX_LOG_MEM]` (`:160`); (5) every table height is a power of two at most
-`2^MAX_LOG_ROWS` (`:161`; heights are announced as logs, `:114-117`, and the two blocks'
-heights `2^κ_mem` and `2^κ_bc` are within the same cap by the other conjuncts); (6) the
-`BLAKE2S` table has at least `2^n_blocks_log(1) = 2^3` rows (`:166`); (7) the WHIR rate
-(`:167`) and (8) the stacked size `mu ∈ [MIN_MU, MAX_MU]` (`:174-176`) are parameters of the
+the M3 part of the announcement checks (`read_public` at `a386121f`; at the pin, `walk` and
+`build_layout`, `verifier/src/lib.rs:208-222` and `verifier/src/layout.rs:381-395`, behind the
+wrapper `crates/leanvm_core/src/cpu/mod.rs:685-698`), which make eight checks: (1) the
+announced sizes have zero upper limbs (`verifier/src/lib.rs:210-213`, the transcript format)
+and (2) the two public words have a zero third limb (`cpu/mod.rs:688-690`), both by type here
+(`PublicInput.word0`, `word1`); (3) the bytecode length is a power of two at most `2^32`
+(`cpu/mod.rs:688`, `verifier/src/layout.rs:386` and `:393`), `Program`'s by type (Layer 2's
+`logSize_le`); (4) the memory log-size is within `[MIN_LOG_MEM, MAX_LOG_MEM] = [16, 32]`
+(`verifier/src/layout.rs:388`); (5) every table height is a power of two at most
+`2^MAX_LOG_ROWS` (`verifier/src/layout.rs:389-391`; heights are announced as logs,
+`cpu/mod.rs:110-113`, and the two blocks' heights `2^κ_mem` and `2^κ_bc` are within the same
+cap by the other conjuncts); (6) the `BLAKE2S` table has at least `2^n_blocks_log(1) = 2^3`
+rows (`verifier/src/layout.rs:392`); (7) the WHIR rate (`verifier/src/lib.rs:217`) and (8) the
+stacked size `mu ∈ [MIN_MU, MAX_MU]` (`verifier/src/lib.rs:219-222`) are parameters of the
 commitment, left to the protocol layer, which reads them off the same announcement. `Caps`
 transcribes (4), (5) and (6) and adds `WellShapedData w.data`, a representation hypothesis
 rather than a check: the shape the announced `log_mem` already implies for an honest prover,
@@ -90,33 +96,33 @@ total read count below `2^64 - 1`, the bound Layer 9's bus argument needs (Lemma
 **The three hypotheses Clean cannot yet express** (the roadmap's dependency table; removed by
 Clean PR #446, indexed fixed columns and proof-committed `ProverData`):
 `IndexColumnsAreRowIndices w`, the `idx` column of row `i` of the memory block is `g^i` (§6.5,
-the index column the verifier computes; `layout.rs:365` and `:376`, `Index`; the bytecode
+the index column the verifier computes; `layout.rs:364` and `:375`, `Index`; the bytecode
 block's index column needs no conjunct, since `bytecodeRowOf prog i` writes it);
 `SeedRowsAreTheImage w`,
 the memory block's rows are the words of the image the prover data names, in order, the index
-and finalize columns free (§6.2 "Seed" and "Finalize"; `layout.rs:359-382`, `MEM_LO, MEM_HI,
+and finalize columns free (§6.2 "Seed" and "Finalize"; `layout.rs:358-381`, `MEM_LO, MEM_HI,
 MEM_TOP` and `MFCNT`); and `BytecodeRowsAreTheProgram prog w`, the bytecode block's rows are
 `bytecodeRowOf prog i cntFin` for every slot `i` with some finalize-count column `cntFin`
 (§8.5 Bus 4: the verifier forms "the program's whole share of the two bytecode blocks" itself;
-`layout.rs:288-290` and `:383-395`, `Coord::Public` and `BFCNT`). Each is faithful: the index
+`layout.rs:287-289` and `:382-394`, `Coord::Public` and `BFCNT`). Each is faithful: the index
 column is verifier-computed, the memory columns are the committed image, the program is
 public. Their per-row readings are Layer 7's `memRowOf_bindings` and `BytecodeBindings prog`.
 
 **The BLAKE2s validity.** `Blake2sRowsValid w`, every row of the `BLAKE2S` table satisfies
 `Blake2sRelation` (Layer 6, the table's `Assumptions` field), is the one conjunct the verifier
-enforces outside the bus: the table has no constraint on its eighteen limbs, and the
-compression is proved by Flock on the region the limb columns are routed to (§8.5 "BLAKE2s
-validity", Opening step 4; `cpu/mod.rs:759-768`). Clean's `EnsembleWitness.Constraints` does
-not include a table's `Assumptions`, and its `AssumptionsConsistency` sources them from the
-public input alone, so the fact is a conjunct of the statement, and
-`assumptions_of_blake2sRowsValid` turns it into the `w.Assumptions` that Clean's
-`TableSoundness` takes. The conjunct stays: the proof system's adaptor discharges it from the
-Flock region, whose R1CS forces every block's limbs to compress (`blake2sRowsValid_witnessOf`).
+enforces outside the bus: the table has no constraint on its eighteen limbs, and the compression is
+proved by Flock on the region the limb columns are routed to (§8.5 "BLAKE2s validity", Opening step
+4; `crates/verifier/src/lib.rs:266-289`). Clean's `EnsembleWitness.Constraints` does not include a
+table's `Assumptions`, and its `AssumptionsConsistency` sources them from the public input alone, so
+the fact is a conjunct of the statement, and `assumptions_of_blake2sRowsValid` turns it into the
+`w.Assumptions` that Clean's `TableSoundness` takes. The conjunct stays: the proof system's adaptor
+discharges it from the Flock region, whose R1CS forces every block's limbs to compress
+(`blake2sRowsValid_witnessOf`).
 
 **The statement.** `SatisfiedBy prog input w` is the relation the proof system proves and
 extracts (issue #13), a structure with named fields so that Layers 9 and 10 project the
 conjunct they consume by name. Its `constraints` field is Clean's; only the `JUMP` table emits
-an assertion (`tables.rs:724-731`; the other seven components and the verifier have none), so
+an assertion (`tables.rs:729-736`; the other seven components and the verifier have none), so
 the field reduces to the `JUMP` residuals on every `JUMP` row. The `public_input_eq` field is
 read by no component: the lanes bind the run through `word0_eq` and `word1_eq`, the two public
 words at `g^0` and `g^1` of the image the data names (§8.2, the evaluation claim against the
@@ -172,7 +178,7 @@ open Air.Flat (Ensemble EnsembleWitness Component)
 
 /-- The leanISA ensemble of the public program `prog`: the six opcode tables (Layer 6), the
 memory and bytecode blocks (Layer 7), the six channels (Layer 5), and the verifier
-`leanIsaVerifier prog`, its one program-bearing component (`layout.rs:352-395`; decision 14). -/
+`leanIsaVerifier prog`, its one program-bearing component (`layout.rs:351-394`; decision 14). -/
 def leanIsaEnsemble (prog : Program) : Ensemble K PublicIO where
   tables := [⟨xorTable⟩, ⟨mulTable⟩, ⟨setTable⟩, ⟨derefTable⟩, ⟨jumpTable⟩, ⟨blake2sTable⟩,
     ⟨memTable⟩, ⟨bytecodeTable⟩]
@@ -236,7 +242,7 @@ def BalancedPair (w : EnsembleWitness (leanIsaEnsemble prog)) (pull push : RawCh
 
 /-- Every read pull of the six tables carries a nonzero count, message index `1` (bus
 coordinate 2) of the memory and bytecode tuples: the nonzero count product (§6.2 "The count
-product"; `layout.rs:73`, `:397-413`). The finalize counts of the two blocks are outside it
+product"; `layout.rs:73`, `:396-412`). The finalize counts of the two blocks are outside it
 (§6.2). Both tuples have at least two coordinates (Layer 5's `MemMsg`, `BytecodeMsg`), so the
 bound is never the reason the conjunct holds. -/
 def CountsNonzero (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop :=
@@ -244,20 +250,21 @@ def CountsNonzero (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop :=
     (i.channel.name = MemPull.name ∨ i.channel.name = BytecodePull.name) →
       ∀ h : 1 < i.msg.size, i.msg[1] ≠ 0
 
-/-- The M3 checks of the announced instance, three of `read_public`'s eight
-(`cpu/mod.rs:130-178`; §6.2 "Instance caps"): the memory log-size window, the height cap and the
-`BLAKE2S` floor. The bytecode length and the public words' third limbs are checked by type
-(`Program`, `PublicInput`); the WHIR rate and the stacked size are the protocol layer's (see
-the module docstring). -/
+/-- The M3 checks of the announced instance, three of the verifier's eight announcement checks
+(`crates/verifier/src/layout.rs:387-395`; §6.2 "Instance caps"): the memory log-size window, the
+height cap and the `BLAKE2S` floor. The bytecode length and the public words' third limbs are
+checked by type (`Program`, `PublicInput`); the WHIR rate and the stacked size are the protocol
+layer's (see the module docstring). -/
 structure Caps (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop where
-  /-- `MIN_LOG_MEM ≤ log_mem` (`:160`). -/
+  /-- `MIN_LOG_MEM ≤ log_mem` (`:388`). -/
   minLogMem_le : minLogMem ≤ (imageOf w.data).1
-  /-- `log_mem ≤ MAX_LOG_MEM` (`:160`). -/
+  /-- `log_mem ≤ MAX_LOG_MEM` (`:388`). -/
   le_maxLogMem : (imageOf w.data).1 ≤ maxLogMem
-  /-- Every table's height is a power of two at most `2^MAX_LOG_ROWS` (`:161`, `:114-117`).
+  /-- Every table's height is a power of two at most `2^MAX_LOG_ROWS` (`:389-391`; announced
+  as logs, `crates/leanvm_core/src/cpu/mod.rs:110-113`).
   The verifier's own table has one row and is not among `w.tables`. -/
   heights : ∀ t ∈ w.tables, ∃ τ ≤ maxLogRows, t.table.length = 2 ^ τ
-  /-- The `BLAKE2S` table has at least `2^n_blocks_log(1)` rows (`:166`; Layer 2's
+  /-- The `BLAKE2S` table has at least `2^n_blocks_log(1)` rows (`:392`; Layer 2's
   `minLogRowsBlake2s`). -/
   blake2s_height : 2 ^ minLogRowsBlake2s ≤ (blake2sRows w).length
   /-- Not a verifier check: the data's `"mem"` table has exactly the `2^κ` rows of its image
@@ -267,7 +274,7 @@ structure Caps (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop where
 /-! ## The hypotheses Clean cannot yet express -/
 
 /-- The `idx` column of row `i` of the memory block is `g^i`: the index column the verifier
-computes (§6.5; `layout.rs:365`, `:376`). The bytecode block needs no such conjunct: its
+computes (§6.5; `layout.rs:364`, `:375`). The bytecode block needs no such conjunct: its
 index column is written by `bytecodeRowOf prog i` inside `BytecodeRowsAreTheProgram`, while
 `SeedRowsAreTheImage` leaves the memory block's free, since the Rust computes the two from
 different sources (the row index here, the program there). Removed by Clean PR #446. -/
@@ -276,7 +283,7 @@ def IndexColumnsAreRowIndices (w : EnsembleWitness (leanIsaEnsemble prog)) : Pro
 
 /-- The memory block's rows are the words of the image the prover data names, in order, for
 some index column `idx` and finalize-count column `cntFin`: the committed columns `MEM_LO,
-MEM_HI, MEM_TOP` are the image (§6.2 "Seed" and "Finalize"; `layout.rs:359-382`). Removed by
+MEM_HI, MEM_TOP` are the image (§6.2 "Seed" and "Finalize"; `layout.rs:358-381`). Removed by
 Clean PR #446. -/
 def SeedRowsAreTheImage (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop :=
   ∃ idx cntFin : Fin (2 ^ (imageOf w.data).1) → K,
@@ -296,9 +303,9 @@ def BytecodeRowsAreTheProgram (prog : Program) (w : EnsembleWitness (leanIsaEnse
 
 /-! ## The BLAKE2s validity -/
 
-/-- Every row of the `BLAKE2S` table satisfies the compression relation on its eighteen limbs
-(Layer 6's `Blake2sRelation`, the table's `Assumptions`): what Flock proves of the region the
-limb columns are routed to (§8.5 "BLAKE2s validity"; `cpu/mod.rs:759-768`). The one conjunct
+/-- Every row of the `BLAKE2S` table satisfies the compression relation on its eighteen limbs (Layer
+6's `Blake2sRelation`, the table's `Assumptions`): what Flock proves of the region the limb columns
+are routed to (§8.5 "BLAKE2s validity"; `crates/verifier/src/lib.rs:266-289`). The one conjunct
 enforced outside the bus; the proof system discharges it from the Flock region. -/
 def Blake2sRowsValid (w : EnsembleWitness (leanIsaEnsemble prog)) : Prop :=
   ∀ row ∈ blake2sRows w, Blake2sRelation (blake2sRowAt w row)

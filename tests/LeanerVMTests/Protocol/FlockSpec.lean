@@ -7,7 +7,7 @@ import LeanerVM.Protocol.FlockSpec
 * **The relation.** The executor's `BLAKE2S` row (`scripts/dump-blake2s-rust.sh` at leanVM
   `a386121f`, as in `tests/LeanerVMTests/Arithmetization/Tables.lean`) and the RFC 7693
   `"abc"` compression, as limb rows, are compressions; one flipped output bit is not.
-* **The slots.** The deployed `SLOTS` of `hash_flock.rs:93-115`, injective; fourteen input limbs.
+* **The slots.** The deployed `SLOTS` of `hash_flock.rs:86-108`, injective; fourteen input limbs.
 * **The honest column.** Two blocks, the two rows: the slots of every block read its row back, so
   the circuit's trace computes the executor's and the RFC's outputs; the column's blocks are the
   honest blocks bit for bit.

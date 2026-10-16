@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Whir.Complete.Tables
 # True column claims
 
 The verifier program (`LeanerVM.Protocol.Verifier`, `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) accumulates column claims as data
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) accumulates column claims as data
 (`Verifier.ColumnClaim`: a global column, a point, a value) and opens them on the stack through
 its layout (`ColumnClaim.onStack`). Against the honest prover every claim it accumulates is a
 *true claim* (`TrueClaim`): the global column is the Python number `pyCol c` of an instance

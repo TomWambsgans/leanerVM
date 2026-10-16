@@ -78,7 +78,7 @@ noncomputable def Trace.runRows {prog : Program} (t : Trace prog) (op : Opcode) 
   (t.regs.dropLast.filter fun r ↦ (prog.fetch r.pc).map Instr.opcode = some op).length
 
 /-- The rows the `JUMP` table owes before its own fill: the run's `JUMP` rows, and one closing
-jump for every traversal of the fill of every other table (`cpu/filler.rs:166-167`, `owed`). -/
+jump for every traversal of the fill of every other table (`cpu/filler.rs:170-171`, `owed`). -/
 noncomputable def Trace.owed {prog : Program} (t : Trace prog) : ℕ := jumpOwed t.runRows
 
 /-- A trace leaves room for the fill blocks and keeps every table within the row cap. -/

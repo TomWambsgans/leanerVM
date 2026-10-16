@@ -5,10 +5,10 @@ public import LeanerVM.Parameters.Isa
 /-!
 # Layer 2 tests: opcode codes and instance caps
 
-Kernel checks that the six codes are the words `1, 2, 4, 8, 16, 32`, bits `0` to `5` since
-`g = x`, in the order of `crates/lean_vm/src/tables.rs:95-100`, and that the caps carry the
-values of `cpu/mod.rs:51-64` and `crates/flock/src/hash.rs:283-286`. The caps are checked
-against each other so that an announcement at the floor is admissible.
+Kernel checks that the six codes are the words `1, 2, 4, 8, 16, 32`, bits `0` to `5` since `g = x`,
+in the order of `crates/leanvm_core/src/tables.rs:99-104`, and that the caps carry the values of
+`cpu/mod.rs:51-60`, `crates/verifier/src/layout.rs:393` and `crates/flock/src/hash.rs:281-284`. The
+caps are checked against each other so that an announcement at the floor is admissible.
 -/
 
 namespace LeanerVMTests.Parameters

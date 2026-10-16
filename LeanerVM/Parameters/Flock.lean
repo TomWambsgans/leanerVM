@@ -13,27 +13,27 @@ public import LeanerVM.Parameters.Field
 /-!
 # Flock constants
 
-Category B: transcribed from leanVM at pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The
+Category B: transcribed from leanVM at pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The
 specification fixes the sizes and the shape of the fixed coordinates (Annex C, §C.1–§C.2) but
 not their values; the values below are the Rust's, cross-checked against the Python verifier.
 
-* `kBlock`, `kSkip`, `kIn` = `14`, `6`, `8`: `python-verifier/verifier.py:635-640`;
-  `crates/flock/src/zerocheck.rs:47`.
-* `constPos` = `512`: `crates/flock/src/hash.rs:146`; `verifier.py:642`.
+* `kBlock`, `kSkip`, `kIn` = `14`, `6`, `8`: `python-verifier/verifier.py:637-642`;
+  `crates/flock/src/zerocheck.rs:45`.
+* `constPos` = `512`: `crates/flock/src/hash.rs:144`; `verifier.py:644`.
 * `phi8Basis`, the images of `1, t, …, t^7` under `φ_8 : GF(2^8) → K`:
-  `crates/primitives/src/field/phi8_tower.rs:15-24`; `verifier.py:1092`.
+  `crates/primitives/src/field/phi8_tower.rs:15-24`; `verifier.py:1091`.
 * `fixedBytes` = `0xF7, 0x53, 0xB5`: `crates/flock/src/zerocheck/univariate_skip_optimized.rs:68`;
-  `verifier.py:1097-1100`.
+  `verifier.py:1096-1099`.
 * `g0`, the limbs `0x243F…08D3, 0x1319…7344, 0xA409…31D0` (π in hexadecimal):
-  `univariate_skip_optimized.rs:104-106`; `verifier.py:1095`.
-* `ringShifts` = `32, 16, 8, 4, 2, 1`: `crates/pcs/src/ring_switch.rs:85`; `verifier.py:1314`.
+  `univariate_skip_optimized.rs:104-106`; `verifier.py:1094`.
+* `ringShifts` = `32, 16, 8, 4, 2, 1`: `crates/pcs/src/ring_switch.rs:80`; `verifier.py:1307`.
 
 `φ_8` is `F_2`-linear in its byte, the sum of the basis images of the byte's set bits
-(`phi8_tower.rs:27-42`, `verifier.py:1093`); its image lies in `K`, the `y^0` limb of `E`. The
+(`phi8_tower.rs:27-42`, `verifier.py:1092`); its image lies in `K`, the `y^0` limb of `E`. The
 skip domain is `φ_8(0), …, φ_8(63)` and its coset `φ_8(64), …, φ_8(127)` (Annex C,
 §C.2). The fixed coordinates of the zerocheck point are `φ_8` of the three bytes, then
 `g0^(2^j) / (1 + g0^(2^j))` for `j < 4` (`univariate_skip_optimized.rs:90-101`,
-`verifier.py:1097-1100`). The modulus of `GF(2^8)` is not needed: only the images are used.
+`verifier.py:1096-1099`). The modulus of `GF(2^8)` is not needed: only the images are used.
 -/
 
 namespace LeanerVM.Parameters

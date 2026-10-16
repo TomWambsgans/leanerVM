@@ -18,7 +18,7 @@ public import Mathlib.Data.List.Perm.Basic
 # Offline memory checking
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A: specification Lemma 6.3, Theorem 6.4 and
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A: specification Lemma 6.3, Theorem 6.4 and
 Corollary 6.5 (`doc/leanvm/body/06-bus-interactions.tex`, §6.2 "Flush rules" and §6.3), stated over
 abstract lists so that the memory pair and the bytecode pair (`Soundness.MemChannel`,
 `Soundness.BytecodeChannel`) are two instances of one argument. Artifact: the counting argument of

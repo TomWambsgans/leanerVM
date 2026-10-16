@@ -17,9 +17,9 @@ public import Clean.Utils.Tactics.CircuitProofStart
 # The `SET_CONSTANT` table
 
 leanISA roadmap Layer 6 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the columns
-are `crates/lean_vm/src/tables.rs:527-538` (`mod set`, in that order) and the flushes
-`tables.rs:548-561` (`SetTable::flushes`), matching specification §7.3
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the columns
+are `crates/leanvm_core/src/tables.rs:532-543` (`mod set`, in that order) and the flushes
+`tables.rs:553-566` (`SetTable::flushes`), matching specification §7.3
 (`doc/leanvm/body/07-instruction-tables.tex:52-64`). There is no constraint.
 
 **The row** `SetRow` is the column list: `pc, fp`; the operand `o`; the immediate `k` as three
@@ -64,7 +64,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `SET_CONSTANT` columns, in the order of `tables.rs:527-538`. -/
+/-- The `SET_CONSTANT` columns, in the order of `tables.rs:532-543`. -/
 structure SetRow (F : Type) where
   /-- The program counter. -/
   pc : F
@@ -120,7 +120,7 @@ def SetSpec (r : SetRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `SET_CONSTANT` table (specification §7.3; `tables.rs:527-580`): state step, bytecode
+/-- The `SET_CONSTANT` table (specification §7.3; `tables.rs:532-585`): state step, bytecode
 read of `(SET, o, k₀, k₁, k₂, 0, 0, 0)`, and the read of `fp·o` carrying the immediate. Returns
 the pushed successor `(g·pc, fp)`. -/
 def setTable : GeneralFormalCircuit K SetRow Regs where

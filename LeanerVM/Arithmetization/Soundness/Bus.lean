@@ -17,7 +17,7 @@ public import LeanerVM.Arithmetization.Completeness.Satisfied
 # The bus of a satisfying witness
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A: specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 §6 (`doc/leanvm/body/06-bus-interactions.tex`; the state boundary §6.1, the seed and finalize
 flushes of §6.2, the bytecode blocks of §6.4). Artifact: the messages a witness of `SatisfiedBy`
 puts on each channel. Direction: soundness (no balance is used here). Boundary: the Layer 8

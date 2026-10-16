@@ -17,9 +17,9 @@ public import LeanerVM.Protocol.Verifier.Sumcheck
 # The WHIR opening
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 898-1087 (`derive_config`, `_ext_row`,
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 900-1086 (`derive_config`, `_ext_row`,
 `sample_queries`, `_enforced_sum`, `_subspace_roots`, `_induced_weight`, `GluedClaim`,
-`verify_whir`) and 1353-1362 (`verify_stacked_opening`).
+`verify_whir`) and 1346-1355 (`verify_stacked_opening`).
 
 ## Commitments in the verifier language
 
@@ -62,11 +62,11 @@ open LeanerVM.Parameters LeanerVM.Protocol.Compile
 /-! ## Configuration and queries -/
 
 /-- `derive_config(log_n, log_inv_rate)`: the ladder of levels, `none` outside the window
-(`verifier.py:920-935`). -/
+(`verifier.py:922-937`). -/
 def deriveConfig (logN logInvRate : ℕ) : Option (List Whir.Level) := Whir.ladder logN logInvRate
 
 /-- The loop of `sample_queries`: each sample yields up to `192 / depth` positions of `depth`
-bits, low bits first (`verifier.py:943-951`). -/
+bits, low bits first (`verifier.py:945-953`). -/
 def sampleQueriesAux (depth : ℕ) : ℕ → ℕ → Prog (List ℕ)
   | 0, _ => return []
   | fuel + 1, remaining =>
@@ -78,11 +78,11 @@ def sampleQueriesAux (depth : ℕ) : ℕ → ℕ → Prog (List ℕ)
       let rest ← sampleQueriesAux depth fuel (remaining - n)
       return chunk ++ rest
 
-/-- `sample_queries(transcript, 2^depth, count)` (`verifier.py:943-951`). -/
+/-- `sample_queries(transcript, 2^depth, count)` (`verifier.py:945-953`). -/
 def sampleQueries (depth count : ℕ) : Prog (List ℕ) := sampleQueriesAux depth count count
 
 /-- `_ext_row(words)`: a deeper level's leaf words regrouped into the `E` values they encode,
-three per lane (`verifier.py:938-940`). -/
+three per lane (`verifier.py:940-942`). -/
 def extRow : List K → List E
   | c0 :: c1 :: c2 :: rest => E.ofLimbs c0 c1 c2 :: extRow rest
   | [c0, c1] => [E.ofLimbs c0 c1 0]
@@ -90,13 +90,13 @@ def extRow : List K → List E
   | [] => []
 
 /-- `_enforced_sum(rows, folds, query_weights)`: `Σ_q w_q · ⟨row_q, eq(folds, ·)⟩`
-(`verifier.py:954-959`). -/
+(`verifier.py:956-961`). -/
 def enforcedSum (rows : List (List E)) (folds queryWeights : List E) : E :=
   let laneWeights := eqKernel folds
   (List.zip queryWeights rows).foldl (fun total (w, row) ↦ total + w * dot row laneWeights) 0
 
 /-- The layers of `_subspace_roots`: square-and-shift the layer by the last root, pop the next
-root (`verifier.py:965-967`). -/
+root (`verifier.py:967-969`). -/
 def subspaceRootsAux : ℕ → E → List E → List E
   | 0, _, _ => []
   | n + 1, last, layer =>
@@ -105,13 +105,13 @@ def subspaceRootsAux : ℕ → E → List E → List E
     | root :: rest => root :: subspaceRootsAux n root rest
 
 /-- `_subspace_roots(log_n)`: `1`, then the `log_n` subspace polynomial values
-(`verifier.py:962-968`). -/
+(`verifier.py:964-970`). -/
 def subspaceRoots (logN : ℕ) : List E :=
   1 :: subspaceRootsAux logN 1 ((List.range logN).map fun i ↦ eOfNat (2 ^ (i + 1)))
 
 /-- `_induced_weight(message_log, queries, query_weights, point)`: the level's batched query
 claims as one weight at `point`, `Σ_q w_q Π_k (1 + p_k (1 + Ŵ_k(x_q)))`
-(`verifier.py:971-989`). -/
+(`verifier.py:973-991`). -/
 def inducedWeight (messageLog : ℕ) (queries : List ℕ) (queryWeights point : List E) : E :=
   let roots := subspaceRoots messageLog
   let inverses := roots.map fun value ↦ if value = 0 then 0 else value⁻¹
@@ -122,7 +122,7 @@ def inducedWeight (messageLog : ℕ) (queries : List ℕ) (queryWeights point : 
     total + product.1) 0
 
 /-- `GluedClaim`: a claim folded into the running sumcheck, and the weight it owes back
-(`verifier.py:992-1003`). -/
+(`verifier.py:994-1005`). -/
 structure GluedClaim where
   /-- The power of the level's `λ` it was glued with. -/
   scalar : E
@@ -131,11 +131,12 @@ structure GluedClaim where
   /-- Its weight at the terminal point, restricted to the level's message coordinates. -/
   weightAt : List E → E
 
-/-! ## The level loop (`verifier.py:1006-1087`) -/
+/-! ## The level loop (`verifier.py:1008-1086`) -/
 
 /-- The running state of `verify_whir`. -/
 structure WhirState where
-  /-- `running_target`. -/
+  /-- `running_target`. The Python of `127510d1` sets it only in the final level's tail rounds,
+  which overwrite the value threaded here, every final message log being at least `2`. -/
   target : E
   /-- `running_quad`. -/
   quad : List E
@@ -145,7 +146,7 @@ structure WhirState where
   glued : List GluedClaim
 
 /-- A level's fold rounds: sample, fold the running claim, read the next quadratic
-(`verifier.py:1019-1024`). Returns the state and the level's own challenges. -/
+(`verifier.py:1020-1024`). Returns the state and the level's own challenges. -/
 def foldRounds : ℕ → WhirState → List E → Prog (WhirState × List E)
   | 0, s, levelFolds => return (s, levelFolds)
   | n + 1, s, levelFolds => do
@@ -156,7 +157,7 @@ def foldRounds : ℕ → WhirState → List E → Prog (WhirState × List E)
       (levelFolds ++ [challenge])
 
 /-- The final level's tail rounds: sample, fold, and read the next quadratic unless it is the
-last round (`verifier.py:1068-1074`). The tail challenges and the final running claim. -/
+last round (`verifier.py:1067-1073`). The tail challenges and the final running claim. -/
 def tailRounds : ℕ → E → List E → Prog (List E × E)
   | 0, target, _ => return ([], target)
   | n + 1, _, quad => do
@@ -169,7 +170,7 @@ def tailRounds : ℕ → E → List E → Prog (List E × E)
       return (challenge :: rest, target)
 
 /-- Glue a level's pending claims into the running sumcheck with powers of `λ`, the running claim
-keeping `λ⁰` (`verifier.py:1058-1063`). -/
+keeping `λ⁰` (`verifier.py:1058-1062`, which no longer adds the values to `running_target`). -/
 def glue (lam : E) (s : WhirState) (pending : List (E × List E × (List E → E))) : WhirState :=
   (pending.foldl (fun (acc : WhirState × E) (value, intro, weightAt) ↦
     let scalar := acc.2 * lam
@@ -183,7 +184,7 @@ words, the message log being the one after the level's folds. -/
 def levelShape (messageLogBefore : ℕ) (level : Whir.Level) (width : ℕ) : ℕ × ℕ :=
   (messageLogBefore - level.fold + level.logInvRate, width)
 
-/-- One level of `verify_whir` and every level after it (`verifier.py:1017-1087`). `index` is
+/-- One level of `verify_whir` and every level after it (`verifier.py:1018-1086`). `index` is
 the level's index, which is also the index of the commitment it opens; `laneFolds` is
 `config.folds[0]`. -/
 def whirLevels (logN laneFolds : ℕ) (evaluateBasis : List E → E) :
@@ -230,14 +231,14 @@ def whirLevels (logN laneFolds : ℕ) (evaluateBasis : List E → E) :
     | _ :: _ => whirLevels logN laneFolds evaluateBasis (index + 1) rest s
 
 /-- `verify_whir(log_n, log_inv_rate, target, root, evaluate_basis)`, the root being commitment
-`0` (`verifier.py:1006-1087`). -/
+`0` (`verifier.py:1008-1086`). -/
 def verifyWhir (logN logInvRate : ℕ) (target : E) (evaluateBasis : List E → E) : Prog Unit := do
   let config ← liftOption (deriveConfig logN logInvRate)
   let quad ← sumcheckRoundPoly 3 target none
   whirLevels logN ((config.head?.map (·.fold)).getD 0) evaluateBasis 0 config
     ⟨target, quad, [], []⟩
 
-/-- Read the stack's root (`verify_execution`, step 2, `verifier.py:1382`): commitment `0`, the
+/-- Read the stack's root (`verify_execution`, step 2, `verifier.py:1375`): commitment `0`, the
 shape level `0` opens it at. -/
 def commitStack (logN logInvRate : ℕ) : Prog Unit := do
   let config ← liftOption (deriveConfig logN logInvRate)
@@ -248,7 +249,7 @@ def commitStack (logN logInvRate : ℕ) : Prog Unit := do
     Prog.commitP height width
 
 /-- `verify_stacked_opening(root, stack_log, log_inv_rate, claims)`: batch the claims with powers
-of one challenge into one WHIR opening (`verifier.py:1356-1362`). -/
+of one challenge into one WHIR opening (`verifier.py:1349-1355`). -/
 def verifyStackedOpening (stackLog logInvRate : ℕ) (claims : List StackClaim) : Prog Unit := do
   let scales := powers (← Prog.sampleE) claims.length
   verifyWhir stackLog logInvRate (dot scales (claims.map (·.2)))

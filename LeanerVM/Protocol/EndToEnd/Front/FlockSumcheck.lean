@@ -17,8 +17,8 @@ public import LeanerVM.Protocol.Spine.Errors
 /-!
 # Sumcheck rounds
 
-The program's rounds (`Verifier.sumcheck`, `verifier.py:406-427` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) read `count - 1` coefficients and derive the other
+The program's rounds (`Verifier.sumcheck`, `verifier.py:405-426` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) read `count - 1` coefficients and derive the other
 from the running claim: in plain mode (`none`) `c₁ = claim + Σ_{k ≥ 2} c_k`, in equality mode
 (`some r`) `c₀ = claim + r · Σ_{k ≥ 1} c_k`. ArkLib's round (`SumcheckRound.round`) reads all
 `d + 1` coefficients and checks their weighted sum over the domain, `[(0, 1), (1, 1)]` (plain)

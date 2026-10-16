@@ -13,7 +13,7 @@ public import LeanerVM.Semantics.FillSteps
 # The fill-block lemma
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A. A block is a cycle: its `s` dummies step
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A. A block is a cycle: its `s` dummies step
 one slot at a time in a frame that does not change, and the closing jump reads its destination
 `g^{pc}` and its frame `g^{base}` from the frame, so it returns to the block's first slot in the
 same frame. Hence `s + 1` steps from the start state return to it (`fill_traversal_run`), and so

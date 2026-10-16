@@ -20,7 +20,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockTerminal
 
 The table phase's identities (`TableFid`, `LeanerVM.Protocol.EndToEnd.Front.TablePhase`) compare
 the verifier program's bus result, `BusWit.result` (`verify_bus_balance`,
-`python-verifier/verifier.py:536-592` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`), with
+`python-verifier/verifier.py:534-593` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`), with
 the oracle protocol's output on the same reads, `Bus.busOut`. This module proves the two agree at
 the leanISA instance and the verifier's layout, for every read whose GKR point has `μ_bus`
 coordinates, whose memory values are three and whose fingerprint challenges are four:

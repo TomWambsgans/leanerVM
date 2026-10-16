@@ -12,10 +12,10 @@ public import LeanerVM.Parameters.Generator
 # The memory image and the public input
 
 leanISA roadmap Layer 2 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`.
 
-**Addressing** (Category B: specification §2, `doc/leanvm/body/02-vm-specification.tex:22` and
-`:49-52`). Memory is `2^κ` words of `E`, the word of logical index `i` sits at the address
+**Addressing** (Category B: specification §2, `doc/leanvm/body/02-vm-specification.tex:24` and
+`:51-54`). Memory is `2^κ` words of `E`, the word of logical index `i` sits at the address
 `g ^ i ∈ K`, and an access at any other address, `0` included, is invalid. `gLog?` is the bounded
 discrete logarithm that turns an address back into its index, or `none`; `MemImage.read` is the
 only reader. It is `noncomputable`: the index is `Classical.choose` of `∃ i, a = g ^ i`, so the
@@ -25,22 +25,23 @@ a discrete logarithm never enters the semantics; a computable carrier for runnin
 one is ever wanted, is separate work bridged to this specification.
 
 **The image** (Category A, roadmap Layer 2, from specification §2 "Write-once memory" and
-"Non determinism", `02-vm-specification.tex:37-47`). The memory is committed whole before
+"Non determinism", `02-vm-specification.tex:39-49`). The memory is committed whole before
 execution and every instruction only reads it, so an execution's memory is one total function
 `MemImage κ = Fin (2 ^ κ) → E`, and *all* nondeterminism — the log-size `κ` and every
 prover-chosen word — is the choice of image. The executor's write-once bookkeeping, zero reads
-of unset cells, and on-demand growth (`crates/lean_vm/src/cpu/execute.rs`) are witness
+of unset cells, and on-demand growth (`crates/leanvm_core/src/cpu/execute.rs`) are witness
 generation producing such an image, not a second memory model (roadmap acceptance test 19).
-Rust-informed: the executor's seeding and address decoding (`execute.rs:36-40`, `:173-177`)
+Rust-informed: the executor's seeding and address decoding (`execute.rs:143-147`, `:219-221`)
 were read before this file was written. `MemImage.limbsAt` and `MemImage.cellAt` read a word
 back as a row's limbs (zero when there is none): the vocabulary of Layer 6's row builders,
 noncomputable like `read` and specified by `ofLimbs_limbsAt`, `limbsAt_getElem_zero` and
 `ofCell_cellAt`; they read, and never a second time differently.
 
-**The public input** (Category B: specification §2, `02-vm-specification.tex:16,24`, and §8.2,
-`08-end-to-end-protocol.tex:29`; seeded at `execute.rs:173-177`, a third limb rejected at
-`cpu/mod.rs:139-143`). The 256-bit input is four `K` lanes fixing the first two words of the
-image as `input₀ + input₁·y` and `input₂ + input₃·y`, top limbs zero.
+**The public input** (Category B: specification §2, `02-vm-specification.tex:18,26`, and §8.2,
+`08-end-to-end-protocol.tex:29`; seeded at `execute.rs:219-221`, a third limb rejected at
+`crates/leanvm_core/src/cpu/mod.rs:688-690`, the verifier wrapper). The 256-bit input is four `K`
+lanes fixing the first two words of the image as `input₀ + input₁·y` and `input₂ + input₃·y`, top
+limbs zero.
 
 ## Wrong readings excluded
 

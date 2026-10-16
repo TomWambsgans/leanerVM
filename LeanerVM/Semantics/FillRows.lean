@@ -13,7 +13,7 @@ public import LeanerVM.Semantics.FillerRows
 # The rows of a fill
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A. A row of an arithmetization table is a state
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A. A row of an arithmetization table is a state
 and the instruction fetched at it. `Skel` is that pair, before any column is built from it: the
 witness of the next layer builds each table's rows from the skeletons of its instructions.
 

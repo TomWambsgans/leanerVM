@@ -6,8 +6,8 @@ import Clean.Air.Balance
 # Layer 5 tests: the bus channels
 
 A classic test for kernel evaluation. The six channels' separators and directions are pinned
-against specification §5.1 and `tables.rs:90-92`, the three element orders against §6.1, §6.2,
-§6.4 and the flush builders of `tables.rs:127-166`, on literal messages, and the sixteen-slot
+against specification §5.1 and `tables.rs:94-96`, the three element orders against §6.1, §6.2,
+§6.4 and the flush builders of `tables.rs:131-170`, on literal messages, and the sixteen-slot
 tuples against §5.1. The read gadgets are checked to emit a `pull` then a `push` with the count
 advanced by `g`. `imageOf` is read off a two-row prover data, which is `WellShapedData`, and a
 correct memory read satisfies `MemPull.Guarantees` while a wrong word does not; a three-row
@@ -28,7 +28,7 @@ namespace LeanerVMTests.Arithmetization
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
 
-/-! ## Separators and directions (specification §5.1; `tables.rs:90-92`) -/
+/-! ## Separators and directions (specification §5.1; `tables.rs:94-96`) -/
 
 #guard channelSep StatePull.toRaw = gpow 0
 #guard channelSep StatePush.toRaw = gpow 0
@@ -69,7 +69,7 @@ def foreign : RawChannel K where
 #guard channelDir foreign = .push
 example : channelSep foreign ≠ channelSep MemPull.toRaw := by decide
 
-/-! ## Element orders (specification §6.1, §6.2, §6.4; `tables.rs:127-166`) -/
+/-! ## Element orders (specification §6.1, §6.2, §6.4; `tables.rs:131-170`) -/
 
 def st : Regs K := ⟨gpow 3, gpow 5⟩
 def mm : MemMsg K := ⟨gpow 3 * gpow 5, gpow 2, #v[K.ofBits 7, K.ofBits 8, K.ofBits 9]⟩

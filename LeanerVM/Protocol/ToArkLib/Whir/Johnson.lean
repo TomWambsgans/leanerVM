@@ -14,7 +14,7 @@ import Mathlib.Algebra.Order.Chebyshev
 /-!
 # The Johnson bound for interleaved codes
 
-Annex B of the leanVM specification (leanVM `a386121f`,
+Annex B of the leanVM specification (leanVM `127510d1`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`), `thm:johnson-general` and its interleaved
 corollary `thm:johnson-interleaved`: if distinct codewords agree on at most `r n` of `n`
 coordinates, at most `1 / (2 η √r)` codewords agree with a word on `(√r + η) n` coordinates.

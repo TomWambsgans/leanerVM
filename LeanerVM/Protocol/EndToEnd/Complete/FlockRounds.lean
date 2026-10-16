@@ -16,7 +16,7 @@ import Mathlib.Algebra.Polynomial.Degree.SmallDegree
 # The Flock rounds on the wire
 
 The verifier program's Flock phase (`verifyFlockZerocheck`, `verifyFlockLincheck`,
-`python-verifier/verifier.py:1126-1177` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+`python-verifier/verifier.py:1125-1176` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 runs two sumchecks of three coefficients a round: the zerocheck's, in equality mode against the
 zerocheck point, lowest coordinate first; and the lincheck's, in plain mode, highest coordinate
 first. The Flock argument (`LeanerVM.Protocol.ToArkLib.Flock.Rounds`) names their running claims:

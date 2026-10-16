@@ -14,7 +14,7 @@ public import LeanerVM.Semantics.PaddedTrace
 # The rows of a padded trace
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A. A table's rows are the skeletons whose
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A. A table's rows are the skeletons whose
 instruction has its opcode. The rows of the padded trace are the run's skeletons (`Trace.runSkels`:
 the states stepped from, with the instructions fetched there) and the skeletons of the fill
 (`padSkels`) under the plan's traversal counts (`planCount`).

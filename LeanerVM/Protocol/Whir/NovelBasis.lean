@@ -14,11 +14,11 @@ public import ArkLib.Data.CodingTheory.ReedSolomon
 /-!
 # The novel basis and the encoder
 
-Annex B of the leanVM specification at leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`:
-§B.2 "Reed–Solomon codes over binary fields" (`sec:binary-rs`,
-`doc/leanvm/body/b-polynomial-commitment-scheme.tex:87-94`) and Definition `def:enc`
-(`:301-307`). Category A: the definitions are the Annex's and the claims of `def:enc` are proved
-here.
+The leanVM specification at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`: Annex B §B.2
+"Reed–Solomon codes over binary fields" (`sec:binary-rs`,
+`doc/leanvm/body/b-polynomial-commitment-scheme.tex:87-94`) and Annex D Definition `def:enc`
+(`doc/leanvm/body/d-novel-basis.tex:40-46`; in Annex B until `127510d1`). Category A: the
+definitions are the Annex's and the claims of `def:enc` are proved here.
 
 * Cube points `u : Fin κ → Bool` are read bit `0` first: `bitsToNat u = ⟨u⟩ = Σ_i u_i 2^i`, and
   `bitsEquiv κ : (Fin κ → Bool) ≃ Fin (2^κ)` is the bijection, with inverse
@@ -39,8 +39,8 @@ The claims of `def:enc` and §B.2, for `κ + R ≤ 64`:
 * `enc_injective`: `Enc_{κ,R}` is injective;
 * `enc_ofK`, `isInK_enc_ofK`: a `K`-valued message gives a `K`-valued word.
 
-The rate `2^-R` is `2^κ / |D_{κ,R}|`; the Annex assumes `R ≥ 1`, which none of the statements here
-needs.
+The rate `2^-R` is `2^κ / |D_{κ,R}|`; §B.2 assumes `R ≥ 1` (`def:enc` allows `R ≥ 0`), which none
+of the statements here needs.
 
 ## Wrong readings excluded
 

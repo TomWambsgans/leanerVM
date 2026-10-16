@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.ToArkLib.Flock.Words
 # The walk's word gadgets against the builder's
 
 The verifier's forward walk (`Verifier.addW`, `Verifier.add3W`, transcribed from
-`blake2s_row_values` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`,
-`python-verifier/verifier.py:1180-1295`) carries, for every bit of a word, one field element:
+`blake2s_row_values` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
+`python-verifier/verifier.py:1179-1288`) carries, for every bit of a word, one field element:
 the value of the bit's linear form against the column weights `cw`. The builder
 (`ProductCircuit.addW`, `ProductCircuit.add3W`) carries the forms themselves and records each
 gate `(a, b)` at the next free position.

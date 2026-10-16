@@ -22,7 +22,7 @@ import Mathlib.Tactic.LinearCombination
 
 Two statements about the fields `K = GF(2^64)` and `E = K[y]/(y^3 + y + 1)`
 (`LeanerVM.Parameters.Field`) on which the Flock phase's knowledge soundness rests, transcribed
-from the specification at leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The concrete
+from the specification at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The concrete
 field facts underneath are kernel checks (`decide +kernel` on `K` words); the rest is algebra.
 
 * **Ring-switching injectivity**, `ringSwitch_injective` (Annex A, §A.3, "Sixty-four terms",

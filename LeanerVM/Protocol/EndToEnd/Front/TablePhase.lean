@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.TableTerms
 /-!
 # The table sumcheck on doom
 
-`tablePhase layout bus` (`verifier.py:1387-1395` and `598-626`) is the oracle protocol's
+`tablePhase layout bus` (`verifier.py:1380-1388` and `599-628`) is the oracle protocol's
 `tableSumcheck` (`LeanerVM.Protocol.TableSumcheck`) on the wire: the batching challenge `ξ`, the
 plain sumcheck of four coefficients per round (one left out on the wire), the evaluations of every
 table's columns, and the final check. Its doom is stated on the protocol's relations at the
@@ -122,7 +122,7 @@ def TableSumcheckPost (w : BusWit) (ξ : E) (claims' : List Verifier.ColumnClaim
     HDoom cands (Seam.table I) (tableOut I (tableStmt I hI input w ξ ch claim)
       (vecOf I.tableColumns evs.flatten)) h
 
-/-- **The table sumcheck's rounds and final values** (`table_sumcheck`, `verifier.py:598-626`),
+/-- **The table sumcheck's rounds and final values** (`table_sumcheck`, `verifier.py:599-628`),
 from doom on the sumcheck's input relation after `ξ`: the plain sumcheck, each round charged
 `L₀ · 3 / |E|`, then the evaluations and the final check. -/
 noncomputable def tableSumcheckSpec (colOf : I.ColumnId → ℕ) (w : BusWit)
@@ -169,7 +169,7 @@ noncomputable def tableSumcheckSpec (colOf : I.ColumnId → ℕ) (w : BusWit)
       le_rfl le_rfl
 
 open Classical in
-/-- **The table sumcheck** (`tablePhase`, `verifier.py:1387-1395`, `598-626`) after the bus phase
+/-- **The table sumcheck** (`tablePhase`, `verifier.py:1380-1388`, `599-628`) after the bus phase
 read `w`: from the bus seam at `w` to the table seam on the wire. `ξ` is charged
 `L₀ · (B + 2) / |E|`, each round `L₀ · 3 / |E|`. -/
 noncomputable def tablePhaseSpec (colOf : I.ColumnId → ℕ) (w : BusWit)

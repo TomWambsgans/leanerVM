@@ -15,7 +15,7 @@ public import LeanerVM.Arithmetization.Soundness.MemChannel
 # Soundness of the bytecode channel
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A: specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 Theorem 6.4 and Corollary 6.5 for the bytecode pair (`doc/leanvm/body/06-bus-interactions.tex`,
 §6.4). Artifact: `bytecode_channel_sound`, in the strong form: every pulled entry is the public
 program's at the pulled counter. Direction: soundness. Boundary: the Layer 8 statement, whose

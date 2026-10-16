@@ -12,8 +12,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.RingMultilinear
 /-!
 # The lincheck's terminal
 
-`progTerminal` (`verifier.py:1153-1177, 1180-1301` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) against ArkLib's `linTerminal`
+`progTerminal` (`verifier.py:1152-1176, 1179-1294` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) against ArkLib's `linTerminal`
 (`ToArkLib/Flock/Tables.lean`):
 
 * the skip weights `lagrange_weights(64, z_skip)` are ArkLib's `skipWeights` over the skip domain

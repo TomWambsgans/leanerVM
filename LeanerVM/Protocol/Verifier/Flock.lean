@@ -17,7 +17,7 @@ public import LeanerVM.Protocol.Verifier.Sumcheck
 # Flock and ring switching
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 1090-1347: the constants (`FIXED_CHALLENGES`,
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 1089-1340: the constants (`FIXED_CHALLENGES`,
 `RING_MAP_SHIFTS`), `verify_flock_zerocheck`, `verify_flock_lincheck`, `blake2s_row_values`,
 `blake2s_bilinear`, `verify_flock`, `_phi`, `_ring_weight` and `ring_switch`.
 
@@ -39,13 +39,13 @@ open LeanerVM.Parameters LeanerVM.Protocol.Compile
 /-! ## Constants -/
 
 /-- `FIXED_CHALLENGES`: the seven fixed coordinates of the zerocheck point
-(`verifier.py:1097-1100`). -/
+(`verifier.py:1096-1099`). -/
 def fixedChallenges : List E := Flock.fixedPoint.toList
 
-/-- `RING_MAP_SHIFTS` (`verifier.py:1314`). -/
+/-- `RING_MAP_SHIFTS` (`verifier.py:1307`). -/
 def ringMapShifts : List ℕ := Flock.ringShifts.toList
 
-/-! ## The zerocheck (`verifier.py:1126-1150`) -/
+/-! ## The zerocheck (`verifier.py:1125-1149`) -/
 
 /-- `ZerocheckResult`. -/
 structure ZerocheckResult where
@@ -60,7 +60,7 @@ structure ZerocheckResult where
   /-- The claim on `C·z`. -/
   vC : E
 
-/-- `verify_flock_zerocheck(log_n)` (`verifier.py:1135-1150`): the point is the seven fixed
+/-- `verify_flock_zerocheck(log_n)` (`verifier.py:1134-1149`): the point is the seven fixed
 coordinates then sampled ones; one univariate skip round over the coset, then quadratic
 equality-mode rounds, closed by `v_a, v_b`, with `v_c = running + v_a·v_b`. -/
 def verifyFlockZerocheck (logN : ℕ) : Prog ZerocheckResult := do
@@ -74,9 +74,9 @@ def verifyFlockZerocheck (logN : ℕ) : Prog ZerocheckResult := do
   let vB ← Prog.readE
   return ⟨zSkip, chi, vA, vB, running + vA * vB⟩
 
-/-! ## The BLAKE2s row vectors (`verifier.py:1180-1301`) -/
+/-! ## The BLAKE2s row vectors (`verifier.py:1179-1294`) -/
 
-/-- `BLAKE2S_G_LANES` (`verifier.py:195`). -/
+/-- `BLAKE2S_G_LANES` (`verifier.py:194`). -/
 def blake2sGLanes : List (ℕ × ℕ × ℕ × ℕ) :=
   [(0, 4, 8, 12), (1, 5, 9, 13), (2, 6, 10, 14), (3, 7, 11, 15), (0, 5, 10, 15), (1, 6, 11, 12),
     (2, 7, 8, 13), (3, 4, 9, 14)]
@@ -149,7 +149,7 @@ def linearRows (columnWeights : Array E) (values : Array E) (base : ℕ) : RowM 
   for bit in List.range 32 do
     setRow (base + bit) (values.getD bit 0) (weightAt columnWeights blake2sConstantColumn)
 
-/-- The forward walk of `blake2s_row_values` (`verifier.py:1252-1294`). -/
+/-- The forward walk of `blake2s_row_values` (`verifier.py:1249-1287`). -/
 def blake2sWalk (cw : Array E) : RowM Unit := do
   let constant := weightAt cw blake2sConstantColumn
   for (base, length) in [(0, 256), (640, 512), (1152, 128)] do
@@ -187,20 +187,20 @@ def blake2sWalk (cw : Array E) : RowM Unit := do
   setRow blake2sConstantColumn constant constant
 
 /-- `blake2s_row_values(column_weights)`: `A0·w` and `B0·w` by one forward walk of the circuit
-(`verifier.py:1180-1295`). -/
+(`verifier.py:1179-1288`). -/
 def blake2sRowValues (columnWeights : List E) : Array E × Array E :=
   let size := 2 ^ blake2sR1csLogSize
   ((blake2sWalk columnWeights.toArray).run (Array.replicate size 0, Array.replicate size 0)).2
 
 /-- `blake2s_bilinear(alpha, row_weights, column_weights)`: `e_rowᵀ (A0 + α B0) w_col`
-(`verifier.py:1298-1301`). -/
+(`verifier.py:1291-1294`). -/
 def blake2sBilinear (alpha : E) (rowWeights columnWeights : List E) : E :=
   let (left, right) := blake2sRowValues columnWeights
   dot rowWeights left.toList + alpha * dot rowWeights right.toList
 
-/-! ## The lincheck (`verifier.py:1153-1177`) -/
+/-! ## The lincheck (`verifier.py:1152-1176`) -/
 
-/-- `verify_flock_lincheck(zc)` (`verifier.py:1153-1177`): eight plain-mode rounds bind the
+/-- `verify_flock_lincheck(zc)` (`verifier.py:1152-1176`): eight plain-mode rounds bind the
 high column coordinates; the 64 slices `s` close the terminal identity. Returns the claim's
 point and the slices. -/
 def verifyFlockLincheck (zc : ZerocheckResult) : Prog (List E × List E) := do
@@ -220,21 +220,21 @@ def verifyFlockLincheck (zc : ZerocheckResult) : Prog (List E × List E) := do
   Prog.require (terminal = rLc)
   return (chiInPrime ++ zc.chi.drop flockNumLincheckRounds, s)
 
-/-- `verify_flock(log_n)`: the zerocheck, then the lincheck (`verifier.py:1304-1308`). -/
+/-- `verify_flock(log_n)`: the zerocheck, then the lincheck (`verifier.py:1297-1301`). -/
 def verifyFlock (logN : ℕ) : Prog (List E × List E) := do
   let zc ← verifyFlockZerocheck logN
   verifyFlockLincheck zc
 
-/-! ## Ring switching (`verifier.py:1311-1347`) -/
+/-! ## Ring switching (`verifier.py:1304-1340`) -/
 
 /-- `_phi(value, challenges)`: `a ↦ a + f_p · a^(2^shift)`, stage by stage
-(`verifier.py:1317-1321`). -/
+(`verifier.py:1310-1314`). -/
 def phiMap (value : E) (challenges : List E) : E :=
   (List.zip challenges ringMapShifts).foldl
     (fun value (challenge, shift) ↦ value + challenge * value ^ (2 ^ shift)) value
 
 /-- `_ring_weight(r, r_prime, coefficients)`: `Σ_k c_k Π_n (1 + r_n^(2^k) + r'_n)`
-(`verifier.py:1324-1335`). -/
+(`verifier.py:1317-1328`). -/
 def ringWeight (r rPrime coefficients : List E) : E :=
   (coefficients.foldl (fun (acc : E × List E) c ↦
     let product := (List.zip acc.2 rPrime).foldl
@@ -242,13 +242,13 @@ def ringWeight (r rPrime coefficients : List E) : E :=
     (acc.1 + product, acc.2.map (· ^ 2))) (0, r)).1
 
 /-- The Frobenius coefficients of the drawn map, `Φ(a) = Σ_{k < 64} c_k a^(2^k)`
-(`verifier.py:1345`). -/
+(`verifier.py:1338`). -/
 def ringCoefficients (challenges : List E) : List E :=
   (List.range kBits).map fun k ↦
     ((List.zip challenges ringMapShifts).filter fun (_, s) ↦ k &&& s ≠ 0).foldl
       (fun acc (f, s) ↦ acc * f ^ (2 ^ (k % s))) 1
 
-/-- `ring_switch(point, s)` (`verifier.py:1338-1347`): draw the map, and return the target
+/-- `ring_switch(point, s)` (`verifier.py:1331-1340`): draw the map, and return the target
 `Σ_i g^i Φ(s_i)` and the weight `W(u) = Φ(eq(point, u))` as a function of the opening point. -/
 def ringSwitch (point s : List E) : Prog (E × (List E → E)) := do
   let challenges ← Prog.sampleN ringMapShifts.length

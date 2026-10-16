@@ -8,9 +8,10 @@ import LeanerVM.Protocol.Blake2sCircuit
 * **The rows against the deployed walk.** `rowsDigest` digests all `2 ^ 14` rows of `A` and `B`
   (the row table: the recorded gate, else the constant, input or zero row); the value is the one
   `scripts/dump-flock-circuit-digest.py` prints for the pinned Python verifier's
-  `blake2s_row_values` (leanVM `a386121f`). The row table agrees with `rowOf`, which the
-  theorems are about, on a position of every row kind. This is test evidence of row equality,
-  not a theorem.
+  `blake2s_row_values` (printed at leanVM `a386121f`; at `127510d1` the function differs only
+  in how it initialises the same sixteen state words). The row table agrees with `rowOf`, which
+  the theorems are about, on a position of every row kind. This is test evidence of row
+  equality, not a theorem.
 * **The trace computes `compress`.** On the RFC 7693 Appendix B vector (`BLAKE2s-256("abc")`) and
   on pseudo-random inputs, the output words of the trace are `compress` of the inputs, and the
   trace satisfies every row.

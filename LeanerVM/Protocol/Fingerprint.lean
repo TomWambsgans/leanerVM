@@ -18,14 +18,16 @@ public import VCVio.OracleComp.Constructions.SampleableType.NativeMeasure
 # Fingerprints and the products of the bus
 
 Specification §5.2 (`doc/leanvm/body/05-arithmetization.tex:22-59` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`). A bus tuple is sixteen elements of `K`. The verifier
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`). A bus tuple is sixteen elements of `K`. The verifier
 draws `α ∈ E⁴` and maps a tuple `t` to `π_α(t) = Σ_{i<16} eq(α, i)·t_i` (`fingerprint`), where
 `eq(α, i)` is the equality kernel at `α` and the four bits of `i`, low bit first: the tuple read
-as a table on four variables and evaluated at `α`. The bit order is the specification's
-convention for an integer's bits (Annex B, `b-polynomial-commitment-scheme.tex:278`; §8,
-`08-end-to-end-protocol.tex:9`), and the deployed verifier's weights
-(`crates/lean_vm/src/leaf.rs:89-98`). It then draws `β ∈ E`, and a side of the bus with the
-multiset `P` of tuples has the product `Π_{t ∈ P} (β − π_α(t))` (`sideProduct`).
+as a table on four variables and evaluated at `α`. The bit order is the one §5.2 now states
+(`:24-26`), the specification's convention for an integer's bits (Annex D,
+`d-novel-basis.tex:6`; §8, `08-end-to-end-protocol.tex:9`), and that of the deployed weights (the
+prover's `crates/leanvm_core/src/leaf.rs:81-90`, the verifier's `eq_kernel`,
+`crates/verifier/src/multilinear.rs:7-19`, at `crates/verifier/src/bus.rs:114`). It then draws
+`β ∈ E`, and a side of the bus with the multiset `P` of tuples has the product
+`Π_{t ∈ P} (β − π_α(t))` (`sideProduct`).
 
 Over the five formal variables `A_0, …, A_3, X` the product is the polynomial
 `Π_P = grandProductPoly P` of `LeanerVM.Protocol.ToArkLib.GrandProductPoly`, with coefficients in

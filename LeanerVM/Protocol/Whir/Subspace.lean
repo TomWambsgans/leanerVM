@@ -16,10 +16,11 @@ public import Mathlib.Algebra.MvPolynomial.Basic
 /-!
 # Subspace vanishing polynomials
 
-Annex B §B.6 ("Novel polynomial basis and additive NTT", `app:ntt`) of the leanVM specification,
-`doc/leanvm/body/b-polynomial-commitment-scheme.tex:275-299` at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A: the definitions are the Annex's, and the
-lemma is its Lemma `lem:subspace`, proved here.
+Annex D ("Novel polynomial basis and additive NTT", `app:ntt`; Annex B §B.6 until `127510d1`) of
+the leanVM specification, `doc/leanvm/body/d-novel-basis.tex:2-27` at leanVM pin
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A: the definitions are the Annex's, and the
+lemma is its Lemma `lem:subspace`, parts (i) and (ii) proved here; its first sentence, added at
+`127510d1` (each `W_i` has only the monomials `X^(2^j)`), is not formalized.
 
 * `basisVec c` is `e_c = x^c`, the word `K.ofBits (2^c)`; `e_0 = 1`.
 * `subspace i` is `U_i = ⟨e_0, …, e_{i-1}⟩_{F₂}`, the words `K.ofBits v` for `v < 2^i`

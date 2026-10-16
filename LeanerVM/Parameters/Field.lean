@@ -15,7 +15,7 @@ import Mathlib.Tactic.LinearCombination
 
 leanISA roadmap Layer 0 (`docs/roadmap/leanisa-blueprint.md`). Category B: the moduli and the
 limb order are transcribed from specification §2, `doc/leanvm/body/02-vm-specification.tex:6-8`
-at leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`, and are exactly CompPoly's `BF64` and
+at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, and are exactly CompPoly's `BF64` and
 `BF64.Ext3` at pin `572f997390aa4fc131ef30b1186fa1dcf292ca10`:
 
 ```text
@@ -24,7 +24,7 @@ E = K[y]/(y^3 + y + 1),  |E| = 2^192         BF64.ext3Params_poly, BF64.ext3Poly
 ```
 
 `K` wraps a `BitVec 64` whose bit `i` is the coefficient of `x^i`
-(`crates/primitives/src/field/gf2_64.rs:19-22`, `F64`); `E` is a `Vector K 3` whose limb `i` is
+(`crates/primitives/src/field/gf2_64.rs:16-19`, `F64`); `E` is a `Vector K 3` whose limb `i` is
 the coefficient of `y^i`. Everything below is an abbreviation or a one-line definition over those
 CompPoly declarations, so the trusted surface is the CompPoly rows of the roadmap's dependency
 table plus this file. The limb arithmetic under "Load-bearing lemmas" (`add_limbs`,

@@ -19,7 +19,7 @@ public import LeanerVM.Protocol.ToArkLib.Flock.Security
 # The Flock phase
 
 The fourth phase after the commitment (Annex C and Annex A, at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`). The instance's Flock region is a column of
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`). The instance's Flock region is a column of
 `2 ^ (8 + kBatch)` cells of `K`, each packing 64 bits of the BLAKE2s witness, and the phase
 proves of it the predicate `FlockRegion.Holds`: every block of `2 ^ 14` bits satisfies the
 region's R1CS and holds `1` at position `512`. It is the generic Flock argument
@@ -29,7 +29,9 @@ coordinates of `LeanerVM.Parameters.Flock`, and six ring-switching coefficients 
 `32, 16, 8, 4, 2, 1`. Its verifier reads no pooled claim: it hands the column claims on and adds
 one weighted claim, `⟨W, q⟩ = T` with `T = Σ_{i < 64} x^i · Φ(s_i)` and `W` the combination of
 the equality kernels at the Frobenius powers of the lincheck's point, lifted into the stack by
-the instance's layout (`cpu/mod.rs:799-805`, `stack_open.rs:522-527`, `verifier.py:1304-1349`).
+the instance's layout (`crates/verifier/src/lib.rs:271-281`, `crates/verifier/src/flock.rs:376-390`,
+`verifier.py:1297-1342`; the prover's strided claim on the region is
+`crates/leanvm_core/src/cpu/mod.rs:718-724`).
 With no region, the phase hands the claims on.
 
 * `flockPhase`: the phase, a `Phase.FrontDef` at the slot `flockSpec`.

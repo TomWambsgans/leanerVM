@@ -13,11 +13,11 @@ public import LeanerVM.Semantics.Memory
 # Instructions and programs
 
 leanISA roadmap Layer 2 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category B: the instruction set is specification
-§2 (`doc/leanvm/body/02-vm-specification.tex:54-68`, the table; `:71-79`, the `DEREF` store
-modes), matching `crates/lean_vm/src/cpu/isa.rs:6-66` (`Op`, `DerefMode`); the bytecode is
-`2 ^ κ_bc` instructions with `κ_bc ≤ 32`, addressed like memory (§2 `:16,22`; §6.4
-`06-bus-interactions.tex:90`; `cpu/mod.rs:158-159`).
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category B: the instruction set is specification
+§2 (`doc/leanvm/body/02-vm-specification.tex:56-70`, the table; `:73-81`, the `DEREF` store
+modes), matching `crates/leanvm_core/src/cpu/isa.rs:6-66` (`Op`, `DerefMode`); the bytecode is
+`2 ^ κ_bc` instructions with `κ_bc ≤ 32`, addressed like memory (§2 `:18,24`; §6.4
+`06-bus-interactions.tex:93`; `crates/verifier/src/layout.rs:386`, `:393`).
 
 An operand is a `K` element: the `g`-power `o = g ^ j` naming the frame cell at `fp · o` (§2
 "Operands and addressing"), except that `SET_CONSTANT`'s immediate is one word `k ∈ E`, whose
@@ -83,7 +83,7 @@ def Instr.opcode : Instr → Opcode
 /-! ## Programs -/
 
 /-- A bytecode of `2 ^ logSize` instructions within the verifier's cap (specification §6.4;
-`cpu/mod.rs:158-159`); instruction `i` sits at address `g ^ i`. -/
+`crates/verifier/src/layout.rs:386`, `:393`); instruction `i` sits at address `g ^ i`. -/
 structure Program where
   /-- The bytecode log-size `κ_bc`. -/
   logSize : ℕ

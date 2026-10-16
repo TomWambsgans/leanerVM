@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.Whir.Sound.Weights
 # Lanes and folds
 
 The deployed verifier (`LeanerVM.Protocol.Verifier`, leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, `python-verifier/verifier.py:233-245, 954-959`)
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, `python-verifier/verifier.py:232-244, 956-961`)
 reduces an opened row of `2^ℓ` lanes with the equality kernel of the level's fold challenges,
 `dot(row, eq_kernel(folds))`, and evaluates the final residual table with `multilinear_eval`.
 Both are the integer-indexed fold `foldsN` of `LeanerVM.Protocol.Whir.Sound.Code`, the first

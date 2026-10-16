@@ -15,7 +15,7 @@ public import Mathlib.Data.Fintype.Pi
 # Counting lemmas for WHIR
 
 Count forms of the elementary steps of the proof of Annex B, `thm:rbr`, of the leanVM
-specification (leanVM `a386121f`, `doc/leanvm/body/b-polynomial-commitment-scheme.tex`):
+specification (leanVM `127510d1`, `doc/leanvm/body/b-polynomial-commitment-scheme.tex`):
 
 * `card_forall_mem`, `card_forall_mem_fin`: the query step. Of the `|ι|^t` query vectors
   `x : Fin t → ι`, exactly `|A|^t` land in `A` at every query, the count behind the error

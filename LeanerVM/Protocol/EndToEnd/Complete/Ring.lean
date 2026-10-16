@@ -16,9 +16,9 @@ import LeanerVM.Protocol.Flock
 /-!
 # Completeness of ring switching
 
-Category B: about the transcription of `python-verifier/verifier.py:1311-1347` (`_phi`,
-`_ring_weight`, `ring_switch`) and `:1411-1412` (the ring claim on the stack) at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` (`Verifier.ringSwitch`, `Verifier.ringSwitchClaim`).
+Category B: about the transcription of `python-verifier/verifier.py:1304-1340` (`_phi`,
+`_ring_weight`, `ring_switch`) and `:1405-1406` (the ring claim on the stack) at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` (`Verifier.ringSwitch`, `Verifier.ringSwitchClaim`).
 
 `ringSwitch point s` reads nothing: it draws the six coefficients `ch` of the staged map
 `Φ(a) = a + f · a^(2^shift)`, stage by stage (`phiMap`), and returns the target

@@ -16,7 +16,7 @@ public import LeanerVM.Semantics.Execution
 # The walk decomposition of the state channel
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A: specification Proposition 6.1
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A: specification Proposition 6.1
 (`doc/leanvm/body/06-bus-interactions.tex`, §6.1), stated over an abstract list of edges so that
 `Soundness.StateWalk` applies it to the rows of the six tables. Artifact: the walk argument.
 Direction: soundness. Boundary: Layer 3's `run`; nothing about the witness.

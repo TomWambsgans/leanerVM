@@ -7,10 +7,13 @@ A four-leaf tree of two-word leaves against a tree computed with CPython's `hash
 (leaf `q` holds the words `2q + 1, 2q + 2`): the leaf digests, the root, and the path of leaf 2;
 the verifier accepting that path, and rejecting a tampered sibling, a wrong index, an index at
 or above the leaf count, a tampered row, an over-wide row, a short path, a long path, a wrong
-depth and a wrong root (`fiat_shamir/src/merkle.rs`, the test `malformed_phases_are_rejected`);
-a node opened as a leaf, which the depth and width checks alone reject; the zero-prefix leaf
-image; and the sibling index as `i ^^^ 1`, the form the pinned source uses
-(`merkle.rs:117, 120, 218`).
+depth and a wrong root (after the test `malformed_phases_are_rejected` of
+`crates/fiat_shamir/src/merkle.rs` at leanVM `a386121f`, removed at `127510d1` with the Rust
+verifier's Merkle code there); a node opened as a leaf, which the depth and width checks alone
+reject; the zero-prefix leaf image; and the sibling index as `i ^^^ 1`, the form the pinned
+prover uses (`crates/fiat_shamir/src/merkle.rs:84, 87` at `127510d1`; the verifier's
+`(leaf >> lvl) ^ 1`, `merkle.rs:218` at `a386121f`, is removed, and the verifier of `127510d1`
+pairs an even `index` with `index | 1`, `crates/verifier/src/merkle.rs:116`).
 -/
 
 namespace LeanerVMTests.Protocol.Merkle

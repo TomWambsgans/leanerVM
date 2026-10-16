@@ -16,8 +16,8 @@ public import LeanerVM.Protocol.Verifier.TableSumcheck
 # Multilinear facts for the table sumcheck
 
 Category A; nothing transcribed. The table sumcheck of the verifier program
-(`LeanerVM.Protocol.Verifier.tableSumcheck`, `python-verifier/verifier.py:598-626` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) sums, over the cube of `n` coordinates, a summand built
+(`LeanerVM.Protocol.Verifier.tableSumcheck`, `python-verifier/verifier.py:599-628` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) sums, over the cube of `n` coordinates, a summand built
 from the tables' weights (`tableWeights`), the columns' multilinear extensions and degree-two
 forms. Its honest prover needs:
 

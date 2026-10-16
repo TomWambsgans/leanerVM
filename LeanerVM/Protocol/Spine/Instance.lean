@@ -280,9 +280,12 @@ def pushLeaves : ℕ :=
       ((I.flushes j).filter fun f ↦ decide (f.1 = .push)).length * 2 ^ I.τ j).sum
 
 /-- The log-height of the bus's leaf stacks: the push side's leaves, stacked largest first at
-aligned offsets with no floor on the depth (`leaf.rs:149-156`). The pull and count trees take
-the same depth, which the deployed verifier asserts of its layouts (`leaf.rs:123-146`,
-`:876-882`) and an instance does not guarantee: the bus phase assumes it of the instance. -/
+aligned offsets with no floor on the depth (`leaf.rs:141-148`). The pull and count trees take
+the same depth, which the deployed prover asserts of its layouts (`leaf.rs:115-138`, the count
+tree padded to it at `:654`; the verifier's own check, `leaf.rs:875-882` at `a386121f`, is removed
+at `127510d1`, whose verifier walks the three trees at the push side's depth,
+`crates/verifier/src/bus.rs:116`) and an instance does not guarantee: the bus phase assumes it of
+the instance. -/
 def μBus : ℕ := Nat.clog 2 I.pushLeaves
 
 /-- The committed columns the boundary blocks name, each once, in the order in which the sides,

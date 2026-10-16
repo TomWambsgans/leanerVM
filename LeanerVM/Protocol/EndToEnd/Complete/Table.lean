@@ -16,8 +16,8 @@ public import LeanerVM.Protocol.Verifier.Verify
 /-!
 # The table phase
 
-Step 4 of `verify_execution` (`tablePhase`, `python-verifier/verifier.py:1387-1395`, and
-`table_sumcheck`, `:598-626`, at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`). The verifier
+Step 4 of `verify_execution` (`tablePhase`, `python-verifier/verifier.py:1380-1388`, and
+`table_sumcheck`, `:599-628`, at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`). The verifier
 samples `ξ`, splits its powers into the constraint powers and the three form powers, and runs one
 plain sumcheck of four coefficients per round over `n = max_t τ_t` coordinates against the target
 `Σ_side ξ^side · total_side`; it then reads every table's row evaluations at the point (the
@@ -426,7 +426,7 @@ section Prover
 
 variable (prog : Program) (s : Sizes) (q : Column (leanIsaμ prog s))
 
-/-- The constraint powers of `ξ` (`verifier.py:1389-1391`). -/
+/-- The constraint powers of `ξ` (`verifier.py:1382-1384`). -/
 def cpOf (xi : E) : List E :=
   (powers xi ((tables.map Table.nConstraints).sum + 3)).take (tables.map Table.nConstraints).sum
 

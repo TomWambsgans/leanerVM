@@ -13,7 +13,7 @@ public import LeanerVM.Protocol.Whir.Sound.Interface
 # Level doom and escape bounds
 
 A level `i` of the deployed WHIR opening (`LeanerVM.Protocol.Verifier.whirLevels`, leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) opens commitment `i`, a matrix of `2^(κ_i + R_i)` rows
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) opens commitment `i`, a matrix of `2^(κ_i + R_i)` rows
 of `wdOf i ℓ_i` words: `2^ℓ₀` `K`-words at level `0` (the stack's lanes), `3·2^ℓ_i` words (the lanes
 in `E`) deeper. `ShapeOK` records that the history has exactly the commitments `0..i` and that the
 `i`-th has this shape; `LevelPre` is the doom at the start of a level: `A(i, 0)` and `ShapeOK`.

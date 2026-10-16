@@ -13,7 +13,7 @@ public import LeanerVM.Semantics.PaddedImage
 # The dummy steps of a fill block
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A. Over the padded image, at a frame pointer
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A. Over the padded image, at a frame pointer
 `g^base` of one of the forty-eight frames, each of the six dummies (`Semantics.FillBlocks`)
 executes to `Regs.next`: the registers advance one slot and the frame is kept. The proof is the
 arithmetic of the template: `XOR` and `MUL_NATIVE` read the zero scratch cell three times and

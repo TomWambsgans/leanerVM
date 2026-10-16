@@ -9,9 +9,10 @@ to reduce there; they do from a plain file and not from a `module` (roadmap stat
 decision 4). Nothing here evaluates `gLog?`: every fetch and read is `Program.fetch_gpow` or
 `MemImage.read_gpow` at a literal index, or one of the failure lemmas.
 
-Fixtures: the executor test `mul_192bit_word` (`crates/lean_vm/src/cpu/mod.rs:981-998` at the
-pin, operands and product reproduced by `scripts/dump-mul-rust.sh`) as a `ValidExecution`; the
-`BLAKE2S` row of `blake2s_computes_the_compression` (`cpu/mod.rs:855-917`) on the cells of
+Fixtures: the executor test `mul_192bit_word` (`crates/leanvm_core/src/cpu/mod.rs:887-904` at
+the pin, operands and product reproduced by `scripts/dump-mul-rust.sh` at `a386121f`, the test
+unchanged since but for unwrapping the now fallible `execute`) as a `ValidExecution`; the
+`BLAKE2S` row of `blake2s_computes_the_compression` (`cpu/mod.rs:774-836`) on the cells of
 `scripts/dump-blake2s-rust.sh`; a taken `JUMP`; a `DEREF` in `pc` mode; the rejections of
 roadmap acceptance tests 2–7 and 12; and the `JUMP` sentinel of acceptance test 20, whose two
 rows are steps that chain to the final registers while `run` never reaches them.
@@ -65,7 +66,7 @@ example : (1: K) + 1 = 0 := by decide
 /-- Register equality decides in the kernel on a product against a power (finding E5). -/
 example : Regs.next ⟨1, 1⟩ = ⟨gpow 1, 1⟩ := by decide +kernel
 
-/-! ## `mul_192bit_word` (`cpu/mod.rs:981-998`) -/
+/-! ## `mul_192bit_word` (`cpu/mod.rs:887-904`) -/
 
 -- scripts/dump-mul-rust.sh at leanVM a386121f
 def mulX : E :=
@@ -352,7 +353,7 @@ example : ∀ n, run haltProg ctlImage n Regs.initial ≠ some (Regs.final haltP
       run_succ_of_eq (prog := haltProg) (r := ⟨g, g⟩) (by decide +kernel) 0]
     exact fun h ↦ Option.some_ne_none _ h.symm
 
-/-! ## `BLAKE2S` (`blake2s_computes_the_compression`, `cpu/mod.rs:855-917`) -/
+/-! ## `BLAKE2S` (`blake2s_computes_the_compression`, `cpu/mod.rs:774-836`) -/
 
 -- scripts/dump-blake2s-rust.sh at leanVM a386121f
 def rustM0 : E :=

@@ -34,8 +34,8 @@ point of `E` (specification §4.1).
   `1 + Σ_b eq(sel_b, ζ_hi)` (§5.4, equation (2)).
 
 Category A: written from the specification, except the strided slots, whose shape is the
-Rust's (`crates/pcs/src/stack_open.rs:84-97`, `crates/lean_vm/src/cpu/mod.rs:799-805` at
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`). Which columns the blocks are, and in which order
+Rust's (`crates/pcs/src/stack_open.rs:74-87`, `crates/leanvm_core/src/cpu/mod.rs:718-724` at
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`). Which columns the blocks are, and in which order
 equal sizes come, is the instance's to say, not this module's.
 
 ## Wrong readings excluded

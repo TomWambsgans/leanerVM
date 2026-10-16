@@ -17,7 +17,7 @@ public import LeanerVM.Protocol.FlockSpec
 `walkFaithful_blake2sFlockSpec : WalkFaithful blake2sFlockSpec`: for every column-weight vector
 `w` of the block's size, the deployed verifier's forward walk `blake2sRowValues w` (the
 transcription in `Verifier/Flock.lean` of `blake2s_row_values`,
-`python-verifier/verifier.py:1180-1295` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+`python-verifier/verifier.py:1179-1288` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 returns, row by row, the left and right products `(A w, B w)` of the R1CS of `blake2sFlockSpec`,
 that is of `blake2sCircuit.toBlockR1CS E`. With `terminalFaithful` this discharges the one
 hypothesis of the lincheck terminal (`terminalFaithful_blake2sFlockSpec`).
@@ -50,7 +50,7 @@ namespace WalkSim
 
 /-! ## The walk, structured -/
 
-/-- One mixing step of the walk (`verifier.py:1270-1290`), its gate positions from
+/-- One mixing step of the walk (`verifier.py:1263-1283`), its gate positions from
 `1280 + 184 (8 round + gate)`. -/
 def walkGate (cw : Array E) (roundIndex : ℕ) (x : (ℕ × ℕ × ℕ × ℕ) × ℕ)
     (state : Array (Array E)) : RowM (ForInStep (Array (Array E))) :=

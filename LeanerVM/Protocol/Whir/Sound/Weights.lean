@@ -17,7 +17,7 @@ public import LeanerVM.Protocol.Verifier.Whir
 # The verifier's weights
 
 The deployed verifier (`LeanerVM.Protocol.Verifier`, transcribing `verify_whir` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, `python-verifier/verifier.py:954-1087`) evaluates
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, `python-verifier/verifier.py:956-1086`) evaluates
 three kinds of weights at the terminal point and computes one kind of value from opened rows.
 This module proves what the round-by-round analysis needs of each:
 
@@ -25,7 +25,7 @@ This module proves what the round-by-round analysis needs of each:
 * `eqEval z` (the out-of-domain claim's weight) is multiaffine (`isMultiaffine_eqEval`), and its
   inner product with a message is the message's multilinear extension at `z`
   (`sum_eqEval_mul_eq_evalMle`);
-* the verifier's `inducedWeight` (`_induced_weight`) is the column-weight sum of Annex B
+* the verifier's `inducedWeight` (`_induced_weight`) is the column-weight sum of Annex D
   `lem:colweight` (`inducedWeight_eq_sum`, through `LeanerVM.Protocol.Whir.inducedWeight_eq`; the
   verifier's own `subspaceRoots` is the Annex's roots, `subspaceRoots_eq_closed`), hence
   multiaffine (`isMultiaffine_inducedWeight`), and its inner product with a message is the batched

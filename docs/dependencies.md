@@ -74,14 +74,17 @@ The pure refactors (`verify_bus_balance`'s hoisted values, `table_sumcheck`'s `t
 `verify_whir`'s dead `running_target`, `blake2s_row_values`) change no Lean definition.
 
 Mechanical porting, recorded separately: the crate `lean_vm` is now `leanvm_core` (01bf5283)
-and the Rust verifiers moved into `crates/verifier`, so source citations re-point; files touched
-by the semantic changes cite the new pin, the rest still cite `a386121f`. The Rust executor's
-error contract, its read pinning (a fix of status finding R28) and its fill-frame placement
-changed, which bear on the leanISA status findings and the Rust contract harness, not on a Lean
-definition. The proof fixtures of `tests/fixtures/verifier` and the scripts that export them
-are at the old pin and must be regenerated at the new one (`scripts/verifier-fixtures.py`); the
-mock trace of `tests/LeanerVMTests/Protocol/Verifier/Replay.lean` and the vectors of
-`Helpers.lean` and `Compiled.lean` were rerun against the new `verifier.py`.
+and the Rust verifiers moved into `crates/verifier`, so source citations re-point: every
+citation of leanVM in the sources and the living documentation now names `127510d1`, with its
+paths and lines checked against that tree, and says so where the cited code is gone. The dated
+review records under `docs/reviews/` keep their pin, as does every record of something produced
+or observed at `a386121f`. The Rust executor's error contract, its read pinning (a fix of
+status finding R28) and its fill-frame placement changed, which bear on the leanISA status
+findings and the Rust contract harness, not on a Lean definition. The proof fixtures of
+`tests/fixtures/verifier` and the scripts that export them are at the old pin and must be
+regenerated at the new one (`scripts/verifier-fixtures.py`); the mock trace of
+`tests/LeanerVMTests/Protocol/Verifier/Replay.lean` and the vectors of `Helpers.lean` and
+`Compiled.lean` were rerun against the new `verifier.py`.
 
 ## Lean 4.34 port review
 

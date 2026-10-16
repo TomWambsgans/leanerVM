@@ -182,8 +182,8 @@ def slot9 : List K := [0, 0, 0, 0, 0, K.ofBits 22, 0, 0, 0, 0, 0, 0, K.ofBits 48
 /-- Slot 10: `BLAKE2S`'s metadata operand. -/
 def slot10 : List K := [0, 0, 0, 0, 0, K.ofBits 23, 0, 0, 0, 0, 0, 0, K.ofBits 49, 0, 0, 0]
 
-/-- The table `stacked_bytecode_table` builds (`crates/lean_vm/src/leaf.rs:585-604` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`): sixteen slots of `2 ^ κ_bc` cells, the cell
+/-- The table `stacked_bytecode_table` builds (`crates/leanvm_core/src/leaf.rs:558-577` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`): sixteen slots of `2 ^ κ_bc` cells, the cell
 `(slot << κ_bc) + i` holding column `slot` at instruction `i`; the eight public columns at
 slots 3 to 10 (`BYTECODE_PUBLIC_SLOT = 3`), and zero at the other slots. -/
 def rustTable : List K :=

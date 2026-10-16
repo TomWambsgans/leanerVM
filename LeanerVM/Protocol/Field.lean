@@ -29,7 +29,7 @@ leanVM's columns take values in `K` and its challenges in `E`, the cubic extensi
 * `innerProductOracle`: the interface of the one committed oracle, the stack, on `Column n`,
   the value table of a `K`-multilinear on `n` variables. A query is a weight `W : Weight E n`
   (specification Definition 3.13, `def:ipcs`, `doc/leanvm/body/03-proving-primitives.tex:112-115`
-  at `a386121f84292f6fa663aaa3e570c15bc0240ea2`): a table over the cube with an evaluator of its
+  at `127510d14c98ade4e8a97646c44fa7f1ff5e752d`): a table over the cube with an evaluator of its
   extension the verifier can run. The answer is `⟨W, q⟩ = Σ_x W(x)·q(x)` in `E`. An evaluation
   `q̃(p)` at a point `p ∈ E^n` is the answer to the equality kernel `eqWeight p`
   (`answer_eqWeight`).

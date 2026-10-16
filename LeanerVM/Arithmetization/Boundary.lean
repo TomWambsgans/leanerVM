@@ -19,16 +19,15 @@ public import Clean.Utils.Tactics.CircuitProofStart
 # The boundary blocks
 
 leanISA roadmap Layer 7 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the three
-blocks are `crates/lean_vm/src/cpu/layout.rs:352-395` (the "shared blocks" of `layout`), matching
-specification §6.1 (`doc/leanvm/body/06-bus-interactions.tex:8`, the state boundary), §6.2
-"Flush rules" (`:44-46`, seed and finalize), §6.4 (the bytecode array), §6.5 (`:95`, the index
-column), and §8.5 (`08-end-to-end-protocol.tex:70`: "three blocks per side belong to no
-table"). The committed columns are `MEM_LO, MEM_HI, MEM_TOP, MFCNT` and `BFCNT`
-(`layout.rs:13-17`); the bytecode entry rides eight *public* columns (`bytecode_columns`,
-`layout.rs:229-290`, Layer 4's `entry`); the sentinel counter `g^(N_prog - 1)` is derived from
-the public program's length and written into the state block as a constant (`layout.rs:335`,
-`final_pc`; `:357`, `Const(g_pow(final_pc))`).
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the three blocks
+are `crates/leanvm_core/src/cpu/layout.rs:351-394` (the "shared blocks" of `layout`), matching
+specification §6.1 (`doc/leanvm/body/06-bus-interactions.tex:8`, the state boundary), §6.2 "Flush
+rules" (`:44-46`, seed and finalize), §6.4 (the bytecode array), §6.5 (`:98`, the index column), and
+§8.5 (`08-end-to-end-protocol.tex:74`: "three blocks per side belong to no table"). The committed
+columns are `MEM_LO, MEM_HI, MEM_TOP, MFCNT` and `BFCNT` (`layout.rs:13-17`); the bytecode entry
+rides eight *public* columns (`bytecode_columns`, `layout.rs:228-289`, Layer 4's `entry`); the
+sentinel counter `g^(N_prog - 1)` is derived from the public program's length and written into the
+state block as a constant (`layout.rs:334`, `final_pc`; `:356`, `Const(g_pow(final_pc))`).
 
 **The three blocks.** Every table row of Layer 6 pulls its state and pushes its successor,
 and reads its cells and its instruction through the counted lookup of §6.2. What closes the
@@ -155,7 +154,7 @@ structure MemBindings {κ : ℕ} (mem : MemImage κ) (r : MemRow K) : Prop where
 def MemSpec (r : MemRow K) (data : ProverData K) : Prop :=
   MemBindings (imageOf data).2 r
 
-/-- The memory block (specification §6.2, seed and finalize; `layout.rs:359-382`): push
+/-- The memory block (specification §6.2, seed and finalize; `layout.rs:358-381`): push
 `(idx, 1, m)`, pull `(idx, cntFin, m)`. -/
 def memTable : GeneralFormalCircuit K MemRow unit where
   main r := do
@@ -210,7 +209,7 @@ theorem mem_word_complete {data : ProverData K} (i : Fin (2 ^ (imageOf data).1))
 
 /-- A row of the bytecode block: the counter `g^i` (the index column), the finalize count
 `g^(A[i])` (`BFCNT`, `layout.rs:17`), and the entry of Layer 4 at that slot, the opcode and the
-seven operand slots (the eight public columns of `bytecode_columns`, `layout.rs:229-290`). -/
+seven operand slots (the eight public columns of `bytecode_columns`, `layout.rs:228-289`). -/
 structure BytecodeRow (F : Type) where
   /-- The counter, `g^i` for row `i`. -/
   idx : F
@@ -237,7 +236,7 @@ structure BytecodeBindings (prog : Program) (r : BytecodeRow K) : Prop where
   /-- The program fetches at `idx` the instruction the row's entry decodes to. -/
   entry_eq : ∃ ins, prog.fetch r.idx = some ins ∧ decode (#v[r.opcode] ++ r.op) = some ins
 
-/-- The bytecode block (specification §6.2 and §6.4, seed and finalize; `layout.rs:383-395`):
+/-- The bytecode block (specification §6.2 and §6.4, seed and finalize; `layout.rs:382-394`):
 push `(idx, 1, opcode, op)`, pull `(idx, cntFin, opcode, op)`. Program-free: the entry columns
 are the program's by Layer 8's conjunct, not by anything here. -/
 def bytecodeTable : GeneralFormalCircuit K BytecodeRow unit where
@@ -307,9 +306,9 @@ theorem bytecode_entry_complete {data : ProverData K} (prog : Program)
 /-! ## The verifier -/
 
 /-- The verifier's state boundary for the public program `prog` (specification §6.1;
-`layout.rs:352-358`): push the initial state `(1, 1)`, pull the final state
+`layout.rs:351-357`): push the initial state `(1, 1)`, pull the final state
 `(g^(N_prog - 1), 1)`, the counter a constant of the program as `Const(g_pow(final_pc))` is
-(`layout.rs:335`, `:357`). `Spec` is `True`: the state pull carries no guarantee (acceptance
+(`layout.rs:334`, `:356`). `Spec` is `True`: the state pull carries no guarantee (acceptance
 test 21), and the run the boundary closes is Layer 9's `exists_run_of_balanced`. -/
 def leanIsaVerifier (prog : Program) : GeneralFormalCircuit K PublicIO unit where
   main _ := do

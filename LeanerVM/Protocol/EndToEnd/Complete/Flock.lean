@@ -16,8 +16,8 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Facts
 # Completeness of the Flock phase
 
 The verifier program's step 6 (`verifyFlock (14 + τ_BLAKE2S)`, `verifyFlockZerocheck`,
-`verifyFlockLincheck`; `python-verifier/verifier.py:1126-1308` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) against the honest prover of a stack `q` that
+`verifyFlockLincheck`; `python-verifier/verifier.py:1125-1301` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) against the honest prover of a stack `q` that
 satisfies the leanISA instance's relation. The honest messages are the Flock argument's
 (`LeanerVM.Protocol.ToArkLib.Flock`), at the parameters and tables the soundness side reads the
 program at (`Front.fP`, `Front.fC`, `Front.fz`: `flockParams τ_BLAKE2S`, the BLAKE2s circuit's

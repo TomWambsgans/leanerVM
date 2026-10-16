@@ -17,16 +17,18 @@ Category B. `blake2sBytes` is RFC 7693 §3.3 over the compression function `comp
 `LeanerVM.Semantics.Blake2s`: the unkeyed parameter block folded into the first word of `iv`,
 every block but the last compressed at the byte count so far with no flag, and the last block,
 zero-padded, at the total length with the last-block flag; the empty message is one zero block.
-The pinned leanVM computes exactly this (`crates/primitives/src/hash.rs:66-224`, `init_state`,
-`Hasher`, `hash`, at `a386121f84292f6fa663aaa3e570c15bc0240ea2`), never setting the last-node
-flag, which the `BLAKE2S` opcode alone takes as an input.
+The pinned leanVM computes exactly this (`crates/primitives/src/hash/mod.rs:75-204`,
+`PARAM_IV`, `Hasher`, `hash`, at `127510d14c98ade4e8a97646c44fa7f1ff5e752d`), never setting the
+last-node flag, which the `BLAKE2S` opcode alone takes as an input.
 
-The Merkle hashes are those of `crates/fiat_shamir/src/merkle.rs:40-67`: a leaf is the hash of
-its `K` words as little-endian bytes (`hash_words`), a node the hash of the 64 bytes of its two
-children (`hash_pair`). The digest encoding is `merkle.rs:14-36`: a digest travels as two
-elements of `E`, each holding sixteen bytes in its two low limbs with the top limb `0`
-(`hash_to_scalars`), and the decoder rejects a nonzero top limb (`scalars_to_hash`), since the
-two halves come off the proof stream.
+The Merkle hashes are those of `crates/verifier/src/merkle.rs:37-46` (and of the prover's
+`crates/fiat_shamir/src/merkle.rs:21-34`): a leaf is the hash of its `K` words as little-endian
+bytes (`hash_leaf`, through `K::to_bytes`), a node the hash of the 64 bytes of its two children
+(`hash_pair`). The digest encoding is `crates/fiat_shamir/src/merkle.rs:13-19` and
+`crates/verifier/src/hash.rs:99-117`: a digest travels as two elements of `E`, each holding
+sixteen bytes in its two low limbs with the top limb `0` (`hash_to_scalars`, `Digest::halves`),
+and the decoder rejects a nonzero top limb (`Digest::from_halves`), since the two halves come off
+the proof stream.
 
 A digest is its eight chaining words; `digestBytes` is its byte form.
 -/
@@ -54,7 +56,7 @@ def lastBlock : UInt32 := 0xFFFFFFFF
 
 /-- The initial chaining value of an unkeyed BLAKE2s-256: `iv` with the parameter block
 `0x01010020` (digest length 32, key length 0, fanout 1, depth 1; RFC 7693 §2.8) XORed into word 0
-(`hash.rs:66-81`, `init_state`, `PARAM_IV`). -/
+(`hash/mod.rs:75-83`, `PARAM_IV`; `init_state` is gone at this pin). -/
 def paramIv : Vector UInt32 8 := iv.set 0 (iv[0] ^^^ 0x01010020)
 
 /-- A little-endian word from four bytes. -/
@@ -62,7 +64,7 @@ def leWord (b0 b1 b2 b3 : UInt8) : UInt32 :=
   b0.toUInt32 ||| (b1.toUInt32 <<< 8) ||| (b2.toUInt32 <<< 16) ||| (b3.toUInt32 <<< 24)
 
 /-- The sixteen little-endian words of a block of at most 64 bytes, zero-padded
-(`hash.rs:118-120`, `block_words`). -/
+(`hash/mod.rs:120-122`, `block_words`). -/
 def blockWords (block : List UInt8) : Vector UInt32 16 :=
   let b := fun i ↦ block.getD i 0
   #v[leWord (b 0) (b 1) (b 2) (b 3), leWord (b 4) (b 5) (b 6) (b 7),
@@ -77,14 +79,14 @@ def blockWords (block : List UInt8) : Vector UInt32 16 :=
 /-- Absorb `data` into the chaining value `h` after `t` bytes: `blocks` more non-final blocks of
 64 bytes, each compressed at the byte count including it with no flag, then the rest as the
 final block, zero-padded, compressed at the total length with the last-block flag
-(RFC 7693 §3.3; `hash.rs:176-199`, `Hasher.update` and `finalize`). -/
+(RFC 7693 §3.3; `hash/mod.rs:157-180`, `Hasher.update` and `finalize`). -/
 def absorb (h : Vector UInt32 8) (t : ℕ) : (blocks : ℕ) → List UInt8 → Digest
   | 0, data => compress h (blockWords data) (t + data.length).toUInt64 lastBlock 0
   | blocks + 1, data =>
     absorb (compress h (blockWords (data.take 64)) (t + 64).toUInt64 0 0) (t + 64) blocks
       (data.drop 64)
 
-/-- BLAKE2s-256 of a byte string (`hash.rs:209-224`, `hash`): `⌈len/64⌉ - 1` non-final blocks,
+/-- BLAKE2s-256 of a byte string (`hash/mod.rs:190-204`, `hash`): `⌈len/64⌉ - 1` non-final blocks,
 then the final one; the empty string is one zero block at counter `0`. -/
 def blake2sBytes (data : List UInt8) : Digest :=
   absorb paramIv 0 ((data.length - 1) / 64) data
@@ -95,23 +97,26 @@ def blake2sBytes (data : List UInt8) : Digest :=
 def wordBytes (w : UInt32) : List UInt8 :=
   [w.toUInt8, (w >>> 8).toUInt8, (w >>> 16).toUInt8, (w >>> 24).toUInt8]
 
-/-- The 32 bytes of a digest: its words, little-endian (`hash.rs:124-130`, `state_bytes`). -/
+/-- The 32 bytes of a digest: its words, little-endian (`hash/mod.rs:126-132`,
+`state_bytes`). -/
 def digestBytes (d : Digest) : List UInt8 := d.toList.flatMap wordBytes
 
-/-- The eight little-endian bytes of a `K` word (`merkle.rs:61-67`, `hash_words`). -/
+/-- The eight little-endian bytes of a `K` word (`crates/verifier/src/field.rs:60-63`,
+`K::to_bytes`). -/
 def kBytes (a : K) : List UInt8 := wordBytes (lowWord a) ++ wordBytes (highWord a)
 
 /-! ## The Merkle hashes -/
 
-/-- The digest of a leaf: BLAKE2s-256 of its words as bytes (`merkle.rs:61-67`, `hash_words`). -/
+/-- The digest of a leaf: BLAKE2s-256 of its words as bytes (`crates/verifier/src/merkle.rs:44-46`,
+`hash_leaf`). -/
 def hashWords (words : List K) : Digest := blake2sBytes (words.flatMap kBytes)
 
 /-- The digest of a node: BLAKE2s-256 of the 64 bytes of its two children, left first
-(`merkle.rs:46-51`, `hash_pair`). -/
+(`crates/verifier/src/merkle.rs:37-42`, `hash_pair`). -/
 def hashPair (left right : Digest) : Digest :=
   blake2sBytes (digestBytes left ++ digestBytes right)
 
-/-! ## The digest encoding (`merkle.rs:14-36`) -/
+/-! ## The digest encoding (`fiat_shamir/src/merkle.rs:13-19`, `verifier/src/hash.rs:99-117`) -/
 
 /-- A digest as the two field elements a transcript carries it in: bytes `0..16` and `16..32`,
 each as a canonical 128-bit cell (`hash_to_scalars`). -/
@@ -119,7 +124,7 @@ def digestScalars (d : Digest) : E × E :=
   (wordsCell #v[d[0], d[1], d[2], d[3]], wordsCell #v[d[4], d[5], d[6], d[7]])
 
 /-- The digest two field elements encode, or `none` if either has a nonzero top limb
-(`scalars_to_hash`, `Error::NonCanonicalEncoding`). -/
+(`Digest::from_halves`, `VerifierError::DigestHalf`). -/
 def digestOfScalars (s : E × E) : Option Digest :=
   if IsCanonical128 s.1 ∧ IsCanonical128 s.2 then some (cellWords s.1 ++ cellWords s.2) else none
 

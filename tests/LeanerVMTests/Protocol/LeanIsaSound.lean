@@ -13,7 +13,7 @@ import LeanerVM.Protocol.LeanIsa.Sound
   the counts, on a stack and a witness that agree.
 * **The limbs are read at the deployed slots.** At a size vector of the instance tests, the
   pinned Rust places `QFLOCK` at offset `4980736`, and limb `k` of row `x` is read at the stack's
-  cell `4980736 + slot k + 256 x`, with the slots of `hash_flock.rs:93-115`; a transposed strided
+  cell `4980736 + slot k + 256 x`, with the slots of `hash_flock.rs:86-108`; a transposed strided
   read would fail this.
 -/
 

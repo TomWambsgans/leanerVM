@@ -104,8 +104,10 @@ when they exist and never rebuilds them under a leanISA-specific spelling.
 
 A prerequisite below is a named declaration at a pinned revision, an earlier layer here, or a
 cited section of a source. The tables below record the original implementation baseline:
-leanVM [`a386121f`](https://github.com/leanEthereum/leanVM/commit/a386121f84292f6fa663aaa3e570c15bc0240ea2), CompPoly
-`3468b38c`, Clean `93c9d1ef`, Lean `v4.33.1`.
+leanVM `a386121f`, CompPoly `3468b38c`, Clean `93c9d1ef`, Lean `v4.33.1`. Their leanVM
+citations are re-pointed to the current pin
+[`127510d1`](https://github.com/leanEthereum/leanVM/commit/127510d14c98ade4e8a97646c44fa7f1ff5e752d),
+where the ISA, the tables and the layouts they cite are unchanged.
 
 Current pins are in `upstreams.json` and [dependencies.md](../dependencies.md). That page
 records the 4.34 port: `BF64` now wraps its bit coordinates, wire literals use `K.ofBits`,
@@ -122,17 +124,17 @@ section or file and lines, and the pin.
 
 | Artifact | Category | Source at the pin |
 | --- | --- | --- |
-| Instruction semantics, halting, public input, nondeterminism | A | specification §2 (`doc/leanvm/body/02-vm-specification.tex`), §8.2, §10.1 |
+| Instruction semantics, halting, public input, nondeterminism | A | specification §2 (`doc/leanvm/body/02-vm-specification.tex`), §8.2, §9.1 (§10.1 at `a386121f`) |
 | Bus balance, lookup rules, boundary tuples | A (meaning) / B (tuple shapes) | specification §5.1, §6.1–§6.4 |
 | Field moduli, limb order | B | specification §2 = CompPoly `BF64`/`Ext3` |
-| Generator value | B | `crates/primitives/src/field/gf2_64.rs:28` (`F64::G = F64(2)`); `python-verifier/verifier.py:182` |
-| Opcode codes, caps, κ bounds | B | specification §6.2, §6.4; `crates/lean_vm/src/tables.rs:79-100`, `cpu/mod.rs` |
-| Bytecode slot layout | B | specification §8.1; `crates/lean_vm/src/cpu/layout.rs:252-290` |
-| Table columns, constraints, flushes | B | specification §7; `crates/lean_vm/src/tables.rs:436-908` |
-| Seed/read/finalize and boundary blocks | B | specification §6.1–§6.2; `crates/lean_vm/src/cpu/layout.rs:355-395` |
+| Generator value | B | `crates/primitives/src/field/gf2_64.rs:25` (`F64::G = F64(2)`); `python-verifier/verifier.py:182` |
+| Opcode codes, caps, κ bounds | B | specification §6.2, §6.4; `crates/leanvm_core/src/tables.rs:83-104`, `cpu/mod.rs` |
+| Bytecode slot layout | B | specification §8.1; `crates/leanvm_core/src/cpu/layout.rs:251-289` |
+| Table columns, constraints, flushes | B | specification §7; `crates/leanvm_core/src/tables.rs:441-913` |
+| Seed/read/finalize and boundary blocks | B | specification §6.1–§6.2; `crates/leanvm_core/src/cpu/layout.rs:354-394` |
 | BLAKE2s constants | B | RFC 7693 §2.6–§2.7 |
-| BLAKE2s cell and metadata encoding | B | `crates/lean_vm/src/cpu/mod.rs` (`blake2s_compress`); `crates/lean_vm/src/hash_flock.rs:136-139` |
-| Table row minimums and fill blocks | B | `crates/lean_vm/src/cpu/filler.rs:36-57`, `crates/lean_compiler/src/filler.rs` |
+| BLAKE2s cell and metadata encoding | B | `crates/leanvm_core/src/cpu/mod.rs` (`blake2s_compress`); `crates/leanvm_core/src/hash_flock.rs:129-132` |
+| Table row minimums and fill blocks | B | `crates/leanvm_core/src/cpu/filler.rs:36-57`, `crates/lean_compiler/src/filler.rs` |
 
 ### CompPoly
 
@@ -217,7 +219,7 @@ not change (decision 14).
 | `JUMP` | The three `K` assertions are unconditional; taken iff `c ≠ 0`; flags `b = c·w`, `c·(b + 1) = 0`. |
 | `BLAKE2S` | Tree-mode compression with both flags, each a 32-bit word (`0xFFFFFFFF` when set), never a `Bool`; metadata `counter = limb 0`, `final = low 32 bits of limb 1`, `last_node = high 32 bits of limb 1`; all nine cells canonical 128-bit; word order transcribed from the Rust. |
 | Bus | One Clean channel per interaction and direction (`st/mem/bc` × `pull/push`); each channel names its domain separator (`g^0`, `g^1`, `g^2`) and its direction as data (`channelSep`, `channelDir`), never through a multiplicity's sign; tuples are typed messages in the specification's coordinate order, and `busTuple` is their sixteen-slot form; `read(addr, count, v)` = pull `(addr, count, v)`, push `(addr, g·count, v)`; balance = multiset equality per pair (`BalancedPair`, a `List.Perm` of the messages `messagesOn` lists), a channel identified by its name. |
-| Program | Public, never prover data, never a parameter of a channel or a table (§6.4; `layout.rs:288-290`, `Coord::Public`; `tables.rs:143-152`, an AIR's bytecode flush is its constant opcode and its own operand columns): the channels and the six tables are program-free, the bytecode guarantee is static decodability, and the program enters in three places, the bytecode block's row builder `bytecodeRowOf prog`, the verifier `leanIsaVerifier prog` and the statement `SatisfiedBy prog`, whose conjunct `BytecodeRowsAreTheProgram prog` pins the block's rows to the program (Clean PR #446's fixed columns by hand). `ProverData` holds the image alone, its `"mem"` table (acceptance test 22, decision 14). |
+| Program | Public, never prover data, never a parameter of a channel or a table (§6.4; `layout.rs:287-289`, `Coord::Public`; `tables.rs:147-156`, an AIR's bytecode flush is its constant opcode and its own operand columns): the channels and the six tables are program-free, the bytecode guarantee is static decodability, and the program enters in three places, the bytecode block's row builder `bytecodeRowOf prog`, the verifier `leanIsaVerifier prog` and the statement `SatisfiedBy prog`, whose conjunct `BytecodeRowsAreTheProgram prog` pins the block's rows to the program (Clean PR #446's fixed columns by hand). `ProverData` holds the image alone, its `"mem"` table (acceptance test 22, decision 14). |
 | Boundary blocks | Three components owned by no table (§8.5): the memory and bytecode blocks push `(idx, 1, entry)` and pull `(idx, cntFin, entry)` per row, the verifier `leanIsaVerifier prog` pushes `(1, 1)` and pulls `(prog.finalPc, 1)`, both constants, the counter the public program's as in `layout(prog, …)`; none has a constraint. A block's `Spec` is its pull guarantee, the verifier's `True` (acceptance test 21). `PublicIO` is the four input lanes; the ensemble is `leanIsaEnsemble prog`. |
 | Opcode codes | `g^0 … g^5` in the order XOR, MUL_NATIVE, SET_CONSTANT, DEREF, JUMP, BLAKE2S. |
 | Bytecode slots | Sixteen `K` slots; opcode in slot 3; operands in slots 4..10; `SET`'s `k2` in slot 7; `BLAKE2S` uses all seven; zero elsewhere. |
@@ -277,7 +279,7 @@ example : (@FiniteField.toField K _ : Field K) = inferInstance := rfl
 Define the generator and certify its order:
 
 ```lean
-/-- `g = x`. Bound to `crates/primitives/src/field/gf2_64.rs:28` (`F64::G = F64(2)`). -/
+/-- `g = x`. Bound to `crates/primitives/src/field/gf2_64.rs:25` (`F64::G = F64(2)`). -/
 def g : K := 0x2
 theorem card_sub_one_factorization : (2 : ℕ) ^ 64 - 1 = 3 * 5 * 17 * 257 * 641 * 65537 * 6700417
 theorem g_pow_div_three_ne_one : g ^ ((2 ^ 64 - 1) / 3) ≠ 1      -- and six more, one per prime
@@ -315,11 +317,11 @@ def CompressCells (m : Fin 4 → E) (cv0 cv1 out0 out1 md : E) : Prop   -- decid
 `cellWords out0 ++ cellWords out1 = compress (cv words) (message words) t f0 f1` with
 `(t, f0, f1) = unpackMetadata md`. The two flags are 32-bit words, `0xFFFFFFFF` when set, not
 Booleans: the pinned Rust XORs the two halves of limb 1 into `v[14]` and `v[15]` whatever their
-value (`crates/flock/src/hash.rs:206-214`) and the Flock relation takes them as free words, so a
+value (`crates/flock/src/hash.rs:204-212`) and the Flock relation takes them as free words, so a
 metadata cell with any other flag word satisfies the constraints and `CompressCells` must accept
 it too (acceptance test 10). Tests: the RFC 7693 vectors for `compress`; one vector for
 `cellWords` and `unpackMetadata` dumped from the Rust test `blake2s_computes_the_compression`
-(`crates/lean_vm/src/cpu/mod.rs:893`), with the dump command recorded under `scripts/`.
+(`crates/leanvm_core/src/cpu/mod.rs:812`), with the dump command recorded under `scripts/`.
 
 ### Layer 2: instructions, programs, the memory image, and the public input
 
@@ -468,7 +470,7 @@ spelling of §2, which needs no index proof.
 execution is a proof that peels `run` one step at a time (`run_succ_of_ne`), rewrites each
 fetch and read through `Program.fetch_gpow` and `MemImage.read_gpow` at a literal index, and
 decides the step's relation on literal words in the kernel, from a plain test file (status
-finding P1). Tests: the Rust executor test `mul_192bit_word` (`cpu/mod.rs:985`, operands and
+finding P1). Tests: the Rust executor test `mul_192bit_word` (`cpu/mod.rs:890`, operands and
 product dumped by `scripts/dump-mul-rust.sh`) as a `ValidExecution` proved that way, with its
 fourth step refused; the `BLAKE2S` row of `blake2s_computes_the_compression` on the Layer 1
 cells, accepted, and rejected with a non-canonical output cell (test 12); the empty execution
@@ -497,7 +499,7 @@ theorem entry_injective : Function.Injective entry
 `decode` is partial and exact on **eight-coordinate entries**. A vector whose opcode is not
 one of the six codes, whose `DEREF` flags are not one of the three pairs, or whose spare entry
 coordinates are nonzero decodes to `none` (`decode_eq_some_iff`). Each table's bytecode tuple
-carries literal zeros in its spare coordinates (`tables.rs:486-908`), and the typed public
+carries literal zeros in its spare coordinates (`tables.rs:491-913`), and the typed public
 program holds only encodable `Instr` values. `Program.fetch` looks up those typed instructions
 by address; it never invokes `decode`. `encodeSlots` constructs a sixteen-slot row, but there
 is no raw-program loader or theorem that an arbitrary verifier bytecode array is rejected when
@@ -586,12 +588,12 @@ drops the rows beyond that power of two, and `WellShapedData` names the shape un
 nothing is dropped, which Layer 8's `Caps` requires. Layer 8's hypothesis `SeedRowsAreTheImage`
 ties the table to the committed seed rows until Clean PR #446 supplies proof-committed data.
 The program is not prover data: leanVM's bytecode is public and never committed (§6.4;
-`layout.rs:288-290`, `Coord::Public`), and `ProverData` is a field of the witness, so a
+`layout.rs:287-289`, `Coord::Public`), and `ProverData` is a field of the witness, so a
 guarantee stated over a program read off it would be about a program the prover chose
 (acceptance test 22). Nor is it a parameter of the channels or of the tables: leanVM's AIRs are
 fixed for all programs, each table's bytecode flush being its constant opcode and its own
-operand columns (`tables.rs:143-152`), and the program rides the bytecode seed and finalize
-blocks as public columns the verifier forms itself (`layout.rs:383-395`; §8.5, Bus 4). The
+operand columns (`tables.rs:147-156`), and the program rides the bytecode seed and finalize
+blocks as public columns the verifier forms itself (`layout.rs:382-394`; §8.5, Bus 4). The
 program enters in three places: the bytecode block's row builder `bytecodeRowOf prog` and the
 verifier `leanIsaVerifier prog` (Layer 7), and the statement `SatisfiedBy prog` (Layer 8), whose
 conjunct `BytecodeRowsAreTheProgram prog` pins the block's rows to the program with only the
@@ -617,7 +619,7 @@ and 14 about Clean's `toRaw` and `BalancedInteractions` over `K`, as theorems.
 `LeanerVM/Arithmetization/Tables/{Basic,Xor,MulNative,SetConstant,Deref,Jump,Blake2s}.lean`.
 
 Each table is a `GeneralFormalCircuit K Row Regs`, program-free as leanVM's AIRs are
-(`tables.rs:143-152`; acceptance test 22, decision 14): `Row` is the table's column list in the
+(`tables.rs:147-156`; acceptance test 22, decision 14): `Row` is the table's column list in the
 Rust's order; `main` is the specification §7 entry read top to bottom (constraints as
 `assertZero`, flushes as interactions in the specification's coordinate order) and returns the
 state it pushes, the row's successor; `channelsWithRequirements` lists the three push channels,
@@ -786,7 +788,7 @@ complete row (`blake2sRow_complete`) whose canonical output is not the compressi
 `LeanerVM/Arithmetization/Boundary.lean`.
 
 The three blocks owned by no table (specification §6.1, §6.2 "Flush rules", §8.5;
-`layout.rs:352-395`): the memory and bytecode seed/finalize blocks and the verifier's state
+`layout.rs:351-394`): the memory and bytecode seed/finalize blocks and the verifier's state
 boundary. Each is a `GeneralFormalCircuit … unit` whose `main` is its two flushes, a push at
 count `1` and a pull at the row's finalize count, with no constraint; its `Spec` is what its
 pull guarantees (Layer 5), stated over the image the prover data names for the memory block and
@@ -846,7 +848,7 @@ theorem verifier_pull_eval (prog : Program) (env : Environment K) :
   are a conjunct of `SatisfiedBy` over `imageOf w.data`; the verifier reads `lanes` for nothing.
   The sentinel counter is not a public coordinate: leanVM's `layout(prog, …)` derives `final_pc`
   from the public program's length and writes `Const(g_pow(final_pc))` into the state block
-  (`layout.rs:335`, `:357`), so the verifier is a function of the program, and so is Layer 8's
+  (`layout.rs:334`, `:356`), so the verifier is a function of the program, and so is Layer 8's
   ensemble.
 - **The memory block.** `MemRow` is the address `idx` (the index column of §6.5, a column here
   until Clean PR #446 makes it the verifier's), the finalize count `cntFin` (`MFCNT`), and the
@@ -859,7 +861,7 @@ theorem verifier_pull_eval (prog : Program) (env : Environment K) :
   can only unbalance the bus (Layer 8).
 - **The bytecode block.** `BytecodeRow` is the counter `idx`, the finalize count (`BFCNT`), and
   the entry of Layer 4 as the opcode and the seven operand slots, spare slots as literal zeros
-  (the eight public columns of `bytecode_columns`, `layout.rs:229-290`). The block's `Spec` is
+  (the eight public columns of `bytecode_columns`, `layout.rs:228-289`). The block's `Spec` is
   its pull guarantee, `BytecodeDecodes r`, the row's entry decoding to an instruction: program-
   free, as the block has no constraint to hold the program and leanVM's block carries it as
   public columns the verifier forms itself (§8.5, Bus 4). `BytecodeBindings prog r`, the
@@ -880,7 +882,7 @@ theorem verifier_pull_eval (prog : Program) (env : Environment K) :
   local witness (`localLength = 0`, the `verifier_length_zero` field of Layer 8's ensemble) and
   is complete for every program and public input.
 
-Tests: the three components' interaction lists as data against `layout.rs:352-395` (push at
+Tests: the three components' interaction lists as data against `layout.rs:351-394` (push at
 `1`, pull at the finalize count, on the block's channel pair); `PublicIO` flattening to the four
 lanes, and the verifier of the fixture's program pulling `g^1`; on a four-word prover data and
 a two-slot `Program` value, the honest rows bound (`MemSpec`; `BytecodeDecodes` and
@@ -925,7 +927,7 @@ def CountsNonzero (w) : Prop :=
   ∀ t ∈ w.tables.take 6, ∀ i ∈ t.interactions,
     (i.channel.name = MemPull.name ∨ i.channel.name = BytecodePull.name) →
       ∀ h : 1 < i.msg.size, i.msg[1] ≠ 0
-structure Caps (w) : Prop where           -- the M3 part of `read_public`, `cpu/mod.rs:130-178`
+structure Caps (w) : Prop where           -- the M3 part of the setup, `verifier/src/lib.rs:208-222`
   minLogMem_le : minLogMem ≤ (imageOf w.data).1
   le_maxLogMem : (imageOf w.data).1 ≤ maxLogMem
   heights : ∀ t ∈ w.tables, ∃ τ ≤ maxLogRows, t.table.length = 2 ^ τ
@@ -1008,19 +1010,22 @@ theorem assumptions_of_blake2sRowsValid : Blake2sRowsValid w → w.Assumptions
   (Layer 5), so the multiset of messages is the multiset of interactions, and the direction of
   an interaction is the channel it is on.
 - **The verifier's checks.** `CountsNonzero` is the nonzero count product (§6.2 "The count
-  product"): the count channel of `layout.rs:73` and `:397-413` stacks the *read-count columns
+  product"): the count channel of `layout.rs:73` and `:396-412` stacks the *read-count columns
   of the six tables* and nothing else, so the conjunct quantifies over `w.tables.take 6` and
   the finalize counts of the two blocks are outside it (§6.2 "Nothing checks the finalize
   counts": a wrong one, `0` included, is rejected by balance alone; a read count of `0` that
   balances, a pull and a push of one tuple, is what the conjunct alone rejects, Theorem 6.4).
-  `Caps` is the M3 part of `read_public` (`cpu/mod.rs:130-178`), which makes eight checks:
-  the memory log-size within `[16, 32]`, every table height a power of two at most `2^32`
-  (heights are announced as logs, `:114-117`; the two blocks' heights `2^κ_mem` and `2^κ_bc`
-  are powers of two within the same cap by the other conjuncts), and the BLAKE2S table of at
-  least `2^3` rows are transcribed; the bytecode length `2^prog.logSize ≤ 2^32` and the public
-  words' zero third limbs are `Program`'s and `PublicInput`'s by type; the WHIR rate and the
-  stacked size `mu ∈ [15, 28]` (`:167`, `:174-176`) are parameters of the commitment and the
-  protocol layer's. `Caps` adds, so that `imageOf` drops no row of the prover data,
+  `Caps` is the M3 part of the verifier's setup (`crates/verifier/src/lib.rs:208-222` with
+  `build_layout`, `crates/verifier/src/layout.rs:381-395`; `read_public`, `cpu/mod.rs:130-178`,
+  at `a386121f`), which makes eight checks: the memory log-size within `[16, 32]`, every table
+  height a power of two at most `2^32` (heights are announced as logs,
+  `leanvm_core/src/cpu/mod.rs:110-113`; the two blocks' heights `2^κ_mem` and `2^κ_bc` are
+  powers of two within the same cap by the other conjuncts), and the BLAKE2S table of at least
+  `2^3` rows are transcribed; the bytecode length `2^prog.logSize ≤ 2^32` and the public words'
+  zero third limbs are `Program`'s and `PublicInput`'s by type; the WHIR rate and the stacked
+  size `mu ∈ [15, 28]` (`crates/verifier/src/lib.rs:217`, `:219-222`) are parameters of the
+  commitment and the protocol layer's. `Caps` adds, so that `imageOf` drops no row of the prover
+  data,
   `WellShapedData w.data` (Layer 5), a representation hypothesis rather than a check, the shape
   the announced sizes already imply for an honest prover. Heights are powers of two because
   the verifier accepts only announced log-heights and completeness pads to them, so
@@ -1028,9 +1033,10 @@ theorem assumptions_of_blake2sRowsValid : Blake2sRowsValid w → w.Assumptions
   [#13](https://github.com/Verified-zkEVM/leanerVM/issues/13)), the commitment parameters
   aside.
 - **The BLAKE2s validity** `Blake2sRowsValid w` is the one conjunct the verifier enforces
-  outside the bus (§8.5 "BLAKE2s validity", Opening step 4; `cpu/mod.rs:759-768`): the
-  `BLAKE2S` table has no constraint on its eighteen limbs, and Flock proves the compression on
-  the region the limb columns are routed to. It is a conjunct of the statement because Clean's
+  outside the bus (§8.5 "BLAKE2s validity", Opening step 4;
+  `crates/verifier/src/lib.rs:266-289`): the `BLAKE2S` table has no constraint on its eighteen
+  limbs, and Flock proves the compression on the region the limb columns are routed to. It is a
+  conjunct of the statement because Clean's
   `EnsembleWitness.Constraints` excludes a table's `Assumptions` and its
   `AssumptionsConsistency` sources them from the public input alone;
   `assumptions_of_blake2sRowsValid` turns it into the `w.Assumptions` Clean's `TableSoundness`
@@ -1041,8 +1047,8 @@ theorem assumptions_of_blake2sRowsValid : Blake2sRowsValid w → w.Assumptions
   restates the conjunct as the constraints themselves, one block of Flock's R1CS per row, and
   derives the relation; T1 does not change.
 - **The three named hypotheses** are the facts Clean cannot yet express (dependency table);
-  they are faithful: the index column is verifier-computed (§6.5; `layout.rs:365`, `:376`),
-  the memory columns are the committed image (`layout.rs:359-382`), the program is public
+  they are faithful: the index column is verifier-computed (§6.5; `layout.rs:364`, `:375`),
+  the memory columns are the committed image (`layout.rs:358-381`), the program is public
   (§8.5, Bus 4).
   `IndexColumnsAreRowIndices` reads the `idx` column through `memRowAt`;
   `SeedRowsAreTheImage` and `BytecodeRowsAreTheProgram prog` pin the two blocks' raw rows to
@@ -1054,7 +1060,7 @@ theorem assumptions_of_blake2sRowsValid : Blake2sRowsValid w → w.Assumptions
 - **The statement** is a structure with named fields, so that Layers 9 and 10 project the
   conjunct they consume by name, as the tables' `*Refines` are (decision 11). Its
   `constraints` field is Clean's, and only the `JUMP` table emits an assertion
-  (`tables.rs:724-731`), so the field reduces to the `JUMP` residuals; `public_input_eq` is
+  (`tables.rs:729-736`), so the field reduces to the `JUMP` residuals; `public_input_eq` is
   read by no component, the lanes binding the run through the two word fields. The two public
   words are §8.2's evaluation claim against the committed memory, spelled as Layer 3's
   `HasPublicBoundary` spells it, through `MemImage.read` on the image the data names; they are
@@ -1075,7 +1081,7 @@ theorem assumptions_of_blake2sRowsValid : Blake2sRowsValid w → w.Assumptions
 Tests: one hand-built `SatisfiedBy` witness for the Layer 3 program, the executor's
 `mul_192bit_word`, extended in the shape of the compiler's fill blocks: a `JUMP` to the
 sentinel and the fill blocks every table needs to reach a power-of-two height (§8.3;
-`crates/lean_vm/src/cpu/filler.rs:36-87`; acceptance test 15), one `XOR`, one `DEREF` and
+`crates/leanvm_core/src/cpu/filler.rs:36-87`; acceptance test 15), one `XOR`, one `DEREF` and
 eight `BLAKE2S` rows, each block a closed walk ending in a `JUMP` back to its first instruction
 in a frame disjoint from the run's. The thirty-two-slot program is a `ValidExecution` in four
 steps; its honest witness at the minimum memory size `2^16` satisfies every conjunct
@@ -1098,7 +1104,8 @@ four-row `BLAKE2S` table fail `Caps`.
 The three named hypotheses are what leanVM's verifier computes itself and Clean at
 `93c9d1ef` cannot express: the memory block's address coordinate is `Coord::Index`, never
 committed, evaluated by the verifier as `∏_k (1 + ζ_k (1 + g^{2^k}))` (§6.5;
-`crates/primitives/src/field/mod.rs:105-113`, `leaf.rs:444`); the bytecode block's entry
+`crates/primitives/src/field/mod.rs:105-113`, `leaf.rs:437`; the verifier's,
+`crates/verifier/src/bus.rs:138`); the bytecode block's entry
 columns are `Coord::Public`, the program's; and the memory block's value columns are the
 committed image. Clean PR [#446](https://github.com/Verified-zkEVM/clean/pull/446) adds
 indexed fixed columns whose row facts reach component soundness proofs, and a `ProverData`
@@ -1157,10 +1164,11 @@ only the `sentinelSafe` field of `WellFormedBytecode`. The remaining rows are th
 /-- `HasFillBlocks prog`: for every table and every size in `fillSizes = [128, 64, …, 1]` the
 program contains a fill block (`IsFillBlock`): `s` dummy instructions of the table's opcode
 (`fillDummy`) at consecutive slots, then the closing `JUMP [DEST, DEST, NEXT_FP]` (`fillClose`),
-all below the sentinel slot (`crates/lean_compiler/src/filler.rs`, `lower.rs:462-533`, identical
-at leanVM `a386121f` and `48a90420`). The dummies read and write the twelve-cell frame the
-interpreter provides and the closing jump goes back to the block's first slot in that frame, so a
-block is a closed walk; the frames are not part of the program. In `Semantics`, beside
+all below the sentinel slot (`crates/lean_compiler/src/filler.rs`, `lower.rs:435-506`, identical
+at leanVM `48a90420`, `a386121f` and `127510d1` up to the crate rename). The dummies read and
+write the twelve-cell frame the interpreter provides and the closing jump goes back to the
+block's first slot in that frame, so a block is a closed walk; the frames are not part of the
+program. In `Semantics`, beside
 `SentinelSafe`, since it speaks of `Program` and `Instr` only. -/
 def HasFillBlocks (prog : Program) : Prop
 
@@ -1208,8 +1216,8 @@ Completeness builds the rows of the run, then pads each table to a power of two 
 BLAKE2S table to at least eight rows — with closed walks from the fill blocks, and uses only
 `hwf.hasFillBlocks`. Both take the whole structure so that T1 reads "for well-formed bytecode".
 Each field is forced (acceptance tests 15 and 20), and the compiled guest satisfies both: the
-compiler pads the sentinel slot with `SET_CONSTANT` (`crates/lean_compiler/src/lib.rs:162`) and
-emits the fill blocks (`filler.rs`).
+compiler pads the sentinel slot with `SET_CONSTANT` (`crates/lean_compiler/src/lib.rs:194`) and
+emits the fill blocks (`crates/lean_compiler/src/filler.rs`).
 
 **The padding.** The padded image `padImage` keeps the committed image below `2^t.κ` and puts one
 twelve-cell frame for each of the forty-eight cycles (six tables, eight sizes) above it, where the
@@ -1276,7 +1284,7 @@ witness that rejects it. Where the witness is executable it is a test under `tes
     `Ensemble.Statement` unsatisfiable over `K` beyond one interaction, so no theorem may be
     stated through it.
 15. **No empty tables.** Every table has at least one row and the BLAKE2S table at least eight
-    (`filler.rs:43`; the verifier enforces `τ_BLAKE2S ≥ 3`). A program with no `BLAKE2S`
+    (`cpu/filler.rs:43`; the verifier enforces `τ_BLAKE2S ≥ 3`). A program with no `BLAKE2S`
     instruction and no fill block has *no* satisfying witness: the eight mandatory rows each
     pull a bytecode entry with opcode `g^5` that the public program lacks. Hence
     `constraintCompleteness` carries `WellFormedBytecode prog`, whose `hasFillBlocks` field this
@@ -1303,7 +1311,7 @@ witness that rejects it. Where the witness is executable it is a test under `tes
     against the boundary, yet `run` halts at `(g, g)` for every step count, so no
     `ValidExecution` exists. Hence `constraintSoundness` carries `WellFormedBytecode prog`, whose
     `sentinelSafe` field excludes a `JUMP` sentinel; a version without it is false. The
-    compiler pads the sentinel with `SET_CONSTANT` (`crates/lean_compiler/src/lib.rs:162`).
+    compiler pads the sentinel with `SET_CONSTANT` (`crates/lean_compiler/src/lib.rs:194`).
 21. **Closed walks are not reachable.** The fill blocks of §8.3 run in frames disjoint from the
     program's own run, so their pulled states are not `run`-reachable from `(1, 1)`, and a state
     pull guarantee stating reachability is refuted by every padded honest witness (issue #10).
@@ -1314,11 +1322,11 @@ witness that rejects it. Where the witness is executable it is a test under `tes
     program the prover chose: a witness whose `"bytecode"` table decodes to a program `P' ≠ P`
     satisfies every table's `Spec` relative to `P'`, and the constraint system says nothing
     about `P` until a conjunct `programOf w.data = P` ties the two, a conjunct leanVM has no
-    counterpart of, since its bytecode is public and never committed (§6.4; `layout.rs:288-290`,
+    counterpart of, since its bytecode is public and never committed (§6.4; `layout.rs:287-289`,
     `Coord::Public`; the faithfulness review of 2026-09-15, row 1). Making the program a
     parameter of the channels and the six tables instead (`xorTable prog`, tried and discarded
     on 2026-09-16) is not wrong but unfaithful: leanVM's AIRs are fixed for all programs, each
-    table's bytecode flush its constant opcode and its own operand columns (`tables.rs:143-152`),
+    table's bytecode flush its constant opcode and its own operand columns (`tables.rs:147-156`),
     and the parameter bought no soundness, the bytecode block still needing the statement's
     conjunct to pin its seed rows. The channels and tables are program-free, the bytecode
     guarantee is static decodability, and the program enters through `bytecodeRowOf prog`,
@@ -1497,18 +1505,19 @@ declaration also enables the kernel axiom audit (`axiom-audit-root: LeanerVM`).
 ## References
 
 - leanVM repository [leanEthereum/leanVM](https://github.com/leanEthereum/leanVM), pinned at
-  [`a386121f`](https://github.com/leanEthereum/leanVM/commit/a386121f84292f6fa663aaa3e570c15bc0240ea2).
+  [`127510d1`](https://github.com/leanEthereum/leanVM/commit/127510d14c98ade4e8a97646c44fa7f1ff5e752d)
+  (the original baseline was `a386121f`).
 - leanVM specification document: the LaTeX source
-  [`doc/leanvm/`](https://github.com/leanEthereum/leanVM/tree/a386121f84292f6fa663aaa3e570c15bc0240ea2/doc/leanvm) at the pin
+  [`doc/leanvm/`](https://github.com/leanEthereum/leanVM/tree/127510d14c98ade4e8a97646c44fa7f1ff5e752d/doc/leanvm) at the pin
   (§2 machine, §5 M3 model, §6 bus interactions, §7 instruction tables, §8 end-to-end
   protocol). leanVM's CI renders it as
   [leanVM.pdf](https://github.com/leanEthereum/leanVM/releases/download/doc-latest/leanVM.pdf), linked from the
   leanVM README; that PDF is rebuilt on every push to leanVM's `main` and tracks `main`, not the
   pin. Section numbers in this document are the pinned source's.
 - leanVM implementation at the same pin,
-  [`crates/lean_vm/src/`](https://github.com/leanEthereum/leanVM/tree/a386121f84292f6fa663aaa3e570c15bc0240ea2/crates/lean_vm/src):
+  [`crates/leanvm_core/src/`](https://github.com/leanEthereum/leanVM/tree/127510d14c98ade4e8a97646c44fa7f1ff5e752d/crates/leanvm_core/src):
   `cpu/{isa,execute,layout,filler}.rs`,
-  `crates/lean_vm/src/tables.rs`, `crates/primitives/src/field/`.
+  `crates/leanvm_core/src/tables.rs`, `crates/primitives/src/field/`.
 - RFC 7693, *The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)*, §2.6–§2.7,
   §3.2; and the BLAKE2 specification's tree-mode finalization flags.
 - Irreducible, *Multi-multiset matching (M3)*, Binius documentation.

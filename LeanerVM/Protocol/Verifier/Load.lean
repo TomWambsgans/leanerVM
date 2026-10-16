@@ -15,10 +15,10 @@ import LeanerVM.Protocol.Compile.Rom.Encoding
 # Loading a proof from the Python verifier's files
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 104-106 (`E.from_bytes`), 204-224 (`Digest`),
-322-332 (`Proof.load`), 385-401 (`Transcript._merkle_data`, `Transcript.merkle`) and 1417-1434
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 104-106 (`E.from_bytes`), 203-223 (`Digest`),
+321-331 (`Proof.load`), 384-400 (`Transcript._merkle_data`, `Transcript.merkle`) and 1411-1428
 (`main`). The pinned Rust prover writes the same files
-(`crates/lean_vm/tests/verifiers/python_verifier.rs`, `python_verify`).
+(`crates/leanvm_core/tests/verifiers/python_verifier.rs`, `python_verify`).
 
 The four files:
 
@@ -101,7 +101,7 @@ def decodeAll {α : Type} (size : ℕ) (decode : Bytes → α) (b : Bytes) : Opt
   | some (xs, []) => some xs
   | _ => none
 
-/-- `bytecode.bin`: the bytecode's words (`main`, `verifier.py:1428-1429`). -/
+/-- `bytecode.bin`: the bytecode's words (`main`, `verifier.py:1422-1423`). -/
 def decodeWords (b : Bytes) : Option (List K) := decodeAll 8 kOfBytes b
 
 /-- `public_input.bin`: the 32-byte public input (`Digest.__post_init__`). -/
@@ -153,7 +153,7 @@ def laterOpeningShapes : ℕ → List Whir.Level → List (ℕ × ℕ)
 
 /-- The openings of a WHIR run on a `logN`-variable stack, level by level: level `0` opens the
 stack at `commitStack`'s shape, level `ℓ + 1` the commitment read at level `ℓ`
-(`verify_whir`, `verifier.py:1006-1087`). -/
+(`verify_whir`, `verifier.py:1008-1086`). -/
 def whirOpeningShapes (logN : ℕ) : List Whir.Level → List (ℕ × ℕ)
   | [] => []
   | level :: rest =>

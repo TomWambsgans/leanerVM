@@ -17,7 +17,7 @@ public import LeanerVM.Arithmetization.Soundness.Walk
 # The state channel
 
 leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A: specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 Proposition 6.1 (`doc/leanvm/body/06-bus-interactions.tex`, §6.1) and roadmap acceptance tests 20
 and 21. Artifact: `no_row_at_sentinel` and `exists_run_of_balanced`. Direction: soundness.
 Boundary: the Layer 8 statement and `WellFormedBytecode`, of which only `sentinelSafe` is used;

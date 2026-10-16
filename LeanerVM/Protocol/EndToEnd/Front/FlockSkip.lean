@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockSumcheck
 /-!
 # The skip interpolation
 
-`lagrangeInterpolate (2·64) (0⁶⁴ ‖ p_coset) z_skip` (`verifier.py:1113-1123, 1141` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) computes the barycentric weights from prefix and
+`lagrangeInterpolate (2·64) (0⁶⁴ ‖ p_coset) z_skip` (`verifier.py:1112-1122, 1140` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) computes the barycentric weights from prefix and
 suffix products of `z + φ(k)` and one *window denominator* `(Π_{0 < k < 128} φ(k))⁻¹` shared by
 every node. ArkLib's skip round (`skipClaim`) interpolates with each node's own Lagrange
 denominator `Π_{j ≠ i} (φ(i) - φ(j))`.

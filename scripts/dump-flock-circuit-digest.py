@@ -14,8 +14,9 @@ statistics.
 Usage:
     python3 scripts/dump-flock-circuit-digest.py path/to/leanVM
 
-The leanVM checkout must be at the pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The output
-at the pin is `digest 4056851438423586957`, `nonzero rows 15873`, `total terms 89305416`.
+The leanVM checkout must be at the pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The output
+at the pin is `digest 4056851438423586957`, `nonzero rows 15873`, `total terms 89305416`, the
+same as at `a386121f84292f6fa663aaa3e570c15bc0240ea2`.
 """
 
 from __future__ import annotations

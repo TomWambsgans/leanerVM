@@ -169,7 +169,7 @@ module (P3).
     would need `Classical`, and no balance would then be decidable in a test.
   - `CountsNonzero` quantifies over the six tables' interactions (`w.tables.take 6`): leanVM's
     count channel stacks the tables' read-count columns and nothing else (`layout.rs:73`,
-    `:397-413`), so the two blocks' finalize counts are outside it, as §6.2 says.
+    `:396-412`), so the two blocks' finalize counts are outside it, as §6.2 says.
   - `Caps.heights` ranges over all eight `w.tables` (the blocks' heights are powers of two
     within the same cap by the other conjuncts) and the BLAKE2S floor reads `blake2sRows`.
   - `IndexColumnsAreRowIndices` reads the `idx` column through `memRowAt`, Clean's
@@ -299,8 +299,8 @@ module (P3).
     `verifier_length_zero` field of Layer 8's ensemble, checked in the tests).
   - The verifier is a function of the public program: `leanIsaVerifier prog` pulls
     `⟨Expression.const prog.finalPc, 1⟩`, as `layout(prog, …)` derives `final_pc` from the
-    program's length and writes `Const(g_pow(final_pc))` into the block (`layout.rs:335`,
-    `:357`); `PublicIO F` is `lanes : Vector F 4` alone, Layer 8's ensemble is `leanIsaEnsemble
+    program's length and writes `Const(g_pow(final_pc))` into the block (`layout.rs:334`,
+    `:356`); `PublicIO F` is `lanes : Vector F 4` alone, Layer 8's ensemble is `leanIsaEnsemble
     prog`, and `SatisfiedBy` requires `w.publicInput = PublicIO.ofInput input` (the roadmap's
     Layer 8 sketch now says so). The sketch's `const (gpow (N_prog - 1))` had `N_prog` free; the
     branch's first shape bound it as a public coordinate `PublicIO.finalPc`, fixed to the
@@ -320,7 +320,7 @@ module (P3).
     same slot are the same tuple (R24). (Since decision 14 the bytecode block's `Spec` is
     `BytecodeDecodes r`, program-free, `BytecodeSpec` is gone, and `BytecodeBindings prog r` is
     the per-row reading of Layer 8's conjunct.)
-  Tests: the three interaction lists as data against `layout.rs:352-395` (`rfl`); `PublicIO`
+  Tests: the three interaction lists as data against `layout.rs:351-394` (`rfl`); `PublicIO`
   flattening to the lanes, the fixture program's verifier pulling `g^1`; on a four-word, two-slot prover data the honest
   rows bound and the built rows accepted; a changed limb, the address `0` and an address past
   the image, a changed opcode, a nonzero spare slot and a counter past the program each
@@ -484,13 +484,14 @@ module (P3).
   limb order, the generator, the six codes, the caps, the six rows of the §8.1 slot table, the
   three flag pairs, the BLAKE2s constants, mixing function, initial state and finalization, the
   cell and metadata encodings, and the two executor vectors all match the pin; the one declared
-  deviation (flags as words) is licensed by `flock/src/hash.rs:206-214`.
+  deviation (flags as words) is licensed by `flock/src/hash.rs:204-212`.
 - **Layer 3** landed as PR #11 on 2026-09-10; its sketch was adjusted in six places, each in the
   roadmap: `step` is `prog.fetch r.pc >>= execute L r`; the halting test is in `run`, not in
   `step`; `HasPublicBoundary` states the public words through `MemImage.read`; `BLAKE2S` reads
   its four message cells as four `let`s; `Regs` has a hand-written `DecidableEq` (E5);
   `Trace.regs` is the `filterMap` of `run`. It was written from §2 first and diffed against the
-  executor (`execute.rs:540-584`, `:584-831`) afterwards: no divergence beyond R1–R24.
+  executor (`execute.rs:540-584`, `:584-831` at `a386121f`; `:674-720`, `:720-921` at
+  `127510d1`) afterwards: no divergence beyond R1–R24.
 - **Closed walks and the state pull** (F5, decision 7, issue
   [#10](https://github.com/Verified-zkEVM/leanerVM/issues/10), settled 2026-09-10): the state
   pull carries no guarantee and Proposition 6.1 is stated once, as `exists_run_of_balanced`.
@@ -517,7 +518,8 @@ module (P3).
   test files (decision 4, settled).
 - **The Rust vectors.** Layer 1's (`blake2s_computes_the_compression`) is reproduced by
   `scripts/dump-blake2s-rust.sh`; Layer 3's and Layer 6's (`mul_192bit_word`,
-  `cpu/mod.rs:981-998`) by `scripts/dump-mul-rust.sh`, whose product CompPoly reproduces in the
+  `cpu/mod.rs:886-903`, its vector unchanged since the dump at `a386121f`) by
+  `scripts/dump-mul-rust.sh`, whose product CompPoly reproduces in the
   kernel (`mulX * mulY = mulXY`, acceptance test 9), and which the `MUL_NATIVE` row reproduces
   from the twelve coordinates.
 - **Clean's bus** is the remaining external item for Layers 9–10 (#16, whose action is a pull
@@ -594,7 +596,7 @@ line.
     a public coordinate `PublicIO.finalPc` fixed by a `SatisfiedBy` conjunct; the Layer 7 review
     of 2026-09-15 replaced it (F9).
 13. Settled 2026-09-15 (the faithfulness review's row 1, F10): the program is public and never
-    prover data. leanVM's bytecode is public and never committed (§6.4; `layout.rs:288-290`,
+    prover data. leanVM's bytecode is public and never committed (§6.4; `layout.rs:287-289`,
     `Coord::Public`), while Layers 5 to 7 read it off Clean's `ProverData`, a field of the
     witness (`programOf`, the `"bytecode"` table), and Layer 8's sketch tied it to the
     statement's program only by the conjunct `programOf w.data = prog`. The roadmap now makes
@@ -609,7 +611,7 @@ line.
     tables are program-free. Decision 13's parameter was built and discarded: it made every
     table's type a function of the program, where leanVM's AIRs are fixed for all programs
     (each table's bytecode flush is its constant opcode and its own operand columns,
-    `tables.rs:143-152`), it put the program into both the semantics and every circuit, and it
+    `tables.rs:147-156`), it put the program into both the semantics and every circuit, and it
     bought no soundness, since the bytecode block's `Spec` was proved from its own pull, which
     balance derives from its own seed push, so the statement still needed the conjunct pinning
     the seed rows. The shape made instead follows leanVM's division of labour and, at the table
@@ -651,69 +653,84 @@ and the bus (acceptance test 5; Layer 3's `run` tests before the fetch). S2 fina
 required by §6.1 and the Rust, not by §2 (test 4; Layer 3's `Regs.final`). S3 `DEREF` reads
 `fp·o3` unconditionally in §7.4, unstated in §2 (test 6; Layer 3's `deref` arm; Layer 6's
 `derefTable` reads it unconditionally). S4 the generator value is not in the specification;
-Layer 0 binds it to the Rust and the Python verifier. S5 `02-vm-specification.tex` line 75
+Layer 0 binds it to the Rust and the Python verifier. S5 `02-vm-specification.tex` line 77
 annotates `o_3 ∈ K` where the cell value is meant. S6 §8.4 Fiat–Shamir is `TODO`. S7 §2 calls
 `BLAKE2S` "the standard BLAKE2s compression" and names both flags in the metadata cell without
 saying that the flag *words* enter the state unchanged (decision 6). S8 the BLAKE2S table floor
-(`τ_BLAKE2S ≥ 3`) is enforced by the verifier (`cpu/mod.rs:166`) and the filler (`filler.rs:43`)
+(`τ_BLAKE2S ≥ 3`) is enforced by the verifier (`crates/verifier/src/layout.rs:392`) and the
+filler (`cpu/filler.rs:43`)
 but appears in no section of the specification; Layer 2 binds `minLogRowsBlake2s` to the Rust
-and to Flock's `min_n_blocks_log` (`crates/flock/src/hash.rs:283-286`). S9 §7.4 lists the
-`DEREF` memory flushes as pointer, local, target while `tables.rs:645-650` emits pointer,
+and to Flock's `min_n_blocks_log` (`crates/flock/src/hash.rs:281-284`). S9 §7.4 lists the
+`DEREF` memory flushes as pointer, local, target while `tables.rs:650-655` emits pointer,
 target, local; Layer 6 follows §7.4, the order of a row's interactions being immaterial to
 balance.
 
-**Rust executor** (`crates/lean_vm/src/cpu/execute.rs`), all witness-generation behaviour, none
-a second meaning of the machine (test 19): R1 registers and operands are `u32` exponents
+**Rust executor** (`crates/leanvm_core/src/cpu/execute.rs`), all witness-generation behaviour, none
+a second meaning of the machine (test 19). The list was taken at `a386121f`; at `127510d1` the
+executor returns an `ExecError` fault where it panicked or asserted (553b335f), pins a read of an
+unwritten cell and links two unwritten `DEREF` sides (5080c406, the fix of R28), and the items so
+affected say so. R1 registers and operands are `u32` exponents
 (Layer 2's operands are `K` elements; a non-`g`-power operand is expressible and names no valid
-cell). R2 an equal rewrite of a set cell is accepted, a differing one panics. R3 an unset cell
-reads as zero with a diagnostic, and the prover refuses to prove a run that read one below the
-fill base (`cpu/mod.rs:536-542`, `execute.rs:909-912`; prover-side only, the verifier accepts
-such a proof; the faithfulness review's row 14). R4 memory grows on demand; no range check at
+cell). R2 an equal rewrite of a set cell is accepted, a differing one is rejected
+(`Fault::Conflict`, `execute.rs:339-345`; a panic at `a386121f`). R3 an unset cell reads as zero
+with a diagnostic, and the prover refuses to prove a run that read one (`cpu/mod.rs:497-499`,
+`execute.rs:317-328`; at `a386121f` only one below the fill base, `cpu/mod.rs:536-542`,
+`execute.rs:909-912`; prover-side only, the verifier accepts such a proof; the faithfulness
+review's row 14). R4 memory grows on demand; no range check at
 access. R5
-`κ_mem` is a post-run high-water mark. R6 `DEREF` in `cell` mode fills the unset side, asserts
-when both are set, defers when neither is, and zero-fills leftovers. R7 `MUL` back-solves one
-unset operand; `XOR` does not. R8 ten `RHint` advice kinds run before each instruction. R9 a
-taken `JUMP` needs small g-powers. R10 a `DEREF` pointer must be a small g-power. R11 the
+`κ_mem` is a post-run high-water mark. R6 `DEREF` in `cell` mode fills the unset side, rejects
+when both are set and differ, and links the two when neither is (`execute.rs:789-801`); at
+`a386121f` it asserted, deferred, and zero-filled leftovers. R7 `MUL` back-solves one
+unset operand; `XOR` does not. R8 ten `RHint` advice kinds run before each instruction
+(twelve at `127510d1`, `execute.rs:524-537`). R9 a taken `JUMP` needs small g-powers. R10 a `DEREF`
+pointer must be a small g-power. R11 the
 canonical check covers the seven read cells only (test 12; pinned by the output-cell mutation
 in the Layer 1 tests, by the Layer 3 step mutation, and by the Layer 6 `BLAKE2S` mutated row).
 R12 metadata split confirmed (test 11). R13 flag booleanity is not an AIR constraint (test 18;
-Layer 6's `derefTable` has none). R14 halt asserts `fp = 0` (test 4). R15 step cap `10^8`. R16
-the filler phase executes fill blocks after halt and can raise `κ_mem` (test 15). R17
+Layer 6's `derefTable` has none). R14 halt requires `fp = 0` (test 4; `Fault::HaltOutsideMain`,
+`execute.rs:459-461`, an assert at `a386121f`). R15 step cap `10^8` (`execute.rs:82`, a fault).
+R16 the filler phase executes fill blocks after halt and can raise `κ_mem` (test 15). R17
 `g = 0x2` (test 1; Layer 0 `g`, certified). R18 `SET`'s immediate is one `F192` (Layer 2
 `setConstant (o : K) (k : E)`). R19 slot packing matches §8.1 (test 16; Layer 4's `entry` and
-`encodeSlots` transcribe `layout.rs:229-290`). R20 `cpu/mod.rs` cites a stale `.tex` filename.
+`encodeSlots` transcribe `layout.rs:228-289`). R20 `cpu/mod.rs` cites a stale `.tex` filename.
 R21 the repository holds two BLAKE2s compressions: `flock::hash::blake2s_compress` (two flag
 words; the opcode) and `primitives::hash::compress` (last-block flag only; the byte hasher).
 Layer 1 transcribes the former. R22 the opcode's IV, sigma, rotations and round count agree with
-RFC 7693 (`crates/primitives/src/hash.rs:19-62`), so no leanVM-specific compression exists. R23
-the verifier rejects a public input with a nonzero top limb (`cpu/mod.rs:139-143`); Layer 2's
+RFC 7693 (`crates/primitives/src/hash/mod.rs:30-73`), so no leanVM-specific compression exists.
+R23 the verifier rejects a public input with a nonzero top limb (`cpu/mod.rs:686-690`, the
+`cpu::verify` wrapper; the `verifier` crate takes the public input as 32 bytes; `read_public`,
+`cpu/mod.rs:139-143`, at `a386121f`); Layer 2's
 `PublicInput` cannot express one, so the check is a type, not a hypothesis. R24 a table's
-bytecode tuple passes five operand coordinates (`tables.rs:486-491`, `:553-558`, `:636`,
-`:742-747`), seven for `BLAKE2S` (`:876-889`), and relies on the bus's zero padding to `m = 16`
+bytecode tuple passes five operand coordinates (`tables.rs:491-496`, `:558-563`, `:641`,
+`:747-752`), seven for `BLAKE2S` (`:881-894`), and relies on the bus's zero padding to `m = 16`
 slots (`05-arithmetization.tex:12`) to match the seed's eight public columns
-(`layout.rs:385-395`); Layer 6 emits all seven explicitly, because Clean messages are typed,
+(`layout.rs:384-394`); Layer 6 emits all seven explicitly, because Clean messages are typed,
 and Layer 4's `decode` rejects a nonzero spare slot for the same reason. R25
-`Program::from_bytecode(prog, main_frame)` (`cpu/mod.rs:289-296`) starts at exponents `(0, 0)`
+`Program::from_bytecode(prog, main_frame)` (`cpu/mod.rs:240-247`) starts at exponents `(0, 0)`
 and `main_frame` is a frame-allocation hint for the prover, not part of the machine; the Layer 3
 fixtures transcribe only `prog`. R26 the `JUMP` table commits `w` and `b` as columns
-(`tables.rs:707-711`, "local witness columns"); Layer 6 has them as Clean `witness` operations,
+(`tables.rs:712-716`, "local witness columns"); Layer 6 has them as Clean `witness` operations,
 local to the component, with the honest generators the Rust's batched inversion computes
-(`tables.rs:781-806`). R27 the verifier accepts any `K`-array as the public bytecode
-(`verifier.py:1365`, `:1429`; `layout.rs:315-316`), and the constraints give an undecodable
+(`tables.rs:786-811`). R27 the verifier accepts any `K`-array as the public bytecode
+(`verifier.py:1358`, `:1423`; `layout.rs:314-315`), and the constraints give an undecodable
 entry a meaning, a `DEREF` with the flag pair `(1, 1)` storing `v₃₀ + g²·pc + fp` in lane `0`
-(`tables.rs:616-623`), where Layer 2's `Program` holds decodable instructions only; T1 is
+(`tables.rs:621-628`), where Layer 2's `Program` holds decodable instructions only; T1 is
 stated for decodable bytecode and is silent, not false, about such a proof (the faithfulness
-review's row 4). R28 `Mem::get` (`execute.rs:263-270`) reads an unwritten cell as zero without
-marking it, and `Mem::put` (`:273-291`) accepts a later differing write as a first write; the
-diagnostic `unconstrained_reads` (`:909-912`) lists only cells never written, so a run that reads
-a cell before the instruction that writes it returns an image violating the reading instruction
-while the prover's guard (`cpu/mod.rs:536-542`) passes. Found by Alexander Hicks (PR #34, the
+review's row 4). R28 at `a386121f`, `Mem::get` (`execute.rs:263-270`) read an unwritten cell as
+zero without marking it, and `Mem::put` (`:273-291`) accepted a later differing write as a first
+write; the diagnostic `unconstrained_reads` (`:909-912`) listed only cells never written, so a run
+that read a cell before the instruction that writes it returned an image violating the reading
+instruction while the prover's guard (`cpu/mod.rs:536-542`) passed. At `127510d1` an
+instruction's read writes the zero it reads (`execute.rs:317-328`), a later differing write is a
+`Fault::Conflict` (`:339-345`), and the prover refuses any such read (`cpu/mod.rs:497-499`)
+(5080c406). Found by Alexander Hicks (PR #34, the
 `stale` fixture; Layer 3's checker rejects the image); confirmed unchanged at leanVM `main`
 `6fab9e30` on 2026-09-25 and filed upstream as leanEthereum/leanVM#285. Witness generation
 only: T1 is unaffected, and a T2 statement of the form "executor success implies
 `ValidExecution`" is false without a read-stability premise or an executor repair. Whether "no
 read before write" joins `WellFormedBytecode` as a program-shape condition is open and recorded
-here as uncertain, pending the upstream response.
+here as uncertain; the upstream response is the executor repair of `127510d1` above, which no
+leanerVM theorem uses yet.
 
 **Clean** (`93c9d1ef`): C1 direction is the sign of the multiplicity (test 13). C2 balance is a
 field sum with a characteristic side condition (test 14). C3 a component cannot see its row
@@ -855,7 +872,7 @@ program-shape hypothesis (test 15); since 2026-09-10 the architecture states T1 
 programs (decision 2). F2 the `2^64 - 1` read bound is derivable from the caps.
 F3 the BLAKE2S value limbs are virtual columns in Flock's stack in the Rust; ordinary columns
 here. F4 answered 2026-09-10: the count blocks are built from the tables' count columns only
-(`layout.rs:412-414`), so the nonzero-count product does not cover the finalize counts, as §6.2
+(`layout.rs:411-413`), so the nonzero-count product does not cover the finalize counts, as §6.2
 says ("Nothing checks the finalize counts"); `CountsNonzero` covers read pulls, as stated. F5
 the roadmap's former state pull guarantee was stronger than Proposition 6.1 (2026-09-10, issue
 [#10](https://github.com/Verified-zkEVM/leanerVM/issues/10)): it said every pulled state is
@@ -903,7 +920,7 @@ wrote the pulled counter as `const (gpow (N_prog - 1))` with `N_prog` free, whil
 decision 12: the verifier's `Spec` is `True`, the seed blocks' `Spec`s are their pull
 guarantees, which the sketch left unstated, and the counter is bound by making the verifier a
 function of the program, `leanIsaVerifier prog` pulling `Expression.const prog.finalPc`, as
-`layout(prog, …)` does (`layout.rs:335`, `:357`). The branch's first resolution made the counter
+`layout(prog, …)` does (`layout.rs:334`, `:356`). The branch's first resolution made the counter
 a public coordinate `PublicIO.finalPc`, fixed to the program's by a `SatisfiedBy` conjunct; the
 Layer 7 review of 2026-09-15 flagged it as unfaithful, since the Rust derives the counter from
 the program and never reads or checks one, and Clean's Fibonacci verifier reading its boundary
@@ -948,41 +965,49 @@ Kept so the searches are not repeated.
   form. Vectors: RFC 7693 Appendix B (`"abc"`, with the working vector per round),
   `hashlib.blake2s` with `last_node` (`scripts/dump-blake2s.py vectors`), and the executor test
   `blake2s_computes_the_compression` (`scripts/dump-blake2s-rust.sh`).
-- **leanVM**: the local checkout `../../leanEthereum/leanVM` is exactly `a386121f`. The
+- **leanVM**: the local checkout `../../leanEthereum/leanVM` was exactly `a386121f` when these
+  layers were written; the citations below are re-pointed to the current pin `127510d1`, where
+  the ISA, tables and layouts are the same (the executor's changes are R2–R28's notes). The
   specification's §2 matches `02-vm-specification.tex` at the pin clause by clause (S5 is the
   only nit); Proposition 6.1 and its proof are `06-bus-interactions.tex:9-31`, the closed-walk
-  filling `08-end-to-end-protocol.tex:35-42` (F5). Executor loop head `execute.rs:540-584`
-  (hints, g-power index growth, bytecode count bump, op load); arms `:584-831`; `BLAKE2S` arm
-  779–812; filler loop 353–410; deferred `DEREF` 884–901; `κ_mem` 914–920; public-input
-  seeding 173–177; `as_addr` 36–40. Tables `tables.rs:436-951`: `mod arith` 436–456 and
-  `arith_result` 461–473 (`XOR`, `MUL`; flushes 483–495), `mod set` 527–538 (flushes 548–561),
-  `mod deref` 586–609 and `deref_store` 616–623 (flushes 633–643), `mod jump` 688–712 (local
-  witnesses 706–710; flushes 731–751), `mod blake2st` 833–863 (flushes 873–908);
-  `FlushBuilder` 108–183 (`bytecode` 145–152, `memory_k` 175–177, `memory_128` 180–182);
-  `TOWER_LANES` 45–49; `jump_identity` 70–74; opcode constants 95–100 (refreshed 2026-09-16,
-  the faithfulness review's row 20). Caps `cpu/mod.rs:51-64`, checked in
-  `read_public` at 158–166, with the third-limb rejection at 139–143. ISA `cpu/isa.rs:6-66`.
-  `Program::from_bytecode` `cpu/mod.rs:289-296` (R25); executor tests `mul_192bit_word`
-  `:981-998`, `blake2s_program` `:855-887`. Boundary blocks `layout.rs:352-395` (the state
-  boundary 352–358 with the constant pull at 357, memory seed and finalize 359–382, bytecode
-  seed and finalize 383–395, the committed column constants 13–17, `final_pc` at 335),
+  filling `08-end-to-end-protocol.tex:39-46` (F5). Executor loop head `execute.rs:674-720`
+  (hints, g-power index growth, bytecode count bump, op load); arms `:720-921`; `BLAKE2S` arm
+  872–902; filler loop 443–511; `κ_mem` 968–974; public-input seeding 219–221; `as_addr`
+  143–147. The deferred `DEREF` fix-up of `a386121f` (`execute.rs:884-901` there) is gone: two
+  unwritten sides are linked instead (`link`, 362–370; the `cell` arm, 789–801). Tables
+  `tables.rs:441-956`: `mod arith` 441–461 and
+  `arith_result` 466–478 (`XOR`, `MUL`; flushes 488–500), `mod set` 532–543 (flushes 553–566),
+  `mod deref` 591–614 and `deref_store` 621–628 (flushes 638–648), `mod jump` 693–717 (local
+  witnesses 711–715; flushes 736–756), `mod blake2st` 838–868 (flushes 878–913);
+  `FlushBuilder` 112–187 (`bytecode` 149–156, `memory_k` 179–181, `memory_128` 184–186);
+  `TOWER_LANES` 45–49; `jump_identity` 70–78 (its `quadratic = false` path is that of
+  `a386121f`); opcode constants 99–104 (refreshed 2026-09-16, the faithfulness review's row 20).
+  Caps `cpu/mod.rs:51-60` (`a386121f`'s bytecode cap `MAX_LOG_BYTECODE` is gone), checked in
+  `crates/verifier/src/layout.rs:387-395` (`read_public` at `cpu/mod.rs:158-166` at
+  `a386121f`), with the third-limb rejection in `cpu::verify`, `cpu/mod.rs:686-690` (139–143 at
+  `a386121f`). ISA `cpu/isa.rs:6-66`.
+  `Program::from_bytecode` `cpu/mod.rs:240-247` (R25); executor tests `mul_192bit_word`
+  `:886-903`, `blake2s_program` `:774-806`. Boundary blocks `layout.rs:351-394` (the state
+  boundary 351–357 with the constant pull at 356, memory seed and finalize 358–381, bytecode
+  seed and finalize 382–394, the committed column constants 13–17, `final_pc` at 334),
   transcribed by Layer 7 against §6.1,
   §6.2 ("Flush rules", `06-bus-interactions.tex:44-46`; "Nothing checks the finalize counts",
-  `:74`), §6.5 (`:95`) and §8.4 (`08-end-to-end-protocol.tex:70`); bytecode
-  columns 229–290 (slot packing 252–290) and the bytecode seed and finalize blocks 385–395;
-  count blocks 410–412. Cell packing `hash_flock.rs:117-139, 162-185`; the compression
-  `flock/src/hash.rs:191-231` with constants in `primitives/src/hash.rs:19-62`; `F192` limb
-  order `c0, c1, c2` in `primitives/src/field/gf2_64x3.rs:34-47` (`E.ofLimbs` order). BLAKE2S
-  floor: `filler.rs:43` (`MIN_ROWS`) and `crates/flock/src/hash.rs:283-286` (`min_n_blocks_log`,
-  `max(8)`). No checked-in fixtures; no textual bytecode format. Smallest executor tests:
-  `mul_192bit_word` (`cpu/mod.rs:985`), `blake2s_computes_the_compression` (`:893`),
-  `blake2s_self_hash_aliased_operands` (`:938`), `blake2s_requires_zero_third_limb` (`:922`).
+  `:74`), §6.5 (`:98`) and §8.4 (`08-end-to-end-protocol.tex:74`); bytecode
+  columns 228–289 (slot packing 251–289) and the bytecode seed and finalize blocks 384–394;
+  count blocks 409–411. Cell packing `hash_flock.rs:110-132, 155-178`; the compression
+  `flock/src/hash.rs:189-229` with constants in `primitives/src/hash/mod.rs:30-73`; `F192` limb
+  order `c0, c1, c2` in `primitives/src/field/gf2_64x3.rs:31-50` (`E.ofLimbs` order). BLAKE2S
+  floor: `cpu/filler.rs:43` (`MIN_ROWS`) and `crates/flock/src/hash.rs:281-284`
+  (`min_n_blocks_log`, `max(8)`). No checked-in fixtures; no textual bytecode format. Smallest
+  executor tests: `mul_192bit_word` (`cpu/mod.rs:890`), `blake2s_computes_the_compression`
+  (`:812`), `blake2s_self_hash_aliased_operands` (`:843`); `blake2s_requires_zero_third_limb`
+  (`:922` at `a386121f`) was removed.
   The executor bodies were read while writing the roadmap and, for Layer 2, its seeding and
   address decoding were read before `Memory.lean` was written (recorded in its docstring);
   Layer 3 was authored from §2 first and the arms diffed afterwards (the frontier). Layer 0
-  cites `gf2_64.rs:19-22` (bit encoding), `:28` (`F64::G`), and `python-verifier/verifier.py:177`
-  (`E.__repr__`), `:182` (`GEN`). Layer 6 transcribed §7 (`07-instruction-tables.tex:9-141`) and
-  `tables.rs:436-960` side by side, column list, identities and flushes per table.
+  cites `gf2_64.rs:16-19` (bit encoding), `:25` (`F64::G`), and `python-verifier/verifier.py:177`
+  (`E.__repr__`), `:182` (`GEN`). Layer 6 transcribed §7 (`07-instruction-tables.tex:9-138`) and
+  `tables.rs:441-965` side by side, column list, identities and flushes per table.
 - **CompPoly**: the working checkout `../CompPoly` (`40bac6e4`) is byte-identical to the pin on
   every field module. No generator, no order lemma, no `IsScalarTower`, no `{1, y, y²}` basis
   (Layer 0 adds `E.eq_sum_limbs`); no multiply-by-`x` lemma on `BF64` (a runnable carrier, if

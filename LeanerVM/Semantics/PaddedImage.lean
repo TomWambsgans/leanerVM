@@ -13,18 +13,19 @@ public import LeanerVM.Semantics.PaddedRun
 # The padded image
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A for the layout, written to what the
-interpreter does at `crates/lean_vm/src/cpu/execute.rs:353-411`: one twelve-cell frame per fill
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A for the layout, written to what the
+interpreter does at `crates/leanvm_core/src/cpu/execute.rs:443-511`: one twelve-cell frame per fill
 cycle, the closing jump's destination and frame written into it, and the other cells read as zero.
 
 **The layout.** The image of `t` has `2^κ` cells. The padded image has `2^(κ + 1)`: the first `2^κ`
 are `t`'s, unchanged, and above them sit the forty-eight frames of the cycles, six tables times
 eight sizes, frame `c = 8 * tableIdx t + k` at cell `2^κ + 12 c`. They fit because `12 * 48 = 576`
 is at most `2^κ` for every memory log-size the verifier accepts (`κ ≥ 16`). The Rust places its
-frames from `max(2^16, next_free)`; any placement above the committed image works, and this one
-needs no knowledge of how much of the memory the run used.
+frames from the first cell past every cell the program touched (`execute.rs:470-473`; from
+`max(2^16, next_free)` at `a386121f`); any placement above the committed image works, and this
+one needs no knowledge of how much of the memory the run used.
 
-**The cells of a frame** (`cpu/filler.rs:73-87`, `lower.rs:482-519`), offsets from the frame base:
+**The cells of a frame** (`cpu/filler.rs:73-87`, `lower.rs:455-492`), offsets from the frame base:
 
 * `dest` holds `g^{pc}` for `pc` the block's first slot: the closing jump's destination and, being a
   power of `g`, its nonzero condition. `nextFp` holds `g^{base}`: the frame to go to, this one.
@@ -33,7 +34,7 @@ needs no knowledge of how much of the memory the run used.
   word: the dummy checks that cell against memory cell `0`.
 * The `BLAKE2S` frame's digest pair holds the compression of the all-zero cells (`zeroDigest`,
   chosen, never computed); every other `BLAKE2S` cell is zero.
-* Every other cell is zero, the value of a cell nobody writes (`execute.rs:261`).
+* Every other cell is zero, the value of a cell nobody writes (`execute.rs:317-320`).
 
 `padTrace t pcs` is the padded trace; it is a `PaddedFrom` of `t` (`padTrace_from`), so by
 `Semantics.PaddedRun` it is valid wherever `t` is.
@@ -76,7 +77,7 @@ theorem sizeAt_mem {k : ℕ} (hk : k < 8) : sizeAt k ∈ fillSizes := by
 /-! ## The frames -/
 
 /-- The output cells of a compression of the all-zero cells, the pair the `BLAKE2S` dummy writes
-(`lower.rs:514-519`). Chosen: it is never computed. -/
+(`lower.rs:487-492`). Chosen: it is never computed. -/
 noncomputable def zeroDigest : E × E :=
   ⟨Classical.choose compressCells_zero, Classical.choose (Classical.choose_spec compressCells_zero)⟩
 

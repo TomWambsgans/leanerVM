@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.Verifier.Bus
 /-!
 # Forms as values
 
-`Form.evaluate f column` (`verifier.py:460-482`) is the sum over the form's terms of the
+`Form.evaluate f column` (`verifier.py:458-480`) is the sum over the form's terms of the
 coefficient times the product of the monomial's columns. It is linear:
 
 * `Form.evaluate_addScaled`: `evaluate (f.add_scaled(g, w)) = evaluate f + w · evaluate g`, whatever

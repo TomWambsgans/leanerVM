@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Flushes
 # The Python tables at values in `E`
 
 `LeanerVM.Protocol.EndToEnd.Complete.Flushes` compares the Python's instruction tables
-(`python-verifier/verifier.py:684-853` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) with
+(`python-verifier/verifier.py:686-855` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) with
 the leanISA instance's on rows in `K`. The table sumcheck's terminal check evaluates them at the
 claimed column values, which lie in `E`; this module lifts the comparison to `E`:
 

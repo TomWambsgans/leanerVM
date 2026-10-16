@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Verifier.Sumcheck
 # The table sumcheck
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 598-626 (`table_sumcheck`).
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 599-628 (`table_sumcheck`).
 
 One plain-mode sumcheck of four coefficients per round runs over `max` of the tables'
 log-heights. Its challenges, reversed, are the point; a table of log-height `h` weighs the first
@@ -32,7 +32,7 @@ open LeanerVM.Parameters LeanerVM.Protocol.Compile
 
 @[expose] public section
 
-/-- The tables' weights at the point (`verifier.py:610-614`): coordinate `v` contributes
+/-- The tables' weights at the point (`verifier.py:611-615`): coordinate `v` contributes
 `1 + equality_point[v] + r_v` to a table taller than `v`, and `r_v` to the others. -/
 def tableWeights (heights : List ℕ) (equalityPoint point : List E) : List E :=
   point.zipIdx.foldl (fun weights (challenge, coord) ↦
@@ -40,7 +40,7 @@ def tableWeights (heights : List ℕ) (equalityPoint point : List E) : List E :=
     List.zipWith (fun weight height ↦ weight * if coord < height then equality else challenge)
       weights heights) (heights.map fun _ ↦ 1)
 
-/-- The per-table loop of `table_sumcheck` (`verifier.py:616-624`): read each table's row
+/-- The per-table loop of `table_sumcheck` (`verifier.py:617-626`): read each table's row
 evaluations, add its weighted terms to `final`, and collect its column claims. -/
 def tableTerms (constraintPowers formPowers point : List E) :
     List (Table × ℕ × List Form × E) → ℕ → E → List ColumnClaim → Prog (E × List ColumnClaim)
@@ -56,7 +56,7 @@ def tableTerms (constraintPowers formPowers point : List E) :
     tableTerms constraintPowers formPowers point rest (cursor + table.nConstraints) final claims
 
 /-- `table_sumcheck(table_log_heights, bus_forms, constraint_powers, form_powers,
-equality_point, target)` (`verifier.py:598-626`). -/
+equality_point, target)` (`verifier.py:599-628`). -/
 def tableSumcheck (heights : List ℕ) (busForms : List (List Form))
     (constraintPowers formPowers equalityPoint : List E) (target : E) :
     Prog (List ColumnClaim) := do

@@ -15,9 +15,9 @@ public import LeanerVM.Protocol.Blake2sHash
 # The compiled verifier
 
 Category B, transcribed from the Python verifier at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` (`python-verifier/verifier.py:322-417`, `Proof`,
-`compress`, `Transcript`), whose Fiat–Shamir chain is the Rust's
-(`crates/fiat_shamir/src/lib.rs:18-174`):
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` (`python-verifier/verifier.py:321-416`, `Proof`,
+`compress`, `Transcript`), whose Fiat–Shamir chain is the Rust's (the prover's
+`crates/fiat_shamir/src/lib.rs:18-174`, the verifier's `crates/verifier/src/transcript.rs:32-216`):
 
 * the chain state is a 256-bit digest `cv`; every step is BLAKE2s-256 of the 64 bytes
   `cv ‖ block`, a block being three little-endian 64-bit words of data and a 64-bit tag
@@ -76,12 +76,12 @@ def tagBytes (tag : ℕ) : Bytes := [tag.toUInt8, 0, 0, 0, 0, 0, 0, 0]
 def blockOf (x : E) (tag : ℕ) : Bytes :=
   kBytes (x.limb 0) ++ kBytes (x.limb 1) ++ kBytes (x.limb 2) ++ tagBytes tag
 
-/-- The challenge squeezed into a state: its three low 64-bit words (`verifier.py:356-358`). -/
+/-- The challenge squeezed into a state: its three low 64-bit words (`verifier.py:355-357`). -/
 def challengeOf (d : Digest) : E :=
   E.ofLimbs (ofWords d[0] d[1]) (ofWords d[2] d[3]) (ofWords d[4] d[5])
 
 /-- The proof-of-work predicate: at `bits = 0` the nonce is `0`; otherwise the low `bits` bits
-of the digest's first 64-bit word are zero (`verifier.py:377-383`). -/
+of the digest's first 64-bit word are zero (`verifier.py:376-382`). -/
 def powOk (bits : ℕ) (nonce : E) (d : Digest) : Bool :=
   if bits = 0 then decide (nonce.limb 0 = 0 ∧ nonce.limb 1 = 0 ∧ nonce.limb 2 = 0)
   else decide ((d[0].toNat + 2 ^ 32 * d[1].toNat) % 2 ^ bits = 0)
@@ -96,7 +96,7 @@ structure Opening where
   path : List Digest
 
 /-- A proof: the scalar stream and the Merkle openings, in the order the verifier reads them
-(`verifier.py:322-332`). -/
+(`verifier.py:321-331`). -/
 structure Proof where
   /-- The scalars. -/
   stream : List E
@@ -125,7 +125,7 @@ variable {m : Type → Type} [Monad m] (H : Bytes → m Digest)
 def absorbBlock (cv : Digest) (block : Bytes) : m Digest := H (digestBytes cv ++ block)
 
 /-- Climb a Merkle path from `node` at position `q`: at each level the position's low bit says
-whether `node` is the left child (`verifier.py:396-397`). -/
+whether `node` is the left child (`verifier.py:395-396`). -/
 def climb : Digest → ℕ → List Digest → m Digest
   | node, _, [] => pure node
   | node, q, s :: ss => do
@@ -190,7 +190,7 @@ def run {α : Type} : Prog α → St → m (Option (α × St))
       | none => pure none
 
 /-- Run a program on a proof from a seed state, and accept when it returns `true` with the
-stream and the openings fully consumed (`verifier.py:415-417`, `finish`). -/
+stream and the openings fully consumed (`verifier.py:414-416`, `finish`). -/
 def runProof (P : Prog Bool) (seed : Digest) (π : Proof) : m Bool := do
   match ← run H P ⟨seed, π.stream, π.openings, []⟩ with
   | some (true, s) => pure (s.stream.isEmpty && s.openings.isEmpty)

@@ -16,8 +16,8 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Facts
 /-!
 # Assembling the honest run
 
-`verifyExecution` (`LeanerVM.Protocol.Verifier`, `python-verifier/verifier.py:1365-1413` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) is a sequence of phases. Its honest prover is the
+`verifyExecution` (`LeanerVM.Protocol.Verifier`, `python-verifier/verifier.py:1358-1407` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is a sequence of phases. Its honest prover is the
 sequence of the phases' honest scripts (`honestRun`), and the simulation composes along `bind`
 (`Follows.bind`), each phase handing the next the facts it needs:
 

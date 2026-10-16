@@ -13,8 +13,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockLin
 /-!
 # Ring switching as a specification
 
-`ringSwitch point s` (`verifier.py:1338-1347` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) draws the six coefficients of the staged map `Φ` and
+`ringSwitch point s` (`verifier.py:1331-1340` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) draws the six coefficients of the staged map `Φ` and
 returns the target `Σ_i g^i Φ(s_i)` and the weight `W(u) = Σ_k c_k eq(point^(2^k), u)`; the
 program claims `⟨eqAbove · W, q⟩ = target` on the stack (`ringSwitchClaim`). Against the Flock
 argument's components (`ToArkLib/Flock/RingSwitch.lean`):
@@ -227,7 +227,7 @@ noncomputable def ringSpec (hst : Stable C) {L₀ : ℕ} (hcard : ∀ h, (C h).n
           le_rfl le_rfl le_rfl
   else Spec.dead.mono (fun _ h ↦ hl ⟨h.1, h.2.1⟩) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
 
-/-- **The Flock phase's specification** (`verifyFlock`, `verifier.py:1304-1308`): the zerocheck
+/-- **The Flock phase's specification** (`verifyFlock`, `verifier.py:1297-1301`): the zerocheck
 then the lincheck, from the Flock phase's precondition (the reading of `Seam.pub`) to `LinPost`,
 with lead `(k + 1)·L₀/|E|` and the follower's allowance `T` after the slices. Each group of the
 phase is bounded by `εmax`: the skip challenge's `L₀·127/|E|`, each round's `L₀·2/|E|`, `α`'s

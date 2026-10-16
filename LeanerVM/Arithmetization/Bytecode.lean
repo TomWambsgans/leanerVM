@@ -13,19 +13,19 @@ public import LeanerVM.Semantics.Instruction
 # The bytecode encoding
 
 leanISA roadmap Layer 4 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category B, transcribed from:
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category B, transcribed from:
 
 * specification §8.1 (`doc/leanvm/body/08-end-to-end-protocol.tex:4-24`): instruction `z` is
   sixteen `K` slots, the opcode in slot 3, the operands and immediate lanes in slots 4–10, zero
   elsewhere (`:8`); the table at `:12-23` gives every instruction's slots;
-* specification §6.4 (`06-bus-interactions.tex:90`): a bytecode entry on the bus is the opcode
+* specification §6.4 (`06-bus-interactions.tex:93`): a bytecode entry on the bus is the opcode
   plus seven operands, eight coordinates after the separator, the address, and the count; §5.1
   (`05-arithmetization.tex:12`): shorter tuples are zero-padded to the `m = 16` slots;
-* `crates/lean_vm/src/cpu/layout.rs:229-290` (`bytecode_columns`): the eight public program
+* `crates/leanvm_core/src/cpu/layout.rs:228-289` (`bytecode_columns`): the eight public program
   columns `(opcode, o1, o2, o3, fpc, ffp, extra0, extra1)`, with `SET_CONSTANT`'s immediate
-  lanes at `o2, o3, fpc` (`:252-271`) and `BLAKE2S`'s last four operands at `fpc, ffp, extra0,
-  extra1` (`:267-287`); the seed and finalize blocks carry them at `:385-395`;
-* `crates/lean_vm/src/cpu/isa.rs:58-75` and specification §7.4 (`07-instruction-tables.tex:76`):
+  lanes at `o2, o3, fpc` (`:251-270`) and `BLAKE2S`'s last four operands at `fpc, ffp, extra0,
+  extra1` (`:266-286`); the seed and finalize blocks carry them at `:384-394`;
+* `crates/leanvm_core/src/cpu/isa.rs:58-75` and specification §7.4 (`07-instruction-tables.tex:76`):
   the `DEREF` store mode as the flag pair `(f_pc, f_fp)`, `cell = (0, 0)`, `pc = (1, 0)`,
   `fp = (0, 1)`.
 
@@ -49,7 +49,7 @@ loading/correspondence theorem. Those interfaces require separate coverage or re
 * The flag pair `(1, 1)` decodes to nothing, and so does every pair that is not one of the
   three (acceptance test 18).
 * A nonzero spare entry coordinate is not ignored. Each opcode table's bytecode tuple carries
-  literal zeros in its spare coordinates (`tables.rs:486-491`, `:553-558`, `:636`, `:742-747`),
+  literal zeros in its spare coordinates (`tables.rs:491-496`, `:558-563`, `:641`, `:747-752`),
   and `decode` rejects a tuple that violates that opcode's canonical entry shape. This is an
   eight-coordinate entry claim, not rejection by the typed program's address lookup.
 -/
@@ -63,7 +63,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 /-! ## The store-mode flags -/
 
 /-- The `DEREF` store-mode flags `(f_pc, f_fp)`: `cell ↦ (0, 0)`, `pc ↦ (1, 0)`, `fp ↦ (0, 1)`
-(`isa.rs:69-78`; specification §7.4). -/
+(`isa.rs:68-75`; specification §7.4). -/
 def derefFlags : DerefMode → K × K
   | .cell => (0, 0)
   | .pc => (1, 0)
@@ -79,7 +79,7 @@ def derefMode? (fpc ffp : K) : Option DerefMode :=
 /-! ## The bus entry and the sixteen slots -/
 
 /-- The bus entry of an instruction, `(opcode, op₁, …, op₇)`: slots 3–10 of specification §8.1,
-the eight public columns of `layout.rs:229-290`. -/
+the eight public columns of `layout.rs:228-289`. -/
 def entry : Instr → Vector K 8
   | .xor oA oB oC => #v[Opcode.xor.code, oA, oB, oC, 0, 0, 0, 0]
   | .mulNative oA oB oC => #v[Opcode.mulNative.code, oA, oB, oC, 0, 0, 0, 0]

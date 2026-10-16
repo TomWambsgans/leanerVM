@@ -39,8 +39,8 @@ leanVM's size; a region with fast walks of the same matrices inherits both direc
 these two theorems.
 
 `blake2sFlockSpec` is the inhabitant: the R1CS of `blake2sCircuit` and the deployed slots
-(Category B: `crates/lean_vm/src/hash_flock.rs:83-115` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, `SLOTS` in the order of
+(Category B: `crates/leanvm_core/src/hash_flock.rs:76-108` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, `SLOTS` in the order of
 `tables::BLAKE2S_VALUE_COLS`); its generator places each row's input limbs at their slots and
 runs the circuit's trace.
 -/
@@ -122,7 +122,7 @@ namespace Blake2sFlock
 
 open Blake2sCircuit
 
-/-- The deployed slots, `SLOTS` of `hash_flock.rs:93-115`: message cells `10 … 17`, output cells
+/-- The deployed slots, `SLOTS` of `hash_flock.rs:86-108`: message cells `10 … 17`, output cells
 `4 … 7`, chaining-value cells `0 … 3`, metadata cells `18, 19`. -/
 def slots : Fin 18 → Fin 256 := ![10, 11, 12, 13, 14, 15, 16, 17, 4, 5, 6, 7, 0, 1, 2, 3, 18, 19]
 

@@ -3,8 +3,8 @@ import LeanerVM.Semantics.FillBlocks
 /-!
 # Layer 10 tests: the fill block shape
 
-The ladder is `crates/lean_compiler/src/lower.rs:462-533` and `crates/lean_vm/src/cpu/filler.rs`
-at leanVM `a386121f`: each dummy is checked operand by operand against the compiler. Two
+The ladder is `crates/lean_compiler/src/lower.rs:435-506` and `crates/leanvm_core/src/cpu/filler.rs`
+at leanVM `127510d1`: each dummy is checked operand by operand against the compiler. Two
 rejections: a program with no block has no `HasFillBlocks`, and a block whose closing jump is the
 sentinel slot fails `IsFillBlock.below` alone (its dummies and its closing jump are fetched).
 -/
@@ -159,7 +159,7 @@ theorem ladder_hasFillBlocks : HasFillBlocks ladderProg := by
   · exact ⟨_, ladder_block t k hk ht 2 258 (by norm_num) (by decide) (by decide)⟩
   · exact ⟨_, ladder_block t k hk ht 1 261 (by norm_num) (by decide) (by decide)⟩
 
-/-- The sentinel slot holds a `SET_CONSTANT`, as `lib.rs:162` pads it. -/
+/-- The sentinel slot holds a `SET_CONSTANT`, as `crates/lean_compiler/src/lib.rs:194` pads it. -/
 theorem ladder_sentinelSafe : SentinelSafe ladderProg := by decide
 
 /-- The layout is well formed bytecode: the inhabitant of both fields. -/

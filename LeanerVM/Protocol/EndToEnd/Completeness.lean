@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.WalkFaithful
 
 The deployed verifier is `Verifier.verify` (`LeanerVM/Protocol/Verifier/Verify.lean`), the
 compiled reading at BLAKE2s of `leanVmProgram`, a transcription of `python-verifier/verifier.py`
-at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The statements here are those of
+at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The statements here are those of
 `EndToEnd.Complete` with their one fidelity hypothesis, that the verifier's walk of the BLAKE2s
 circuit computes the Flock R1CS's rows, discharged by `walkFaithful_blake2sFlockSpec`.
 

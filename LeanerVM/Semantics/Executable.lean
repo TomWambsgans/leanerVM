@@ -12,7 +12,7 @@ public import LeanerVM.Semantics.Execution
 /-!
 # The executable carrier
 
-leanISA roadmap Layer 3 companion, at leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`.
+leanISA roadmap Layer 3 companion, at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`.
 The reference semantics (`gLog?`, `MemImage.read`, `Program.fetch`, `execute`, `step`, `run`,
 `ValidExecution`) is noncomputable and is what a reader audits. This module is its computable
 carrier: one address search, `addressIndex`, replaces the chosen logarithm `gLog?`; the checked

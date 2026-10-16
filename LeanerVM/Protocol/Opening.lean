@@ -18,8 +18,8 @@ import LeanerVM.Protocol.ClaimWeights
 # The opening phase
 
 Specification §8.5, the paragraph "Opening" of the unrolled protocol
-(`doc/leanvm/body/08-end-to-end-protocol.tex:94-101` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`): every pooled claim is a weighted claim on the stack
+(`doc/leanvm/body/08-end-to-end-protocol.tex:98-105` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`): every pooled claim is a weighted claim on the stack
 `⟨W_j, q⟩ = c_j`, a column claim through the stacking selectors (`ColumnClaim.holds_iff_weighted`)
 and the ring-switched claim as it arrives; the verifier sends one batching challenge `λ`; claim
 `j` takes the weight `λ^j`, counting from zero, the ring-switched claims first and the column
@@ -34,8 +34,8 @@ Lean) and combines the pooled values into the batched claim `⟨W_ρ, C_ρ⟩` (
 check asks the stack the batched claim's weight and accepts when the answer is its value. The
 claim values were sent by the earlier phases, so they are in the statement before `ρ` is drawn.
 The pool's order (`pool_weighted`, `pool_column`) is the deployed verifiers': the ring-switched
-claims take the first powers (`crates/pcs/src/stack_open.rs:518-526`,
-`python-verifier/verifier.py:1409-1413`).
+claims take the first powers (`crates/verifier/src/lib.rs:118-142, 272-289`,
+`python-verifier/verifier.py:1403-1407`).
 
 Perfect completeness: on the Flock seam every pooled claim holds, so the batched claim holds at
 every challenge (`Weight.pair_batch`), and the stack's answer is its value. Knowledge soundness

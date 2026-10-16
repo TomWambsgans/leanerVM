@@ -5,7 +5,7 @@ import LeanerVM.Protocol.Verifier.Load
 
 `lake exe leanvm-verify <bytecode> <public input> <stream> <openings>` runs
 `LeanerVM.Protocol.Verifier.verifyFiles`, the Lean transcription of `python-verifier/verifier.py`
-at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`, compiled, and prints the verdict in the
+at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, compiled, and prints the verdict in the
 Python CLI's words; the exit code is `0` on acceptance. It imports the production verifier only.
 -/
 

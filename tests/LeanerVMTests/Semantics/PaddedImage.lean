@@ -6,7 +6,7 @@ import LeanerVMTests.Semantics.PaddedRun
 
 The executor's `mul_192bit_word` padded with the fill frames. Its padded trace is a valid execution
 with the same register sequence. The frame cells are read off the padded image at their addresses
-and are what the interpreter writes (`cpu/filler.rs:73-87`, `execute.rs:389-391`): the destination
+and are what the interpreter writes (`cpu/filler.rs:73-87`, `execute.rs:491-493`): the destination
 is `g^{pc}`, the frame is `g^{base}`, the pointer is `1`, the `DEREF` frame's scratch cell is the
 word at memory cell `0` while every other frame's is zero, and the `BLAKE2S` frame holds the
 compression of zero, which is not the pair of zero cells. The cells past the forty-eight frames are

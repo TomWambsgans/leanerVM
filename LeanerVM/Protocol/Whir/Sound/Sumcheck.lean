@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.ToArkLib.Whir.Counting
 # Weighted claims and the sumcheck step
 
 The deployed verifier (`LeanerVM.Protocol.Verifier.verifyWhir`, a transcription of
-`verify_whir`, `python-verifier/verifier.py:1006-1087` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) holds its weights as functions `List E → E`,
+`verify_whir`, `python-verifier/verifier.py:1008-1086` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) holds its weights as functions `List E → E`,
 evaluated at points of the remaining variables (`GluedClaim.weightAt`, `evaluate_basis`), and its
 running claim as a value. This module gives these the meaning of Annex B
 (`doc/leanvm/body/b-polynomial-commitment-scheme.tex`, Theorem `thm:rbr`):

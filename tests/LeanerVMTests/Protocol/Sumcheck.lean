@@ -20,8 +20,8 @@ product of two tables' extensions.
   `p_k`, and the final claim is the summand at the challenges, with no equality factor.
 * **What is rejected.** A round polynomial with one coefficient changed, a wrong claim, and
   values that are not the tables' at the final point.
-* **The wire.** The Rust verifier's decoding of a round (`next_round_poly`,
-  `crates/fiat_shamir/src/transcript.rs:289-309` at leanVM `a386121f`): the plain round drops
+* **The wire.** The Rust verifier's decoding of a round (`sumcheck_round_poly`,
+  `crates/verifier/src/transcript.rs:186-202` at leanVM `127510d1`): the plain round drops
   `c_1`, recomputed as `claim + c_2 + … + c_d`; the normalized round drops `c_0`, recomputed as
   `claim + r · (c_1 + … + c_d)`. `decodeWire` agrees with both on honest messages of degree two
   and three, and returns the honest message from the wire of `d` values.

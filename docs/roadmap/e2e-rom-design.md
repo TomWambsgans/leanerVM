@@ -23,7 +23,7 @@ Pr_H[ verify^H accepts ∧ the extracted word has no good list member ] ≤ N·�
 ```
 
 The deployed verifier is `Compile.runProof blake2sBytes (leanVmProgram ...)`, a transcription of
-`python-verifier/verifier.py` at leanVM `a386121f`; the theorem is about the same program with
+`python-verifier/verifier.py` at leanVM `127510d1`; the theorem is about the same program with
 `H` a random oracle.
 
 ## The random-oracle model
@@ -147,7 +147,7 @@ complete in the log, its proof of work, if any, was checked).
 
 ## The deployed WHIR and its round-by-round invariant
 
-The deployed opening (`verify_whir`, `verifier.py:1006-1101`) differs in shape from Annex B's
+The deployed opening (`verify_whir`, `verifier.py:1008-1100`) differs in shape from Annex B's
 Protocol: there is one running sumcheck over all `μ` variables, and each level's new claims
 (the out-of-domain claim and the batched consistency claims) are *glued* into the running round
 polynomial with powers of the level's `λ`, each with its own "intro" round polynomial, instead

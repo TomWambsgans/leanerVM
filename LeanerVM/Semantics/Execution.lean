@@ -12,9 +12,9 @@ public import LeanerVM.Semantics.Step
 # Valid executions
 
 leanISA roadmap Layer 3 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category A: written from specification §2
-(`doc/leanvm/body/02-vm-specification.tex`; the initial registers `:16-20`, the public input
-`:24`, the execution loop `:26-35`, nondeterminism `:43-47`) and the boundary tuples of §6.1
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category A: written from specification §2
+(`doc/leanvm/body/02-vm-specification.tex`; the initial registers `:18-22`, the public input
+`:26`, the execution loop `:28-37`, nondeterminism `:45-49`) and the boundary tuples of §6.1
 (`06-bus-interactions.tex`), before the Rust executor was opened; the diff is recorded in
 `docs/roadmap/leanisa-status.md`.
 

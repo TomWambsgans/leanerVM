@@ -19,9 +19,9 @@ public import Mathlib.Algebra.CharP.Two
 # The `DEREF` table
 
 leanISA roadmap Layer 6 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the columns
-are `crates/lean_vm/src/tables.rs:586-609` (`mod deref`, in that order), the store coordinates
-`tables.rs:616-623` (`deref_store`), the flushes `tables.rs:633-643` (`DerefTable::flushes`),
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the columns
+are `crates/leanvm_core/src/tables.rs:591-614` (`mod deref`, in that order), the store coordinates
+`tables.rs:621-628` (`deref_store`), the flushes `tables.rs:638-648` (`DerefTable::flushes`),
 matching specification §7.4 (`doc/leanvm/body/07-instruction-tables.tex:66-92`). There is no
 constraint enforcing Boolean flags. Local soundness instead requires the bytecode pull's
 canonical-entry guarantee, whose decoder admits only the three flag pairs (Layer 4;
@@ -68,7 +68,7 @@ prover data, from the execution alone.
 
 ## Wrong readings excluded
 
-* The pointer read carries literal zeros above its low limb (`memory_k`, `tables.rs:175-177`),
+* The pointer read carries literal zeros above its low limb (`memory_k`, `tables.rs:179-181`),
   so a pointer word outside `K` cannot balance the bus; `step` asserts `IsInK p` the same way.
 * The local cell is read in every mode, `pc` and `fp` modes included (acceptance test 6):
   `memRead (fp·o₃)` is unconditional, as is the third read of `execute`, and `DerefBindings`
@@ -86,7 +86,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `DEREF` columns, in the order of `tables.rs:586-609`. -/
+/-- The `DEREF` columns, in the order of `tables.rs:591-614`. -/
 structure DerefRow (F : Type) where
   /-- The program counter. -/
   pc : F
@@ -119,7 +119,7 @@ structure DerefRow (F : Type) where
 /-! ## The store coordinates -/
 
 /-- The store coordinates evaluate to Layer 3's `derefSource` at each flag setting
-(specification §7.4; `tables.rs:616-623`): the local word in `cell` mode, `g²·pc` in `pc` mode,
+(specification §7.4; `tables.rs:621-628`): the local word in `cell` mode, `g²·pc` in `pc` mode,
 `fp` in `fp` mode. -/
 theorem storeCoords_eval (mode : DerefMode) (pc fp v30 v31 v32 : K) :
     E.ofLimbs
@@ -188,10 +188,10 @@ def DerefSpec (r : DerefRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `DEREF` table (specification §7.4; `tables.rs:586-682`): state step, bytecode read of
+/-- The `DEREF` table (specification §7.4; `tables.rs:591-687`): state step, bytecode read of
 `(DRF, o₁, o₂, o₃, f_pc, f_fp, 0, 0)`, the pointer read `(p, 0, 0)` at `fp·o₁`, the target read
 at `p·o₂` carrying the flag-selected source, and the local read at `fp·o₃`, in the order of
-`tables.rs:637-642` and of the Python verifier's `_flushes_deref`, which fixes the order of the
+`tables.rs:642-647` and of the Python verifier's `_flushes_deref`, which fixes the order of the
 bus blocks. Returns the pushed successor `(g·pc, fp)`. -/
 def derefTable : GeneralFormalCircuit K DerefRow Regs where
   main r := do

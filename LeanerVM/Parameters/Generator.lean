@@ -14,8 +14,8 @@ import Mathlib.Tactic.NormNum.Prime
 # The generator `g` and exponent addressing
 
 leanISA roadmap Layer 0 (`docs/roadmap/leanisa-blueprint.md`). Category B: `g = x`, the word
-`0x2`, is transcribed from `crates/primitives/src/field/gf2_64.rs:28` (`F64::G = F64(2)`, "with
-`ord(x) = 2^64 - 1`") at leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`, cross-checked
+`0x2`, is transcribed from `crates/primitives/src/field/gf2_64.rs:25` (`F64::G = F64(2)`, "with
+`ord(x) = 2^64 - 1`") at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, cross-checked
 against `python-verifier/verifier.py:182` (`GEN = E(2)`). Specification §2
 (`02-vm-specification.tex:12`) fixes a generator of `K^×` of order `2^64 - 1` without naming it
 (status finding S4). The value appears exactly once, in `g`, and is symbolic everywhere else.
@@ -39,7 +39,7 @@ namespace LeanerVM.Parameters
 
 /-! ## The generator -/
 
-/-- `g = x`, the word `0x2`; `crates/primitives/src/field/gf2_64.rs:28` (`F64::G = F64(2)`). -/
+/-- `g = x`, the word `0x2`; `crates/primitives/src/field/gf2_64.rs:25` (`F64::G = F64(2)`). -/
 def g : K := K.ofBits 0x2
 
 /-- Exponent addressing: logical index `i` is the address `g ^ i`. -/

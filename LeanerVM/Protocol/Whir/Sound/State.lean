@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.Whir.Sound.Prob
 # The running state of `verify_whir`
 
 `LeanerVM.Protocol.Verifier.WhirState` (`verify_whir`'s locals `running_target`, `running_quad`,
-`folds`, `glued`, leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`,
-`python-verifier/verifier.py:1006-1087`) holds the running claim as a target value and a list of
+`folds`, `glued`, leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
+`python-verifier/verifier.py:1008-1086`) holds the running claim as a target value and a list of
 glued claims whose weights are only evaluated at the terminal point. This module reads it as a
 weighted claim:
 

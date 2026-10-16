@@ -16,7 +16,7 @@ public import LeanerVM.Arithmetization.Completeness.Rows
 # The rows of a satisfying witness
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), soundness half, at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category A: specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 §7 (the six AIRs, `doc/leanvm/body/07-*`) and §6 (their bus interactions). Artifact: the per-row
 soundness of the six opcode tables. Direction: soundness. Boundary: Layer 6's tables and their
 Clean soundness theorems; the bus is `Soundness.Bus`'s.

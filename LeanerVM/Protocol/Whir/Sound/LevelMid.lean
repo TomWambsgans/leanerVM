@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.Whir.Sound.GroupEscape
 # A level with a next commitment
 
 `whirLevels μ ℓ₀ w i (level :: next :: rest) s` (`verify_whir`'s loop body,
-`python-verifier/verifier.py:1017-1087` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) is,
+`python-verifier/verifier.py:1018-1086` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is,
 definitionally, `midProg`: the fold rounds, then `midTail` (commitment, out-of-domain point and
 value with its intro polynomial, proof of work, positions, `λ`, opening, query intro polynomial,
 glue, next level).

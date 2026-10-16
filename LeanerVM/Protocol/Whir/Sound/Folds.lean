@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.Whir.Sound.Generic
 # The fold rounds
 
 `foldRounds ℓ s []` (`LeanerVM.Protocol.Verifier.foldRounds`, `verify_whir`'s inner loop,
-`python-verifier/verifier.py:1019-1024` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+`python-verifier/verifier.py:1020-1024` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 samples a challenge `c`, moves the running claim to `q(c)` and reads the next round polynomial.
 
 `FoldInv` is the doom of the design note's `A(i, j)`, together with the bookkeeping the step needs:

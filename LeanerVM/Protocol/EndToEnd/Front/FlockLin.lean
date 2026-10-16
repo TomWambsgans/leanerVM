@@ -13,8 +13,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockZc
 /-!
 # The Flock lincheck as a specification
 
-`verifyFlockLincheck zc` (`verifier.py:1153-1177` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) against the Flock argument's lincheck components
+`verifyFlockLincheck zc` (`verifier.py:1152-1176` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) against the Flock argument's lincheck components
 (`ToArkLib/Flock/Lincheck.lean`):
 
 | program | component | doom after it | escape per challenge |
@@ -37,7 +37,7 @@ open scoped ENNReal NNReal
 
 @[expose] public section
 
-/-- The program's terminal value of the lincheck (`verifier.py:1170-1175`). -/
+/-- The program's terminal value of the lincheck (`verifier.py:1169-1174`). -/
 def progTerminal (zc : LeanerVM.Protocol.Verifier.ZerocheckResult) (alpha : E)
     (roundChallenges s : List E) : E :=
   let skipWeights := LeanerVM.Protocol.Verifier.lagrangeWeights LeanerVM.Protocol.Verifier.kBits

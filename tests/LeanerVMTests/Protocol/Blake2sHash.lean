@@ -6,9 +6,10 @@ import LeanerVM.Protocol.Blake2sHash
 `blake2sBytes` against digests of CPython's `hashlib.blake2s`, which wraps the BLAKE2 authors'
 reference implementation: the empty message, `"abc"` (RFC 7693 Appendix B), and the byte ramps
 of lengths 64, 65 and 128, which sit on both sides of a block boundary and cover the one-block,
-two-block and whole-blocks paths of the pinned `hash` (`crates/primitives/src/hash.rs:209-224`).
-Then `hash_pair` and `hash_words` on known inputs, the one-compression form of a 64-byte
-message, and the digest encoding: a round trip and the rejection of a nonzero top limb.
+two-block and whole-blocks paths of the pinned `hash` (leanVM `127510d1`,
+`crates/primitives/src/hash/mod.rs:190-204`). Then `hash_pair` and `hash_words` on known inputs,
+the one-compression form of a 64-byte message, and the digest encoding: a round trip and the
+rejection of a nonzero top limb.
 
 The compiled checks are `#guard`; the `"abc"` vector is also decided in the kernel.
 -/
@@ -43,7 +44,7 @@ example : blake2sBytes [0x61, 0x62, 0x63] = abcDigest := by decide +kernel
   #v[0xde77a81f, 0x199d2567, 0x342a3a86, 0x2a96c6bc, 0xbffc252b, 0x7ecdbe5c, 0xa31f8fde, 0x96a78866]
 
 /- A 64-byte message is one compression at counter 64 with the last-block flag: the pinned
-fast path (`hash.rs:212-220`) and the streaming path agree. -/
+fast path (`hash/mod.rs:192-199`) and the streaming path agree. -/
 #guard blake2sBytes (ramp 64) = compress paramIv (blockWords (ramp 64)) 64 lastBlock 0
 
 /-! ## The Merkle hashes -/

@@ -18,10 +18,10 @@ public import Clean.Utils.Tactics.CircuitProofStart
 # The `MUL_NATIVE` table
 
 leanISA roadmap Layer 6 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the columns
-are `crates/lean_vm/src/tables.rs:436-456` (`mod arith`, shared with `XOR`, in that order), the
-flushes `tables.rs:483-495` (`Arith::flushes` with `is_xor = false`), the result coordinates
-`tables.rs:45-49` and `:461-473` (`TOWER_LANES`, `arith_result`), all matching specification
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the columns
+are `crates/leanvm_core/src/tables.rs:441-461` (`mod arith`, shared with `XOR`, in that order), the
+flushes `tables.rs:488-500` (`Arith::flushes` with `is_xor = false`), the result coordinates
+`tables.rs:45-49` and `:466-478` (`TOWER_LANES`, `arith_result`), all matching specification
 §7.2 (`doc/leanvm/body/07-instruction-tables.tex:28-50`). There is no constraint: the bus
 balance is the assertion `[o_C] = [o_A] · [o_B]` (§5, "M3").
 
@@ -79,7 +79,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `MUL_NATIVE` columns, in the order of `tables.rs:436-456`. -/
+/-- The `MUL_NATIVE` columns, in the order of `tables.rs:441-461`. -/
 structure MulRow (F : Type) where
   /-- The program counter. -/
   pc : F
@@ -155,7 +155,7 @@ def MulSpec (r : MulRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `MUL_NATIVE` table (specification §7.2; `tables.rs:436-521`): state step, bytecode read
+/-- The `MUL_NATIVE` table (specification §7.2; `tables.rs:441-526`): state step, bytecode read
 of `(MUL, o_A, o_B, o_C, 0, 0, 0, 0)`, the two operand reads, and the result read carrying the
 tower product's three lanes. Returns the pushed successor `(g·pc, fp)`. -/
 def mulTable : GeneralFormalCircuit K MulRow Regs where

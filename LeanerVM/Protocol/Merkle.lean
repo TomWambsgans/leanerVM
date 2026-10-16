@@ -13,16 +13,17 @@ public import LeanerVM.Protocol.ToArkLib.Merkle
 /-!
 # leanVM's Merkle trees
 
-Category B. The committer's tree is `crates/pcs/src/merkle.rs:119-142` (`merkle_tree`) of the
-pinned leanVM (`a386121f84292f6fa663aaa3e570c15bc0240ea2`): `2^k` leaves hashed by `hash_words`,
-parents by `hash_pair`, left child first, up to one root. A leaf is a row of `K` words; a row
-narrower than the leaf width is hashed as its image `zeros ‖ row`, the zero prefix being what a
-commitment with absent lanes leaves out of the proof (`fiat_shamir/src/merkle.rs:54-58`,
-`leaf_image`; `pcs/src/merkle.rs:161-192`). The verifier's check is `RawMerklePath::root`
-(`fiat_shamir/src/merkle.rs:254-263`), climb the sibling path from the leaf's digest, the running
-node on the left at an even index, and compare with the root, under the per-row checks of
-`PrunedMerklePaths::open` (`:147, 176-186`): the row has the announced width, the path has one
-sibling per level of the tree, and the index is below the leaf count. The pruned form in which
+Category B. The committer's tree is `crates/pcs/src/merkle.rs:50-61` (`merkle_tree`) of the
+pinned leanVM (`127510d14c98ade4e8a97646c44fa7f1ff5e752d`): `2^k` leaves hashed by `hash_leaf`
+on their little-endian words, parents by `hash_pair`, left child first, up to one root. A leaf is
+a row of `K` words; a row narrower than the leaf width is hashed as its image `zeros ‖ row`, the
+zero prefix being what a commitment with absent lanes leaves out of the proof
+(`crates/verifier/src/merkle.rs:97-101`; `MerkleBuilder`, `pcs/src/merkle.rs:63-72`). The
+verifier's check is `MerklePath::root` (`crates/verifier/src/merkle.rs:58-70`), climb the sibling
+path from the leaf's digest, the running node on the left at an even index, and compare with the
+root (`crates/verifier/src/transcript.rs:162-164`, `:174-177`), under the per-row checks of
+`PrunedMerklePaths::expand` (`merkle.rs:87-93`): the row has the announced width, the path has
+one sibling per level of the tree, and the index is below the leaf count. The pruned form in which
 a proof carries the paths of one level's queries (the octopus) is the proof object's, not this
 module's.
 

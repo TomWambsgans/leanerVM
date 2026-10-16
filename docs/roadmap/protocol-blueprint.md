@@ -177,7 +177,7 @@ theorem that refutes its omission (convention *Load-bearing checks*).
 A prerequisite is a named declaration of a pinned library, an earlier layer here or in the
 leanISA roadmap, or a cited section of a source. The pins are in `upstreams.json`, with the
 history of each in [dependencies.md](../dependencies.md); leanVM is pinned at
-[`a386121f`](https://github.com/leanEthereum/leanVM/commit/a386121f84292f6fa663aaa3e570c15bc0240ea2).
+[`127510d1`](https://github.com/leanEthereum/leanVM/commit/127510d14c98ade4e8a97646c44fa7f1ff5e752d).
 Library paths below are at the current pins.
 
 **Prior work.** The earlier formalization of leanVM-a in the private repository `leanth` is
@@ -199,22 +199,22 @@ recorded, by name, in [leanvm-target.md](../leanvm-target.md#known-discrepancies
 | --- | --- | --- |
 | M3 model, grand product, GKR, leaf stacking, table sumcheck | from the specification | §5 (`doc/leanvm/body/05-arithmetization.tex`) |
 | Lookup and count arguments, index column | from the specification | §6.2–§6.5 |
-| Unrolled protocol, public input, opening | from the specification, checks as deployed | §8.2, §8.3, §8.5; `cpu/mod.rs:711-779` |
-| Ring switching, WHIR, novel basis, additive NTT | protocol from the specification; parameters transcribed | Annex A, Annex B; `crates/pcs/src/whir.rs`, `whir_config.rs:38-86` |
+| Unrolled protocol, public input, opening | from the specification, checks as deployed | §8.2, §8.3, §8.5; `crates/verifier/src/lib.rs:204-297` |
+| Ring switching, WHIR, novel basis, additive NTT | protocol from the specification; parameters transcribed | Annex A, Annex B, Annex D; `crates/pcs/src/whir.rs`, `crates/verifier/src/whir.rs`, `whir_config.rs:38-86` |
 | Flock: protocol and errors | from the specification, owned by #3 | Annex C |
-| Flock: the BLAKE2s circuit, wire positions, limb slots, `φ_8`, the fixed coordinates, `R1CS_DIGEST` | transcribed (the specification lacks them) | `flock/src/hash.rs`, `lean_vm/src/hash_flock.rs:87-115`, `pcs/src/stack_open.rs:84-97`, `py:1092-1095` |
-| Fiat–Shamir chain: tags, seeding, sampling, grinding | transcribed (§8.4 is `TODO`) | `crates/fiat_shamir/src/lib.rs:18-174`; `cpu/mod.rs:82-124` |
-| Proof object, stream order, round-polynomial encoding | transcribed | `fiat_shamir/src/transcript.rs:9-19, 280-330`; `cpu/mod.rs:711-779` |
-| Stack and leaf layouts, block order, selectors, strided limb slots | transcribed | `witness.rs:67-101`, `cpu/layout.rs:13-49, 400-445`, `leaf.rs:53-156`, `stack_open.rs:84-97` |
-| Count blocks (the tables' count columns only) | transcribed | `cpu/layout.rs:412-414`; `leaf.rs:606-622` |
-| Bytecode multilinear, sixteen slots | transcribed | §8.1; `leaf.rs:585-637` |
-| Caps, the stacking window `μ ∈ [15, 28]`, the rate window `[1, 4]` | transcribed | `cpu/mod.rs:45-64, 130-178`; `lean_vm/src/pcs.rs:49-51` |
-| GKR radix, combiners, normalized round, root sharing | transcribed | `gkr.rs:32-76, 247-430` |
-| `ξ`-power assignment, derived target | transcribed | `cpu/mod.rs:404-441, 726-735` |
-| WHIR fold factors, rates, queries, out-of-domain samples, grinding | transcribed | `whir_config.rs:38-86, 260-370`; `py:910` |
-| Merkle hashing, pruned paths, digest encoding | transcribed | `fiat_shamir/src/merkle.rs:14-67`; `crates/pcs/src/merkle.rs` |
-| BLAKE2s byte hasher | transcribed | `crates/primitives/src/hash.rs`; RFC 7693 §3.3 |
-| Second verifier (cross-check only) | — | `python-verifier/verifier.py:1365-1414` |
+| Flock: the BLAKE2s circuit, wire positions, limb slots, `φ_8`, the fixed coordinates, `R1CS_DIGEST` | transcribed (the specification lacks them) | `flock/src/hash.rs`, `leanvm_core/src/hash_flock.rs:80-108`, `pcs/src/stack_open.rs:74-87`, `py:1091-1094` |
+| Fiat–Shamir chain: tags, seeding, sampling, grinding | transcribed (§8.4 is `TODO`) | `crates/fiat_shamir/src/lib.rs:18-174`, `crates/verifier/src/transcript.rs:32-123`; `cpu/mod.rs:78-120` |
+| Proof object, stream order, round-polynomial encoding | transcribed | `crates/verifier/src/transcript.rs:9-30, 186-202`; `crates/verifier/src/lib.rs:204-297` |
+| Stack and leaf layouts, block order, selectors, strided limb slots | transcribed | `witness.rs:56-95`, `cpu/layout.rs:13-49, 399-444`, `leaf.rs:53-148`, `stack_open.rs:74-87` |
+| Count blocks (the tables' count columns only) | transcribed | `cpu/layout.rs:411-413`; `leaf.rs:579-595` |
+| Bytecode multilinear, sixteen slots | transcribed | §8.1; `leaf.rs:558-577`, `crates/verifier/src/bus.rs:138-146` |
+| Caps, the stacking window `μ ∈ [15, 28]`, the rate window `[1, 4]` | transcribed | `cpu/mod.rs:45-60`, `crates/verifier/src/lib.rs:208-222`, `crates/verifier/src/layout.rs:84-86, 381-395`; `leanvm_core/src/pcs.rs:49-51` |
+| GKR radix, combiners, normalized round, root sharing | transcribed | `gkr.rs:24-68, 301-418`, `crates/verifier/src/bus.rs:12-49` |
+| `ξ`-power assignment, derived target | transcribed | `cpu/mod.rs:388-406, 604-624`, `crates/verifier/src/lib.rs:231-249` |
+| WHIR fold factors, rates, queries, out-of-domain samples, grinding | transcribed | `whir_config.rs:38-86, 252-360`; `py:912` |
+| Merkle hashing, pruned paths, digest encoding | transcribed | `fiat_shamir/src/merkle.rs:13-34`, `crates/verifier/src/merkle.rs:37-144`, `crates/verifier/src/hash.rs:99-117`; `crates/pcs/src/merkle.rs` |
+| BLAKE2s byte hasher | transcribed | `crates/primitives/src/hash/mod.rs`, `crates/verifier/src/hash.rs:6-87`; RFC 7693 §3.3 |
+| Second verifier (cross-check only) | — | `python-verifier/verifier.py:1358-1408`, `crates/verifier/src/lib.rs:204-297` |
 
 ### The leanISA roadmap
 
@@ -267,7 +267,7 @@ spine stays on it (decision 24).
 | `BF64`, `BF64.Ext3`, `card_bf64`, `card_ext3`, `Ext.coeff`, `Ext.ofFn` (CompPoly) | As in the leanISA roadmap; `Fintype.card E = 2^192` is the only cardinality fact the errors use. |
 | `CMlPolynomialEval R n`, `evalMle`, `evalMleLayer`, `eval₂Mle`, `eqTilde`, `lagrangeBasis`, `evalManyMleByLayers` (CompPoly `Multilinear/`) | Hypercube tables and their multilinear evaluation, computable; `eval₂Mle` is the `K → E` lift. |
 | `CMvPolynomial`, `CPolynomial` (CompPoly) | Constraint and flush polynomials of the instance; round polynomials. The conversion to Mathlib's `MvPolynomial` is noncomputable, so Layer 2 translates Clean expressions directly and proves the translation equal to Clean's polynomial. |
-| `AdditiveNTT` (CompPoly `Fields/Binary/AdditiveNTT/`) | The novel basis and the encoder of Annex B, generic over a basis; instantiated only at `GF(2^8)`, so Layer 11 supplies the `K` basis. |
+| `AdditiveNTT` (CompPoly `Fields/Binary/AdditiveNTT/`) | The novel basis and the encoder of Annex D, generic over a basis; instantiated only at `GF(2^8)`, so Layer 11 supplies the `K` basis. |
 | `Expression`, `Expression.eval`, `Operations.constraints`, `Operations.interactions`, `AbstractInteraction`, `EnsembleWitness`, `Table.environment`, `Environment.fromArray` (Clean `Circuit/`, `Air/`) | Constraints and flushes as syntax over the row's variables (out-of-range variables read `0`); the witness. Clean's own balance over `K` is vacuous (#16), so `SatisfiedBy` uses `BalancedPair`. |
 | `Expression.degreeBound`, `Expression.WithinWidth`, `Expression.toBoundedPolynomial` (Clean `Circuit/ExpressionPolynomial`, held as a local copy until the pin contains it) | An expression's syntactic degree, the claim that its variables lie below a width, and its noncomputable Mathlib polynomial in that many variables; Layer 2's computable translation is proved equal to it. |
 | `MvPolynomial`, `Polynomial.card_roots'`, `UniqueFactorizationMonoid`, `Multiset.prod` (Mathlib) | Degrees and root counts behind every Schwartz–Zippel step; Lemma 5.2 by unique factorization. |
@@ -307,17 +307,17 @@ and when the local copy goes. Nothing is worked around by a hypothesis.
 | `eq` | `eq(r, x) = ∏ (1 + r_k + x_k)` over `E` (characteristic 2); on the cube, CompPoly's `lagrangeBasis r`. |
 | The oracle | One committed oracle, the stack `q : Column μ_stack`, for the whole protocol, with the inner-product interface: a query is a `Weight μ` (a table `W` over the cube with an evaluator of its extension, specification Definition 3.13), the answer `⟨W, q⟩ = Σ_w W(w)·q(w)`; an evaluation `q̃(r)` is the query `eqWeight r`. No phase before the opening queries the stack, since each is a `Phase.FrontDef` (decision 31); the opening queries it once. The compilation depends on both. WHIR's codewords appear only in Layer 11. |
 | Sumcheck variants | *Plain*: the round message is the polynomial of degree `d`, error `d/|F|` per round, the verifier evaluating the equality factors at the end (the table sumcheck). *Normalized*: the round message is the cofactor `h` of degree `d_c`, the verifier checks `(1 + r_t)·h(0) + r_t·h(1)` against the running claim, `r_t` the point's coordinate, the new claim is `h(χ_t)`, and the final check has no equality factor; error `d_c/|F|` (the GKR layers). |
-| Sumcheck messages | The oracle protocol sends every coefficient, low degree first, and its verifier checks each round. The wire drops one (`c_1` for the plain table sumcheck, `c_0` for the normalized GKR round), which the compiled verifier derives from the running claim, so no round check remains (`transcript.rs:289-309`). Layer 4 proves the transport lemma: a verifier composed with an injective decoding of wire messages onto the messages passing its round check keeps its round-by-round knowledge soundness at the same error, with the state function composed with the decoding. Fiat–Shamir absorbs the encoded message (decision 26). |
+| Sumcheck messages | The oracle protocol sends every coefficient, low degree first, and its verifier checks each round. The wire drops one (`c_1` for the plain table sumcheck, `c_0` for the normalized GKR round), which the compiled verifier derives from the running claim, so no round check remains (`crates/verifier/src/transcript.rs:186-202`). Layer 4 proves the transport lemma: a verifier composed with an injective decoding of wire messages onto the messages passing its round check keeps its round-by-round knowledge soundness at the same error, with the state function composed with the decoding. Fiat–Shamir absorbs the encoded message (decision 26). |
 | Statements and parameters | The public `input : I.Stmt` is the statement of the oracle protocol, and the instance `I` (for leanISA: the program and the announced sizes) indexes the protocol family; a phase's input statement carries only what earlier phases produced. The sizes are the prover's: the compiled verifier reads them, checks them against the caps and the windows before the protocol starts, and the non-interactive theorem is stated for the family, its error the maximum over admissible sizes, the challenge oracle taking the announced sizes with the statement (decision 29). |
 | Errors | `ℝ≥0` per challenge, ArkLib's form. The spine fixes each phase's error as a closed form of the instance's sizes and demands each phase's knowledge soundness at it; no phase declares its own, since a declared error of 1 makes the knowledge theorem hold of a phase that checks nothing (decision 20). `piopError_le` bounds the sum at admissible sizes. `|E|` is `Fintype.card E`, rewritten to `2^192` only in the numeric test. |
 | Bus | Width `m = 16`; coordinate 0 is the separator `g^0 / g^1 / g^2` for state, memory, bytecode; coordinates follow the specification's tuple order; unused coordinates are the constant `0`. Fingerprint `π_α(t) = Σ_{i<16} eq(α, bits i)·t_i` with `α : Fin 4 → E`; leaf `β − π_α(t)`, padding leaf `1`. |
-| Count tree | Leaves are the tables' count columns (`α = β = 0`), padded with `1` to the depth of the push tree; the finalize counts are not in it (`layout.rs:412-414`). |
-| GKR | Radix 4 from the root down; if `μ` is odd, one radix-2 layer first. The layer sumcheck is normalized: the cofactor has degree 4 (degree 2 in the radix-2 layer), four coefficients travel, the constant one is derived. A combiner `λ` is drawn after the roots and after every layer, the last included: the last is used by nothing, has error 0, and still changes every later challenge. Two combination challenges `u_0, u_1` after each radix-4 layer, one after the radix-2 layer. The three trees share every challenge and end at one point `ζ = (u_0, u_1, χ_0, …)` of the last layer, coordinate 0 the lowest bit of the leaf index (`gkr.rs:247-430`). |
-| Leaf stacks | Per side, the boundary blocks of that side in the order of `I.boundary` (state, memory, bytecode), then each table's flushes of that side in order; the count side one block per count column in the order of `I.counts`. Stacked largest first at aligned offsets, ties by that index, no floor on the depth; the depth of the three trees is the push side's (`layout.rs:354-415`, `leaf.rs:149-156`). The spine's `tuples` lists flushes first, which is immaterial to `Balanced` and not the leaf order. |
-| Stacks | Blocks ordered largest first at aligned offsets; `sel_b = offset_b >> κ_b`; `q̃(z, sel_b) = P̃_b(z)`. Blocks of equal size keep the order of the column index, which puts the six shared columns first, `mem_0, mem_1, mem_2`, `cntfin_mem`, `cntfin_bc`, `q_flock`, then every table's columns in table order (`witness.rs:67-79`, `cpu/layout.rs:13-49`). The eighteen BLAKE2S limb columns are strided slots of `q_flock`, not blocks. `μ_stack ∈ [15, 28]`. |
+| Count tree | Leaves are the tables' count columns (`α = β = 0`), padded with `1` to the depth of the push tree; the finalize counts are not in it (`layout.rs:411-413`). |
+| GKR | Radix 4 from the root down; if `μ` is odd, one radix-2 layer first. The layer sumcheck is normalized: the cofactor has degree 4 (degree 2 in the radix-2 layer), four coefficients travel, the constant one is derived. A combiner `λ` is drawn at the start of every layer, before its sumcheck, and none after the roots or after the last layer (since leanVM 40bdeac6; at `a386121f` one followed the roots and every layer, the last unused). Two combination challenges `u_0, u_1` after each radix-4 layer, one after the radix-2 layer. The three trees share every challenge and end at one point `ζ = (u_0, u_1, χ_0, …)` of the last layer, coordinate 0 the lowest bit of the leaf index (`gkr.rs:301-418`, `crates/verifier/src/bus.rs:12-49`). |
+| Leaf stacks | Per side, the boundary blocks of that side in the order of `I.boundary` (state, memory, bytecode), then each table's flushes of that side in order; the count side one block per count column in the order of `I.counts`. Stacked largest first at aligned offsets, ties by that index, no floor on the depth; the depth of the three trees is the push side's (`layout.rs:353-414`, `leaf.rs:141-148`). The spine's `tuples` lists flushes first, which is immaterial to `Balanced` and not the leaf order. |
+| Stacks | Blocks ordered largest first at aligned offsets; `sel_b = offset_b >> κ_b`; `q̃(z, sel_b) = P̃_b(z)`. Blocks of equal size keep the order of the column index, which puts the six shared columns first, `mem_0, mem_1, mem_2`, `cntfin_mem`, `cntfin_bc`, `q_flock`, then every table's columns in table order (`witness.rs:56-73`, `cpu/layout.rs:13-49`). The eighteen BLAKE2S limb columns are strided slots of `q_flock`, not blocks. `μ_stack ∈ [15, 28]`. |
 | Table sumcheck | It ranges over the *sumcheck tables*, those with a constraint, a flush or a count column (for leanISA the six opcode tables, never the column groups of the shared columns); `τ_max` is the largest log-height among them, and the final message has one value per column of each, table by table. Variables bound highest first; table `j` joins at round `τ_max − τ_j`, its summand padded by `∏_{k ≥ τ_j} X_k`; round polynomials have degree 3; `ξ` powers: constraints table by table, then the three bus sides `[push, pull, count]` sharing the last three powers; the target is derived by the verifier, never sent. |
-| Claim pool order | The bus phase's column claims, then per-table column claims, then the three public-input claims (`cpu/mod.rs:656-667`), then Flock's; ring-switched claims take the low powers of `λ`, point claims the high ones (`stack_open.rs:400-401, 518-519`). |
-| Fiat–Shamir | Every step is BLAKE2s-256 of 64 bytes, the chain state followed by a block: the RFC compression `F(paramIV, cv ‖ block, t = 64, f_0 = 1)` with the chain state in the message, not in the chaining value. Block lane 3 carries the tag `1` (observe), `2` (squeeze), `3` (grinding base), `4` (grinding nonce); no labels. Seeded from `"leanvm" ‖ len ‖ R1CS_DIGEST ‖ bytecodeHash` and the public input; one squeeze yields one `E` challenge (three low words); every WHIR level grinds 17 bits before its queries (`fiat_shamir/src/lib.rs:18-174`, `cpu/mod.rs:82-124`). |
+| Claim pool order | The bus phase's column claims, then per-table column claims, then the three public-input claims (`cpu/mod.rs:604-624`), then Flock's; ring-switched claims take the low powers of `λ`, point claims the high ones (`stack_open.rs:211-212`, `crates/verifier/src/lib.rs:127, 280-281`). |
+| Fiat–Shamir | Every step is BLAKE2s-256 of 64 bytes, the chain state followed by a block: the RFC compression `F(paramIV, cv ‖ block, t = 64, f_0 = 1)` with the chain state in the message, not in the chaining value. Block lane 3 carries the tag `1` (observe), `2` (squeeze), `3` (grinding base), `4` (grinding nonce); no labels. Seeded from `"leanvm" ‖ len ‖ R1CS_DIGEST ‖ bytecodeHash` and the public input; one squeeze yields one `E` challenge (three low words); every WHIR level grinds 17 bits before its queries (`fiat_shamir/src/lib.rs:18-174`, `cpu/mod.rs:78-120`, `crates/verifier/src/transcript.rs:32-123`). |
 | Verifier shape | `verify` is a total, computable function of a typed `Program`, a typed `PublicInput` and a `Proof`, to `Bool`; a malformed proof is `false`. The deployed rejection of a public word with a nonzero third limb, and of a bytecode that is not `2^k ≤ 2^32` decodable instructions, is the obligation of whoever builds those values from bytes (the fixture's loader, T7's encoding); the fixture records such an input as a parse failure, not as `verify = false`. |
 | Load-bearing checks | Every check of a phase's verifier comes with a theorem that the verifier without it (or with it weakened) has no round-by-round knowledge soundness at the phase's seams below error 1, whatever the extractor; every check the deployed verifier does not make comes with a theorem that the verifier with it is not perfectly complete. A check is load-bearing only if the verifier commits to what it checked: a claim pooled from a prover's message pools the value *sent*. A check whose omission cannot be refuted is one the design does not rely on, and the design is revised until it does. The generic lemmas (`not_rbr`, `not_perfectCompleteness`) live in `ToArkLib/`; the refutations are tests, listed in the phase's pull request. |
 | Trusted surface | Every trusted definition fits on one screen, cites its source line, and appears in [Interfaces](#interfaces-supplied-to-later-work); assumed interfaces are structures whose docstring names the owner and the witness obligation, never `variable`-block hypotheses or `axiom`s. The instance is trusted data: the spine proves nothing of it beyond its layout law, and the master theorems hold of instances whose relation is empty; the leanISA instance's non-vacuity is `m3Holds_stackOf`, its faithfulness the fixture of Layer 12. |
@@ -688,7 +688,7 @@ theorem bytecodeColumn_eval (z) (w) : … = bytecodeColumnEval prog z w
 fact for a table the prover chose, and `Blocks.layout` packages it as a `Layout`. leanVM reads the
 eighteen BLAKE2S limb columns as *strided* slots of `q_flock`: the low eight coordinates of
 `q_flock`'s block are frozen to the slot's bits and the high ones are the claim's point
-(`stack_open.rs:84-97`, `SlotClaim::Strided` at `cpu/mod.rs:799-805`); `Blocks.stridedLayout`
+(`stack_open.rs:74-87`, `SlotClaim::Strided` at `cpu/mod.rs:717-724`); `Blocks.stridedLayout`
 reads them through `evalMle_boolVec_append`, and `Layout.piecewise` joins the two readers, whose
 sum type Layer 3 transports to `ColumnId`. The special cases the protocol uses are derived here:
 back-loaded padding is `placeSlice` at the all-ones index; the index column is the geometric table
@@ -697,10 +697,10 @@ at the generator; the public-input point `(r, 0, …, 0)` is `evalMle_append_boo
 Tests: offsets and selectors decided in the kernel on blocks of heights 4, 2, 1, the stacking
 identity on them and on a column that is no honest stack, reversed selector bits, the small-first
 placement no selector reads; the strided slice against the aligned slice, and a limb claim's
-lifted point against the Python's `Placement.stack_point` (`py:295-297`); back-loaded padding
+lifted point against the Python's `Placement.stack_point` (`py:294-296`); back-loaded padding
 against the copied table; `idxColumn_eval` at `κ = 2` against the reversed bit order;
 `bytecodeColumn_answer_boolVec` against reversed slot bits, and `bytecodeColumn` of a
-sixteen-instruction program with distinct operands against the Rust encoder (`leaf.rs:585-604`),
+sixteen-instruction program with distinct operands against the Rust encoder (`leaf.rs:558-577`),
 written with `K.ofBits`.
 
 ### Layer 2: Clean components as polynomials
@@ -742,7 +742,7 @@ Clean's polynomial; the degree bound is Clean's `degreeBound` and goes through C
 typed channels to the bus is explicit data. A component whose expressions mention a variable at or
 beyond its width reads `0` there, as `Environment.fromArray` does. Tests: a two-column component
 whose constraint `x·y` has `degreeBound = 2`, checked on a satisfying and a failing row; the six
-tables' count columns against `count_columns()` (`layout.rs:412-414`); the memory, bytecode and
+tables' count columns against `count_columns()` (`layout.rs:411-413`); the memory, bytecode and
 verifier components against the boundary blocks of Layer 3 on the one-row witness.
 
 ### Layer 3: the leanISA instance and the adaptor
@@ -753,7 +753,7 @@ and the Flock roadmap's `FlockSpec` (Layer 9).
 ```lean
 structure Sizes where (logMem : ℕ) (τ : Fin 6 → ℕ)                    -- heights only; the family index
 def Sizes.ofWitness (w : EnsembleWitness (leanIsaEnsemble prog)) : Option Sizes
-def leanIsaBlocks (prog) (s) : Blocks ; def leanIsaμ (prog) (s) : ℕ     -- witness.rs:67-101
+def leanIsaBlocks (prog) (s) : Blocks ; def leanIsaμ (prog) (s) : ℕ     -- witness.rs:56-95
 theorem leanIsaBlocks_fits : (leanIsaBlocks prog s).total ≤ 2 ^ leanIsaμ prog s
 def Sizes.Admissible (prog) (s) : Prop   -- 16 ≤ logMem ≤ 32, τ j ≤ 32, 3 ≤ τ BLAKE2S, leanIsaμ prog s ≤ 28
 def validRate (ρ : ℕ) : Prop := 1 ≤ ρ ∧ ρ ≤ 4                           -- whir_config.rs:48-55
@@ -784,8 +784,8 @@ at `2^logMem`; `cntfin_bc` at `2^prog.logSize`; `q_flock` at `2^(τ_BLAKE2S + 8)
 with no constraint, flush or count and so take no part in the table sumcheck; six boundary blocks
 written from `memTable`, `bytecodeTable` and `leanIsaVerifier prog`, with the index columns
 `Coord.known (idxColumn κ)`, the program's slots `Coord.known`, the final pc `Coord.const
-prog.finalPc`, and the limbs and counts `Coord.committed`; the layout of `witness.rs:67-101`,
-`cpu/layout.rs:13-49` and `leaf.rs:53-156`, aligned blocks joined by `Layout.piecewise` to the
+prog.finalPc`, and the limbs and counts `Coord.committed`; the layout of `witness.rs:56-95`,
+`cpu/layout.rs:13-49` and `leaf.rs:53-148`, aligned blocks joined by `Layout.piecewise` to the
 strided reader of the limb slots `F.slot`; `d := 2`; three public lines, on `mem_0, mem_1, mem_2`
 (for `ℓ = 0, 1` the cells are limb `ℓ` of the two public words, sent; for `mem_2` the cells are
 `0, 0`, not sent); and the Flock region `q_flock` with `kBatch = τ_BLAKE2S` and the predicate
@@ -930,7 +930,10 @@ conjunct joins, whose escape costs `1/|E|` per coordinate and is dominated by th
 there; no boundary claim exists before the last message. `busError` is `4·2^{μ_bus}/|E|`
 on `(α, β)` and `gkrError 3 μ_bus` on the GKR's challenges; the zerocheck adds nothing.
 The two hypotheses are the bus phase's side conditions (decision 30): a count column's form has
-degree 1, and a constrained table off the bus has no zerocheck point (`constraints.rs:250-253`).
+degree 1, and a constrained table off the bus has no zerocheck point (removed from the Rust
+verifier at `127510d1`, which reads the bus point at every round,
+`crates/verifier/src/bus.rs:221-226`; was `constraints.rs:250-253` at `a386121f`; the prover
+keeps it as a `debug_assert`, `crates/leanvm_core/src/constraints.rs:147-148`).
 
 Tests: `leaf_decomposition` in the kernel on a layout with two blocks; the whole phase on the toy
 instance's honest stack; the zero-count mutation (acceptance test 3) and the pad-0 mutation (test
@@ -1044,7 +1047,7 @@ the toy, it is the pass-through.
 ```lean
 /-- What the Flock roadmap supplies, none of it mentioning an instance. -/
 structure FlockSpec where
-  slot : Fin 18 → Fin 256                                    -- hash_flock.rs:87-115
+  slot : Fin 18 → Fin 256                                    -- hash_flock.rs:80-108
   Holds (kBatch : ℕ) : Column (8 + kBatch) → Prop            -- the R1CS with the constant position
   decHolds : ∀ k, DecidablePred (Holds k)
   compress_of_holds : Holds k c → ∀ j, Blake2sRelation (the limbs read at slot j of c)
@@ -1060,7 +1063,8 @@ The verifier reads no claim of the pool. It hands the column claims on unchanged
 limb claims among them (they stay in the pool and are opened as strided claims on `q_flock`),
 and adds one weighted claim, the ring-switched one, `⟨W, q⟩ = T` with
 `T = Σ_{i<64} x^i·Φ(s_i)` and `W(x_lo, x_hi) = eq(sel_{q_flock}, x_hi)·Φ(eq((χ'_in, χ_out), x_lo))`
-(`cpu/mod.rs:799-805`, `stack_open.rs:522-527`). The schedule, with `k_batch = τ_BLAKE2S`:
+(`cpu/mod.rs:717-724`, `crates/verifier/src/lib.rs:271-279`). The schedule, with
+`k_batch = τ_BLAKE2S`:
 `k_batch + 1` challenges; 64 values; one challenge; `8 + k_batch` rounds of two values and a
 challenge; two values; one challenge; 8 rounds of two values and a challenge; 64 values; six
 challenges: `162 + 2·k_batch` scalars and `2·k_batch + 25` challenges. The error per challenge:
@@ -1074,9 +1078,10 @@ lincheck. The bound needs three facts, owed with the proof: the 128 fixed weight
 monomials.
 
 The verifier's checks (each with its refutation): the lincheck terminal identity
-(`lincheck.rs:1252-1256`); the zeros on `H` imposed by interpolating 64 received values with 64
-zeros (`zerocheck/multilinear.rs:133-137`); the `α³` term of the constant position in the target
-and in the terminal identity (`lincheck.rs:1202, 1240`); `T` computed from the `s_i`; the weighted
+(`crates/verifier/src/flock.rs:165-169`); the zeros on `H` imposed by interpolating 64 received
+values with 64 zeros (`zerocheck/multilinear.rs:97-101`, `crates/verifier/src/flock.rs:90`); the
+`α³` term of the constant position in the target and in the terminal identity
+(`crates/verifier/src/flock.rs:133, 168`); `T` computed from the `s_i`; the weighted
 claim and the limb claims entering the pool. The derived coefficients (`c_0` in the zerocheck
 rounds, `v_c = R_zc + v_a·v_b`, `c_1` in the lincheck rounds) are encodings, not checks.
 
@@ -1088,7 +1093,7 @@ fails at `r_eq = 1`, a defect of the implementation (the discrepancy *the Flock 
 exceptional challenge*), not of the protocol.
 
 Tests: the honest run on a toy circuit accepted; the schedule and the circuit walk against the
-Python verifier's (`verifier.py:1092-1295`); the round at `r_eq = 1` with `G(0) ≠ 0`, accepted for
+Python verifier's (`verifier.py:1091-1288`); the round at `r_eq = 1` with `G(0) ≠ 0`, accepted for
 the true coefficients and rejected for the derived ones; `Holds` fails on the zero region (the
 constant position is part of the predicate). The definition and its completeness are this
 roadmap's and can start now; `flockSecurity` is #3's, and the compiled verifier's fixture waits on
@@ -1124,8 +1129,9 @@ accepted by `#guard`; `piopExtractedStack` returns the committed stack.
 
 `LeanerVM/Protocol/ToArkLib/Whir.lean` (module; ArkLib candidate; shared with #3's concrete
 PCS), `LeanerVM/Parameters/Whir.lean`, `LeanerVM/Parameters/Blake2sHash.lean`,
-`LeanerVM/Protocol/Pcs.lean`. Annex B is cited by label (`def:enc`, `lem:colweight`,
-`def:listbinding`, `thm:rbr`), since its numbers moved.
+`LeanerVM/Protocol/Pcs.lean`. Annexes B and D are cited by label (`def:enc` and
+`lem:colweight`, in Annex D since `127510d1`; `def:listbinding`, `thm:rbr`), since their numbers
+moved.
 
 ```lean
 -- Parameters (transcribed, whir_config.rs)
@@ -1133,7 +1139,7 @@ def initialFold := 6 ; subsequentFold := 4 ; initialReduction := 3 ; subsequentR
 def residualMaxLog := 5 ; queryGrindingBits := 17
 structure Level where (fold rateExp queries oodSamples grindingBits : ℕ) (η : ℚ)
 def ladder (μ ρ : ℕ) : List Level                     -- the deployed η per (μ, ρ) transcribed
-theorem ladder_queries_eq : (ladder 15 1).map (·.queries) = [223, 55]   -- py:910
+theorem ladder_queries_eq : (ladder 15 1).map (·.queries) = [222, 55]   -- py:912
 -- Codes (def:enc)
 def novelBasis : Fin 64 → K := fun c ↦ g ^ c.val
 def encode (κ R) : (Fin (2^κ) → E) → (Fin (2^(κ+R)) → E)          -- additive NTT on the K basis
@@ -1155,19 +1161,19 @@ theorem merkle_fits                                    -- leanVM's fixed-height,
 `whirOpen` is Protocol B.6 with its level-0 batching challenge the opening phase's `λ`, not a
 second batching: `ℓ_i` normalized sumcheck rounds, commit, one out-of-domain sample from level 1
 on (`ood_samples[0] = 0`), the grinding nonce (17 bits, read before the positions), `t_i` queries,
-and the final plaintext level. Four transcript facts are transcribed (`whir.rs`): the level-0 lane
-relayout `f(u, x) = q(x, u)` and the rotated terminal point (`:2297-2306`); the out-of-domain
-claim's intro round polynomial is sent before each level's `λ_i` and the query batch's after it;
-the last round message is omitted; the grinding nonce precedes the positions at every level. Its
-soundness is round-by-round soundness for the list relation, not knowledge soundness: the
-commitment is list binding (`def:listbinding`), and the invariant is "every codeword within
-`γ_i` of the current fold violates the current claim"; Layer 12 turns list binding into
-extraction. `McaJohnson a` has two candidate inhabitants: ArkLib's proved
-`ReedSolomon.mcaError_affineLine_johnson_le` (its own constant, any characteristic), used if its
-constant meets Annex B's per-level budget at the pinned parameters, and the admitted
-`rs_mcaError_le_in_johnson_range` with [BCHKS25]'s printed constant, a preprint theorem whose proof
-is sketched, named as the obligation otherwise. The capacity-range theorems exclude
-characteristic two.
+and the final plaintext level. Four transcript facts are transcribed
+(`crates/verifier/src/whir.rs`): the level-0 lane relayout `f(u, x) = q(x, u)` and the rotated
+terminal point (`:257-259`); the out-of-domain claim's intro round polynomial is sent before each
+level's `λ_i` and the query batch's after it; the last round message is omitted; the grinding
+nonce precedes the positions at every level. Its soundness is round-by-round soundness for the
+list relation, not knowledge soundness: the commitment is list binding (`def:listbinding`), and
+the invariant is "every codeword within `γ_i` of the current fold violates the current claim";
+Layer 12 turns list binding into extraction. `McaJohnson a` has two candidate inhabitants:
+ArkLib's proved `ReedSolomon.mcaError_affineLine_johnson_le` (its own constant, any
+characteristic), used if its constant meets Annex B's per-level budget at the pinned parameters,
+and the admitted `rs_mcaError_le_in_johnson_range` with [BCHKS25]'s printed constant, a preprint
+theorem whose proof is sketched, named as the obligation otherwise. The capacity-range theorems
+exclude characteristic two.
 
 The Merkle trees are VCVio's (`CryptoFoundations/MerkleTree/`), with BLAKE2s nodes and leaves, if
 `merkle_fits` holds (decision 32). A leaf is BLAKE2s-256 of 512 or 384 bytes, that is several
@@ -1175,7 +1181,7 @@ chained compressions, so the random oracle of Layer 12 stands for the multi-bloc
 well as for the compression. Tests: `encode` against CompPoly's additive NTT at `κ = 3`, over `K`
 and `E`; `merkleVerify` on a four-leaf tree with a wrong sibling rejected; `blake2sBytes` on the
 RFC 7693 vector; the honest `whirOpen` at toy parameters (`μ = 4`, rate `1/2`) accepted; the
-parameter tables against `py:910`; every pinned coding parameter with a witness that it is
+parameter tables against `py:912`; every pinned coding parameter with a witness that it is
 achievable.
 
 ### Layer 12: compilation, the transcript, the proof, and the executable verifier
@@ -1188,7 +1194,7 @@ structure FsState where cv : Vector UInt32 8
 def FsState.seed (prog) (input) : FsState ; observe (x : E) ; sample : FsState → E × FsState
 def FsState.grind (bits : ℕ) (nonce : E) : FsState → Bool × FsState
 def blake2sChain (prog) (s) : Chain PublicInput (piopSpec …)      -- the chain as a challenge oracle
--- The proof object (transcribed, transcript.rs:9-19)
+-- The proof object (transcribed, verifier/src/transcript.rs:9-30)
 structure Proof where (stream : List E) (merkle : List PrunedMerklePaths)
 def RoundPoly.decode (d) (claim) (eq? : Option E) : List E → Option (Fin (d+1) → E)
 def decode (prog) (s) : Proof → Option Messages
@@ -1296,7 +1302,7 @@ instantiation is the one non-formal step, a hypothesis of the deployment and of 
 `execution_of_extracted` keeps the extracted witness, which recursion (T6) needs. Both directions
 take `WellFormedBytecode prog`, as `constraintSoundness` and `constraintCompleteness` do (decision
 27): a bytecode with a `JUMP` in the sentinel slot has balancing steps and no execution (a proved
-repository test); leanVM's compiler establishes it (`lean_compiler/src/lib.rs:162`).
+repository test); leanVM's compiler establishes it (`lean_compiler/src/lib.rs:194`).
 
 Completeness starts from a satisfying witness with admissible sizes and a valid rate
 (decision 28): `baseProver_complete` is existential in the witness, composing
@@ -1358,7 +1364,7 @@ witness is executable it is a test under `tests/`.
     Witness: the `#guard`s on `idxColumn 2` in `tests/LeanerVMTests/Protocol/FixedColumns.lean`.
 14. **Bytecode slot bits.** The opcode is `P(z, 1, 1, 0, 0)`: slot 3 in low-first bits.
     Witnesses: `bytecodeColumn_answer_boolVec` with the oracle `#guard`s, and the
-    sixteen-instruction `#guard` against `leaf.rs:585-604`.
+    sixteen-instruction `#guard` against `leaf.rs:558-577`.
 15. **Selector alignment.** Blocks placed largest first sit at offsets that are multiples of
     their heights (`pow_size_dvd_offset`); with the smallest first no selector reads it. Largest
     first is sufficient, not necessary, and says nothing of equal heights (the tie order is
@@ -1540,7 +1546,7 @@ developed once. The fixture of Layer 12 waits on the Flock phase's definition.
 **With recursion (T5, T6).** `verify` evaluates the bytecode multilinear and the Flock matrices
 through `settleFixedClaims`; the recursive verifier replaces that one function by a deferred claim
 and is otherwise `verify`. `execution_of_extracted` hands recursion the extracted witness.
-`VerifySummary`-style outputs (`cpu/mod.rs:690-704`) are not modelled.
+`Summary`-style outputs (`crates/verifier/src/lib.rs:147-157`) are not modelled.
 
 ## Decisions
 
@@ -1679,11 +1685,12 @@ source findings' former codes are beside each entry of
 ## References
 
 - leanVM [leanEthereum/leanVM](https://github.com/leanEthereum/leanVM) at
-  [`a386121f`](https://github.com/leanEthereum/leanVM/commit/a386121f84292f6fa663aaa3e570c15bc0240ea2):
-  the specification [`doc/leanvm/`](https://github.com/leanEthereum/leanVM/tree/a386121f84292f6fa663aaa3e570c15bc0240ea2/doc/leanvm)
+  [`127510d1`](https://github.com/leanEthereum/leanVM/commit/127510d14c98ade4e8a97646c44fa7f1ff5e752d):
+  the specification [`doc/leanvm/`](https://github.com/leanEthereum/leanVM/tree/127510d14c98ade4e8a97646c44fa7f1ff5e752d/doc/leanvm)
   (§3 primitives, §4 committing, §5 arithmetization, §6 bus, §8 end-to-end, Annex A ring
-  switching, Annex B WHIR, Annex C Flock); `crates/lean_vm/src/`, `crates/fiat_shamir/src/`,
-  `crates/pcs/src/`, `crates/flock/src/`, `python-verifier/verifier.py`.
+  switching, Annex B WHIR, Annex C Flock, Annex D novel basis); `crates/leanvm_core/src/`,
+  `crates/verifier/src/`, `crates/fiat_shamir/src/`, `crates/pcs/src/`, `crates/flock/src/`,
+  `python-verifier/verifier.py`.
 - ArkLib [Verified-zkEVM/ArkLib](https://github.com/Verified-zkEVM/ArkLib): `ArkLib/OracleReduction/`,
   `ArkLib/ProofSystem/`, `ArkLib/Data/`; pull requests #615 (knowledge append), #1244 (the
   sumcheck leaf), #1245 (round-by-round to plain); issues #676 (composition), #627 (BCS).

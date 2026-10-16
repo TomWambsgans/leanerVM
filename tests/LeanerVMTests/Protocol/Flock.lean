@@ -231,7 +231,7 @@ example (k : ℕ) : flockSchedule E Flock.kSkip Flock.kIn k (k + 1) 5 = flockSpe
 #guard (List.ofFn fun p : Fin 6 ↦ 2 ^ (5 - p.val)) = Flock.ringShifts.toList
 
 -- The fourth fixed coordinate and a skip node, against the Python verifier
--- (`verifier.py:1092-1100`).
+-- (`verifier.py:1091-1099`).
 #guard toString Flock.fixedPoint[3] = "E(0xb996e3c1cf34ac2412fa45aa9a1825d135cfd1ab784e4bf6)"
 #guard toString (Flock.skipNode 5) = "E(0x00000000000000000000000000000000512620375ed2a109)"
 

@@ -16,12 +16,12 @@ public import LeanerVM.Protocol.Whir.Complete.Encoding
 # Completeness of the WHIR opening
 
 The verifier is the port `LeanerVM.Protocol.Verifier.verifyStackedOpening` /
-`verifyWhir` of `python-verifier/verifier.py:1006-1087, 1356-1362` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, with the commitment `commitStack`. The honest prover
+`verifyWhir` of `python-verifier/verifier.py:1008-1086, 1349-1355` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, with the commitment `commitStack`. The honest prover
 is a specification, written as a `Script` (`LeanerVM.Protocol.Whir.Complete.Script`) that sends
 its messages in the order the verifier reads them. Its round messages are the two scalars the
 Rust prover sends, `u_0 = h(0)` and the quadratic coefficient `u_2` (`send_msg`,
-`crates/pcs/src/whir.rs:509-511` at the same revision); its words are the ones the verifier's
+`crates/pcs/src/whir.rs:258-260` at the same revision); its words are the ones the verifier's
 reading of an opening (`row.reverse` at level `0`, `_ext_row` deeper) and the Annex's encoder
 fix. No correspondence with the Rust prover's memory layout or code is claimed.
 

@@ -16,7 +16,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.LayoutInstance
 # The commitment's doom
 
 Steps 1 and 2 of the verifier program (`readSizes`, `commitStack`; `verify_execution`,
-`python-verifier/verifier.py:1371-1382` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) read
+`python-verifier/verifier.py:1364-1375` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) read
 the announced sizes and the stack's root. Before the root, nothing is at stake: the doom is
 false, so no group of challenges is charged. The root creates the doom `CommitDoom`: for the sizes
 `s` the layout was built from, no candidate of the committed word `W₀` (`Candidates`, at the

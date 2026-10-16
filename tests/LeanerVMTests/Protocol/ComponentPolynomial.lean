@@ -11,11 +11,11 @@ equal the degree.
 
 The six opcode tables and the two blocks of leanISA are translated with leanISA's separators,
 directions and counted channels (the memory and bytecode pulls), and the result is checked
-against the pinned Rust (`crates/lean_vm/src/tables.rs` at
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`): the widths are the committed column counts `N` of
-`:455`, `:537`, `:608`, `:711`, `:862` (`XOR` and `MUL` share `arith`), the count columns are
-`count_columns()` of `:481`, `:546`, `:631`, `:720`, `:871`, and only `JUMP` has constraints,
-its two of degree two (`n_constraints`, `:722-724`; the default is none, `:319-321`). Every
+against the pinned Rust (`crates/leanvm_core/src/tables.rs` at
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`): the widths are the committed column counts `N` of
+`:460`, `:542`, `:613`, `:716`, `:867` (`XOR` and `MUL` share `arith`), the count columns are
+`count_columns()` of `:486`, `:551`, `:636`, `:725`, `:876`, and only `JUMP` has constraints,
+its two of degree two (`n_constraints`, `:727-729`; the default is none, `:323-325`). Every
 constraint and message coordinate has syntactic degree at most two, the bound `d = 2` of the M3
 instance; the kernel decides it. Every read count is a column (`CountsAreVariables`, which a
 constant count fails) and every message has at most fifteen coordinates, so a tuple determines

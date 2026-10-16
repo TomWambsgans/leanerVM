@@ -20,19 +20,19 @@ public import Mathlib.Data.Nat.Log
 # The bus channels
 
 leanISA roadmap Layer 5 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`.
 
 **The tuples** (Category B). Every bus tuple is sixteen `K` slots: a domain separator, then the
 interaction's coordinates, then zeros (specification §5.1,
-`doc/leanvm/body/05-arithmetization.tex:12` and `:16`; `crates/lean_vm/src/tables.rs:90-92`,
+`doc/leanvm/body/05-arithmetization.tex:12` and `:16`; `crates/leanvm_core/src/tables.rs:94-96`,
 `SEP_STATE`, `SEP_MEM`, `SEP_BYTECODE`). The three interactions and their coordinate orders:
 
-* state, separator `g^0`: `(pc, fp)` (§6.1, `06-bus-interactions.tex:8`; `tables.rs:127-141`);
+* state, separator `g^0`: `(pc, fp)` (§6.1, `06-bus-interactions.tex:8`; `tables.rs:131-145`);
 * memory, separator `g^1`: `(addr, count, v₀, v₁, v₂)`, a read of the word `v` at `addr` with
   count `count` (§6.2 "Tuple and columns" and "Flush rules", `:40-47`, and §6.3, `:86`;
-  `tables.rs:159-166`);
+  `tables.rs:163-170`);
 * bytecode, separator `g^2`: `(pc, count, opcode, op₁, …, op₇)`, the entry of Layer 4 after the
-  address and the count (§6.4, `:90-92`; `tables.rs:145-152`).
+  address and the count (§6.4, `:93-95`; `tables.rs:149-156`).
 
 A typed message is one such coordinate list: the state message is the register pair `Regs` of
 Layer 3 itself, over `K` when evaluated and over `Expression K` in a row (one structure, one
@@ -89,11 +89,11 @@ table to the committed seed rows until Clean PR #446 supplies proof-committed da
 dependency table).
 
 **The program is public and the channels are program-free.** leanVM's bytecode is "public,
-i.e. not committed, the verifier can evaluate it directly" (§6.4, `06-bus-interactions.tex:93`):
+i.e. not committed, the verifier can evaluate it directly" (§6.4, `06-bus-interactions.tex:96`):
 the eight entry columns ride the bytecode seed and finalize blocks as `Coord::Public`
-(`cpu/layout.rs:8-11`, `:288-290`, `:383-395`; `leaf.rs:36-39`), and every opcode table's read
+(`cpu/layout.rs:8-11`, `:287-289`, `:382-394`; `leaf.rs:36-39`), and every opcode table's read
 is its own constant opcode and its own operand columns, `[Const(BC), Col(pc), Col(count),
-Const(opcode), operands…]` (`tables.rs:143-152`): no table knows the program, and what binds a
+Const(opcode), operands…]` (`tables.rs:147-156`): no table knows the program, and what binds a
 row's operands to the program is the bus, Theorem 6.4 applied to the bytecode pair. The Lean
 follows that division of labour. The program is not prover data: Clean's `ProverData` is a
 field of the witness, so a guarantee stated over a program read off it would be about a program
@@ -124,7 +124,7 @@ primitive.
   `imageOf` (a three-row store yields a one-bit image, tests) and is not `WellShapedData`; the
   empty store is not either, since its image still has one word.
 * The bytecode guarantee is not `True`: `DEREF`'s constraints are defined at the flag pair
-  `(1, 1)`, which is no store mode's (`tables.rs:616-623`), so its soundness needs the pulled
+  `(1, 1)`, which is no store mode's (`tables.rs:621-628`), so its soundness needs the pulled
   entry to decode; that every entry on the bus does is a fact about the public program
   (`decode_entry` on the block's rows), and Layer 9 derives it (tests: the pair `(1, 1)` is
   rejected at every counter, acceptance test 18).
@@ -242,7 +242,7 @@ def BytecodePush : Channel K BytecodeMsg where
 /-! ## The read gadgets -/
 
 /-- A memory read of the word `v` at `addr` with count `count`: pull `(addr, count, v)`, push
-`(addr, g·count, v)` (specification §6.2 "Flush rules"; `tables.rs:159-166`). The pull is a
+`(addr, g·count, v)` (specification §6.2 "Flush rules"; `tables.rs:163-170`). The pull is a
 `Channel.pull`, so that a soundness proof may assume `MemPull.Guarantees` of it. -/
 def memRead (addr count : Expression K) (v : Vector (Expression K) 3) : Circuit K Unit := do
   MemPull.pull ⟨addr, count, v⟩
@@ -250,7 +250,7 @@ def memRead (addr count : Expression K) (v : Vector (Expression K) 3) : Circuit 
 
 /-- A bytecode read of the entry `(opcode, op)` at counter `pc` with count `count`: pull
 `(pc, count, opcode, op)`, push `(pc, g·count, opcode, op)` (specification §6.2, §6.4;
-`tables.rs:145-152`). -/
+`tables.rs:149-156`). -/
 def bytecodeRead (pc count opcode : Expression K) (op : Vector (Expression K) 7) :
     Circuit K Unit := do
   BytecodePull.pull ⟨pc, count, opcode, op⟩
@@ -275,7 +275,7 @@ def channelDir (c : RawChannel K) : Direction :=
   else .push
 
 /-- The domain separator of a channel (specification §5.1 "Domain separation";
-`tables.rs:90-92`): `g^0` for the state pair, `g^1` for memory, `g^2` for bytecode, and `0`,
+`tables.rs:94-96`): `g^0` for the state pair, `g^1` for memory, `g^2` for bytecode, and `0`,
 which is no separator, for any other channel. -/
 def channelSep (c : RawChannel K) : K :=
   if c.name = StatePull.name ∨ c.name = StatePush.name then gpow 0

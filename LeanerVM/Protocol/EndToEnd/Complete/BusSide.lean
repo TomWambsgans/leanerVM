@@ -16,9 +16,9 @@ public import LeanerVM.Protocol.Verifier.Bus
 /-!
 # One side of the leaf decomposition
 
-`accumulateSide` (`python-verifier/verifier.py:577-590` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) takes a side's GKR value and its layout
-(`bus_layout`, `verifier.py:506-511`) and returns the forms with the side's table blocks added and
+`accumulateSide` (`python-verifier/verifier.py:578-591` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) takes a side's GKR value and its layout
+(`bus_layout`, `verifier.py:504-509`) and returns the forms with the side's table blocks added and
 the side's total. This module states what it computes:
 
 * `busLayout_framework`, `busLayout_tables`, `busLayout_depth`: the layout's selectors at a point

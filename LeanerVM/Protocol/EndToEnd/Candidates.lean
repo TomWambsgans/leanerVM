@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Compile.Prog
 # The candidates of a commitment
 
 The deployed commitment (`verify_execution` step 2 and `verify_whir` level 0,
-`python-verifier/verifier.py:1006-1066` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+`python-verifier/verifier.py:1008-1065` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 is a Merkle root of a word of `2^(μ − 6 + R)` columns, each a leaf of `64` words of `K`. The
 leaf stores the lanes of its column in reverse order (`row.reverse`): lane `u` of column `v` is
 word `63 − u` of leaf `v` (`laneOf`). Lane `u` of an honest word is the encoding (`enc`, the

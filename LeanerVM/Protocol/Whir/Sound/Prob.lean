@@ -20,7 +20,7 @@ public import LeanerVM.Protocol.ToArkLib.Whir.Ood
 before its first prover move, of `g` at the return. The joint bounds of `Spec.ofNoMove` are
 expectations of indicators. This module computes them for the move-free fragments of the WHIR
 verifier (`LeanerVM.Protocol.Verifier.verifyWhir`, transcribing `verify_whir` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`):
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`):
 
 * algebra: `retExp_bind` (sequencing is iterated expectation), `retExp_mono`, `retExp_add_le`,
   `retExp_const_mul`, `retExp_le_const`, and `retExp_commits` (a function of the commitments of the

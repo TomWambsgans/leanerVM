@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Whir.Sound.Group
 # The glued claim of a level
 
 The verifier glues a level's claims into the running sumcheck (`glue`,
-`python-verifier/verifier.py:1058-1063` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`):
+`python-verifier/verifier.py:1058-1062` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`):
 the running claim keeps `λ⁰`, the out-of-domain claim `(eq_eval(z, ·), y)` gets `λ`, and the batch
 of consistency claims `(_induced_weight(κ, qs, powers(λ, t), ·), _enforced_sum)` gets `λ²`; on the
 final level only the batch, with `λ`. With the inner products of `LeanerVM.Protocol.Whir.Sound.

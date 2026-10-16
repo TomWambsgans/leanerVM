@@ -7,8 +7,8 @@ meta import LeanerVM.Parameters.Generator
 # Layer 0 tests: the generator
 
 `gpow k` is bit `k` for `k < 64`, pinning `g = x`, and `gpow 64` is the reduction tail
-`x^4 + x^3 + x + 1 = K.ofBits 0x1b` of the modulus (`crates/primitives/src/field/gf2_64.rs:3`, `R64`).
-The nearby false statements of roadmap acceptance test 1 follow: `g^3` has order
+`x^4 + x^3 + x + 1 = K.ofBits 0x1b` of the modulus (`crates/primitives/src/field/gf2_64.rs:14`,
+`R64`). The nearby false statements of roadmap acceptance test 1 follow: `g^3` has order
 `(2^64 - 1)/3` and fails the `3`-check, and `gpow` wraps at the order.
 -/
 

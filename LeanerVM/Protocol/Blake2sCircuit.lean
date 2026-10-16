@@ -15,10 +15,10 @@ public import LeanerVM.Semantics.Blake2s
 /-!
 # The BLAKE2s compression circuit
 
-Category B: transcribed from leanVM at pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`,
-`crates/flock/src/hash.rs:40-63` (layout), `:143-162` (positions and gadget offsets) and
-`:295-358` (`forward_walk`), with the adder rows of `crates/flock/src/gf2.rs`, cross-checked row
-for row against `python-verifier/verifier.py:1180-1295` (`blake2s_row_values`) by the digest
+Category B: transcribed from leanVM at pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
+`crates/flock/src/hash.rs:40-63` (layout), `:141-160` (positions and gadget offsets) and
+`:293-356` (`forward_walk`), with the adder rows of `crates/flock/src/gf2.rs`, cross-checked row
+for row against `python-verifier/verifier.py:1179-1288` (`blake2s_row_values`) by the digest
 test. The specification fixes the constant at position `512` and the row of each kind of wire
 (`doc/leanvm/body/c-flock-protocol.tex:22-28`, `:205-215`: a product `(u, u')`, a committed XOR
 `(S_w, 1)`, a source `(w, 1)`, an empty position zero), which `rowOf` implements; it does not

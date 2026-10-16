@@ -6,23 +6,22 @@ import LeanerVM.Arithmetization.Completeness.Basics
 A classic test for kernel evaluation: the fixture decides `K` and `E` arithmetic and the
 bus permutations in the kernel.
 
-**The fixture** is one hand-built witness of `SatisfiedBy` for the Layer 3 program, the
-executor's `mul_192bit_word` (`crates/lean_vm/src/cpu/mod.rs:982-999`, `tests/LeanerVMTests/
+**The fixture** is one hand-built witness of `SatisfiedBy` for the Layer 3 program, the executor's
+`mul_192bit_word` (`crates/leanvm_core/src/cpu/mod.rs:887-904`, `tests/LeanerVMTests/
 Semantics/Execution.lean`), extended in the shape of the compiler's fill blocks, simplified: a
-`JUMP` to the sentinel after the three instructions, and the fill blocks every table needs to
-reach a power-of-two height (§8.3; `crates/lean_vm/src/cpu/filler.rs:36-87`, emitted by
-`crates/lean_compiler/src/filler.rs`; roadmap acceptance test 15): one `XOR`, one `DEREF`,
-eight `BLAKE2S` rows (the verifier's floor, `cpu/mod.rs:166`), each block a closed walk ending
-in a `JUMP` back to its first instruction, run in a frame disjoint from the program's own (the
-compiler's closing `JUMP` reuses one frame cell as condition and destination and its dummy
-`JUMP` falls through; the fixture's use distinct cells). The thirty-two-slot program
-`fillProg` runs four steps from `(1, 1)` to `(g^31, 1)` (`fill_run`, a `ValidExecution`), and
-its honest witness `fillW 1 g memCnt` at the minimum memory size `2^16` satisfies every
-conjunct of `SatisfiedBy` (`fill_satisfiedBy`) and represents the trace (`fill_represents`):
-the completeness instance of T1 for this program, by hand (`fill_t1_instance`). The witness
-is parametric in the first `SET_CONSTANT` row's read count, the product row's read count of
-`x`, and the memory block's finalize counts, so that the rejections below are the honest
-witness with one thing changed.
+`JUMP` to the sentinel after the three instructions, and the fill blocks every table needs to reach
+a power-of-two height (§8.3; `crates/leanvm_core/src/cpu/filler.rs:36-87`, emitted by
+`crates/lean_compiler/src/filler.rs`; roadmap acceptance test 15): one `XOR`, one `DEREF`, eight
+`BLAKE2S` rows (the verifier's floor, `crates/verifier/src/layout.rs:392`), each block a closed walk
+ending in a `JUMP` back to its first instruction, run in a frame disjoint from the program's own
+(the compiler's closing `JUMP` reuses one frame cell as condition and destination and its dummy
+`JUMP` falls through; the fixture's use distinct cells). The thirty-two-slot program `fillProg` runs
+four steps from `(1, 1)` to `(g^31, 1)` (`fill_run`, a `ValidExecution`), and its honest witness
+`fillW 1 g memCnt` at the minimum memory size `2^16` satisfies every conjunct of `SatisfiedBy`
+(`fill_satisfiedBy`) and represents the trace (`fill_represents`): the completeness instance of T1
+for this program, by hand (`fill_t1_instance`). The witness is parametric in the first
+`SET_CONSTANT` row's read count, the product row's read count of `x`, and the memory block's
+finalize counts, so that the rejections below are the honest witness with one thing changed.
 
 **What the proofs exercise.** The eight tables are the witness's `tables` in the ensemble's
 order, the memory block's `2^16` rows built by `List.ofFn` and never enumerated: its constraints
@@ -961,8 +960,8 @@ theorem three_ne_two_pow (τ : ℕ) : (3 : ℕ) ≠ 2 ^ τ := by
     have := Nat.one_le_two_pow (n := τ)
     omega
 
-/-- The heights are checked (`read_public`, `:114-117`, `:161`): a height that is not a power
-of two fails `Caps`. -/
+/-- The heights are checked (`crates/verifier/src/layout.rs:389-391`; announced as logs,
+`crates/leanvm_core/src/cpu/mod.rs:110-113`): a height that is not a power of two fails `Caps`. -/
 example : ¬ Caps heightW := fun h ↦ by
   obtain ⟨τ, -, hτ⟩ := h.heights setT3 (by
     simp only [heightW, mkW, List.mem_cons, true_or, or_true])
@@ -982,7 +981,7 @@ theorem blakeT4_table :
 def floorW : EnsembleWitness (leanIsaEnsemble fillProg) :=
   mkW [xorT, mulT g, setT 1, derefT, jumpT, blakeT4, memT memCnt, bcT]
 
-/-- The `BLAKE2S` floor is checked (`:166`): four rows fail `Caps`. -/
+/-- The `BLAKE2S` floor is checked (`crates/verifier/src/layout.rs:392`): four rows fail `Caps`. -/
 example : ¬ Caps floorW := fun h ↦ by
   have h8 := h.blake2s_height
   rw [blake2sRows, show tableAt floorW 5 = blakeT4 from rfl, blakeT4_table, List.length_map,

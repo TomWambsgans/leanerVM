@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.Whir.Sound.Tail
 `whirLevels μ ℓ₀ w i [level] s` is, definitionally, `finProg`: the fold rounds, the residual
 `f_final` (`2^κ` scalars), the proof of work, positions, `λ`, opening, the query intro
 polynomial, the glue (`λ^(1+q)` for the consistency claims), the tail rounds and the terminal
-check `weight · multilinear_eval(f_final, tail) = target` (`verifier.py:1039-1087` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`).
+check `weight · multilinear_eval(f_final, tail) = target` (`verifier.py:1039-1086` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`).
 
 Doom: `AfterFold` after the fold rounds (`A(r−1, ℓ)`); with the residual's length; after the query
 group `GlueFinC`: `f_final` violates the glued claim (`escRet_queryFrag_le_final`); then the tail

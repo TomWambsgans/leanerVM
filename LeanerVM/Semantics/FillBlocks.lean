@@ -13,9 +13,9 @@ public import LeanerVM.Semantics.Execution
 # Fill blocks
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category B, transcribed from
-`crates/lean_compiler/src/lower.rs:462-533` (`lower_filler_blocks`) and
-`crates/lean_vm/src/cpu/filler.rs:36-87` (the sizes and the frame offsets), which are identical
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category B, transcribed from
+`crates/lean_compiler/src/lower.rs:435-506` (`lower_filler_blocks`) and
+`crates/leanvm_core/src/cpu/filler.rs:36-87` (the sizes and the frame offsets), which are identical
 at leanVM `48a904208d682848dac0e18ef8b01ebfc40df9ad`. Artifact: a shape of the public program.
 Direction: none, a definition. Contribution: the program-shape hypothesis of T1-C
 (`WellFormedBytecode`, roadmap acceptance test 15).
@@ -66,7 +66,7 @@ open LeanerVM.Parameters
 traversals of the largest block and then one per set bit of the remainder. -/
 def fillSizes : List ℕ := [128, 64, 32, 16, 8, 4, 2, 1]
 
-/-- The six tables in the order of their bus codes (Layer 2's `Opcode`, `tables.rs:95-100`). -/
+/-- The six tables in the order of their bus codes (Layer 2's `Opcode`, `tables.rs:99-104`). -/
 def fillTables : List Opcode := [.xor, .mulNative, .setConstant, .deref, .jump, .blake2s]
 
 /-! ## The frame
@@ -101,7 +101,7 @@ end FillFrame
 
 /-! ## The blocks -/
 
-/-- The dummy instruction of a table (`lower.rs:482-519`): the cheapest instruction of that opcode
+/-- The dummy instruction of a table (`lower.rs:455-492`): the cheapest instruction of that opcode
 that can be executed any number of times in one frame. `XOR`, `MUL_NATIVE` and `SET_CONSTANT` name
 the scratch cell as every operand, `DEREF` reads memory cell `0` through the frame's pointer,
 `JUMP` reads a cell nothing writes (a zero condition falls through) and `BLAKE2S` compresses
@@ -118,7 +118,7 @@ def fillDummy : Opcode → Instr
       gpow (FillFrame.digest + 4), gpow (FillFrame.digest + 5)]
       (gpow FillFrame.scratch) (gpow FillFrame.digest) (gpow FillFrame.zero)
 
-/-- The jump that closes a block (`lower.rs:525-529`): condition and destination are the cell
+/-- The jump that closes a block (`lower.rs:498-502`): condition and destination are the cell
 `DEST`, the new frame the cell `NEXT_FP`. -/
 def fillClose : Instr :=
   .jump (gpow FillFrame.dest) (gpow FillFrame.dest) (gpow FillFrame.nextFp)
@@ -133,7 +133,7 @@ structure IsFillBlock (prog : Program) (t : Opcode) (s p : ℕ) : Prop where
   /-- Slot `p + s` fetches the closing jump. -/
   close : prog.fetch (gpow (p + s)) = some fillClose
 
-/-- The program has a block of every size for every table (`lower.rs:473-531`): the fill blocks
+/-- The program has a block of every size for every table (`lower.rs:446-504`): the fill blocks
 the prover pads the tables with. -/
 def HasFillBlocks (prog : Program) : Prop :=
   ∀ t : Opcode, ∀ s ∈ fillSizes, ∃ p, IsFillBlock prog t s p

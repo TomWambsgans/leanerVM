@@ -4,7 +4,7 @@ import LeanerVM.Semantics.FillPlan
 # Layer 10 tests: the fill plan arithmetic
 
 Concrete values of the targets and the traversals, including the row mix the Rust's own filler
-test uses (`crates/lean_vm/src/cpu/filler.rs:228-246` at leanVM `a386121f`), and the `JUMP`
+test uses (`crates/leanvm_core/src/cpu/filler.rs:249-267` at leanVM `127510d1`), and the `JUMP`
 feasibility cases around the row cap. The cap cases show the exclusion of a one-row gap is
 load-bearing: a `JUMP` table owing `2^32 - 1` rows has no plan, and one owing `2^31 - 1` does,
 by taking the next power of two.

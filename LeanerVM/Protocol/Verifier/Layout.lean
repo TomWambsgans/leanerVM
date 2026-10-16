@@ -15,9 +15,9 @@ public import LeanerVM.Protocol.Verifier.Arith
 # The verifier's layout
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 286-316 (`Placement`, `stack_offsets`,
-`_selector_point`), 460-533 (`Form`, `BusBlock`, `BusLayout`, `bus_layout`, `ColumnClaim`), and
-629-895 (the constants, `Layout`, `Flushes`, `Table`, the six tables, `build_layout`).
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 285-315 (`Placement`, `stack_offsets`,
+`_selector_point`), 458-531 (`Form`, `BusBlock`, `BusLayout`, `bus_layout`, `ColumnClaim`), and
+631-897 (the constants, `Layout`, `Flushes`, `Table`, the six tables, `build_layout`).
 
 ## Representation
 
@@ -41,7 +41,7 @@ open LeanerVM.Parameters
 
 @[expose] public section
 
-/-! ## Constants (`verifier.py:525, 629-643, 679-681, 821-853`) -/
+/-! ## Constants (`verifier.py:523, 631-645, 681-683, 823-855`) -/
 
 /-- The bus communicates tuples of `2^BUS_BITS` field elements. -/
 def busBits : ℕ := 4
@@ -109,7 +109,7 @@ def opJump : ℕ := 4
 /-- Opcode `BLAKE2S`. -/
 def opBlake2s : ℕ := 5
 
-/-! ## Placements (`verifier.py:286-316`) -/
+/-! ## Placements (`verifier.py:285-315`) -/
 
 /-- Where something sits in the stacked cube: a claim's point fills the `vars` coordinates
 above `low`, the bits of `index` fixing the rest. -/
@@ -134,7 +134,7 @@ def Placement.eqAbove (p : Placement) (point : List E) : E :=
   eqEval bits (point.drop (p.low + p.vars))
 
 /-- `stack_offsets(sizes)`: blocks of `2^size` laid end to end, largest first, ties by index;
-their offsets, and the log-size of the total (`verifier.py:305-311`). -/
+their offsets, and the log-size of the total (`verifier.py:304-310`). -/
 def stackOffsets (sizes : List ℕ) : List ℕ × ℕ :=
   let size := fun i ↦ sizes.getD i 0
   let order := (List.range sizes.length).mergeSort fun i j ↦
@@ -143,7 +143,7 @@ def stackOffsets (sizes : List ℕ) : List ℕ × ℕ :=
     (acc.1.set i acc.2, acc.2 + 2 ^ size i)) (List.replicate sizes.length 0, 0)
   (placed.1, log2Ceil placed.2)
 
-/-! ## Forms (`verifier.py:460-482`) -/
+/-! ## Forms (`verifier.py:458-480`) -/
 
 /-- A polynomial of degree at most two in a table's columns: monomial (sorted column indices) to
 coefficient, in insertion order. -/
@@ -182,7 +182,7 @@ def Form.col (index : ℕ) (exponent : ℕ := 0) : Form := ⟨[([index], gpow ex
 /-- `_prod(a, b, exponent)`: `g^exponent · x_a · x_b`. -/
 def Form.prod (a b : ℕ) (exponent : ℕ := 0) : Form := ⟨[([min a b, max a b], gpow exponent)]⟩
 
-/-! ## Flushes (`verifier.py:684-709`) -/
+/-! ## Flushes (`verifier.py:686-711`) -/
 
 /-- A table's bus flushes: the tuples it pushes and pulls, in pairs. -/
 structure Flushes where
@@ -224,7 +224,7 @@ def memoryCols (f : Flushes) (address : Form) (count : ℕ) (columns : List ℕ)
 
 end Flushes
 
-/-! ## The instruction tables (`verifier.py:715-853`) -/
+/-! ## The instruction tables (`verifier.py:717-855`) -/
 
 /-- `_cols(columns, name)`: the index of a column by name. -/
 def colIdx (columns : List String) (name : String) : ℕ := columns.idxOf name
@@ -261,7 +261,7 @@ def towerLanes : List (List (ℕ × ℕ)) :=
   [[(0, 0), (1, 2), (2, 1)], [(0, 1), (1, 0), (1, 2), (2, 1), (2, 2)],
     [(0, 2), (1, 1), (2, 0), (2, 2)]]
 
-/-- `_flushes_arith(opcode, multiply)` (`verifier.py:738-753`). -/
+/-- `_flushes_arith(opcode, multiply)` (`verifier.py:740-755`). -/
 def flushesArith (opcode : ℕ) (multiply : Bool) : Flushes :=
   let c := colIdx arithColumns
   let va := [c "va_0", c "va_1", c "va_2"]
@@ -279,7 +279,7 @@ def flushesArith (opcode : ℕ) (multiply : Bool) : Flushes :=
   let f := f.memoryCols (Form.prod (c "fp") (c "o_b")) (c "cnt_b") vb
   f.memory (Form.prod (c "fp") (c "o_c")) (c "cnt_c") result
 
-/-- `_flushes_set()` (`verifier.py:756-763`). -/
+/-- `_flushes_set()` (`verifier.py:758-765`). -/
 def flushesSet : Flushes :=
   let c := colIdx setColumns
   let k := [c "k_0", c "k_1", c "k_2"]
@@ -289,7 +289,7 @@ def flushesSet : Flushes :=
     (Form.col (c "o") :: k.map (Form.col ·) ++ [Form.const 0])
   f.memoryCols (Form.prod (c "fp") (c "o")) (c "cnt") k
 
-/-- `_flushes_deref()` (`verifier.py:766-782`). -/
+/-- `_flushes_deref()` (`verifier.py:768-784`). -/
 def flushesDeref : Flushes :=
   let c := colIdx derefColumns
   let pc := c "pc"
@@ -309,7 +309,7 @@ def flushesDeref : Flushes :=
   let f := f.memory (Form.prod (c "ptr") (c "o2")) (c "cnt_target") store
   f.memoryCols (Form.prod fp (c "o3")) (c "cnt_local") v3
 
-/-- `_flushes_jump()` (`verifier.py:785-795`): `next_pc = b·dest + (b + 1)·g·pc`,
+/-- `_flushes_jump()` (`verifier.py:787-797`): `next_pc = b·dest + (b + 1)·g·pc`,
 `next_fp = b·frame + (b + 1)·fp`. -/
 def flushesJump : Flushes :=
   let c := colIdx jumpColumns
@@ -326,7 +326,7 @@ def flushesJump : Flushes :=
   let f := f.memoryCols (Form.prod fp (c "o_d")) (c "cnt_d") [c "v_pc"]
   f.memoryCols (Form.prod fp (c "o_f")) (c "cnt_f") [c "v_fp"]
 
-/-- `_jump_constraints(columns)`: `b + cond·w` and `cond·(b + 1)` (`verifier.py:798-800`). -/
+/-- `_jump_constraints(columns)`: `b + cond·w` and `cond·(b + 1)` (`verifier.py:800-802`). -/
 def jumpConstraints (columns : List E) : List E :=
   let c := colIdx jumpColumns
   let condition := columns.getD (c "v_cond") 0
@@ -334,13 +334,13 @@ def jumpConstraints (columns : List E) : List E :=
   let flag := columns.getD (c "b") 0
   [flag + condition * inverse, condition * (flag + 1)]
 
-/-- The nine `BLAKE2S` cells read, as (cell, operand, offset): `verifier.py:812-814`. -/
+/-- The nine `BLAKE2S` cells read, as (cell, operand, offset): `verifier.py:814-816`. -/
 def blake2sCells : List (String × String × ℕ) :=
   [("m0", "o_0", 0), ("m1", "o_1", 0), ("m2", "o_2", 0), ("m3", "o_3", 0),
     ("cv0", "o_v", 0), ("cv1", "o_v", 1), ("out0", "o_out", 0), ("out1", "o_out", 1),
     ("md", "o_md", 0)]
 
-/-- `_flushes_blake2s()` (`verifier.py:803-818`). -/
+/-- `_flushes_blake2s()` (`verifier.py:805-820`). -/
 def flushesBlake2s : Flushes :=
   let c := colIdx blake2sColumns
   let operands := ["o_0", "o_1", "o_2", "o_3", "o_v", "o_out", "o_md"].map c
@@ -352,7 +352,7 @@ def flushesBlake2s : Flushes :=
       [c (cell ++ "_lo"), c (cell ++ "_hi")]) f
 
 /-- One instruction's table: its columns, its bus flushes, its constraints
-(`verifier.py:715-735`). -/
+(`verifier.py:717-737`). -/
 structure Table where
   /-- The table's name. -/
   name : String
@@ -376,7 +376,7 @@ def Table.nConstraints (t : Table) : ℕ := (t.constraints (List.replicate t.wid
 def Table.countColumns (t : Table) : List ℕ :=
   (t.columns.zipIdx.filter fun (name, _) ↦ name.startsWith "cnt").map (·.2)
 
-/-- `TABLES`, in opcode order (`verifier.py:836-843`). -/
+/-- `TABLES`, in opcode order (`verifier.py:838-845`). -/
 def tables : List Table :=
   [⟨"xor", opXor, arithColumns, flushesArith opXor false, fun _ ↦ []⟩,
     ⟨"mul", opMul, arithColumns, flushesArith opMul true, fun _ ↦ []⟩,
@@ -386,7 +386,7 @@ def tables : List Table :=
     ⟨"blake2s", opBlake2s, blake2sColumns, flushesBlake2s, fun _ ↦ []⟩]
 
 /-- `BLAKE2S_SLOTS`: the `BLAKE2S` limb each Flock slot carries; slots 8 and 9 carry none
-(`verifier.py:847-850`). -/
+(`verifier.py:849-852`). -/
 def blake2sSlots : List (Option String) :=
   [some "cv0_lo", some "cv0_hi", some "cv1_lo", some "cv1_hi", some "out0_lo", some "out0_hi",
     some "out1_lo", some "out1_hi", none, none,
@@ -400,7 +400,7 @@ def tableWidths : List ℕ := tables.map Table.width
 def globalColumnBases : List ℕ :=
   (List.range tables.length).map fun t ↦ numGlobalColumns + (tableWidths.take t).sum
 
-/-! ## The bus layout (`verifier.py:484-533`) -/
+/-! ## The bus layout (`verifier.py:482-531`) -/
 
 /-- One block of a bus side, owned by a table. -/
 structure BusBlock where
@@ -421,7 +421,7 @@ structure BusLayout where
   /-- The table blocks' placements, in the side's block order. -/
   tables : List Placement
 
-/-- `bus_layout(framework_log_rows, blocks)` (`verifier.py:506-511`). -/
+/-- `bus_layout(framework_log_rows, blocks)` (`verifier.py:504-509`). -/
 def busLayout (frameworkLogRows : List ℕ) (blocks : List BusBlock) : BusLayout :=
   let sizes := frameworkLogRows ++ blocks.map (·.logRows)
   let (offsets, depth) := stackOffsets sizes
@@ -441,7 +441,7 @@ structure ColumnClaim where
 /-- A claim on the stack: the weight it puts on the stack, and the value it claims for it. -/
 abbrev StackClaim : Type := (List E → E) × E
 
-/-! ## `build_layout` (`verifier.py:645-655, 856-895`) -/
+/-! ## `build_layout` (`verifier.py:647-657, 858-897`) -/
 
 /-- The layout the verifier derives from the bytecode and the announced sizes. -/
 structure Layout where
@@ -470,7 +470,7 @@ def ColumnClaim.onStack (c : ColumnClaim) (layout : Layout) : StackClaim :=
   (fun x ↦ eqEval point x, c.value)
 
 /-- The bus blocks of every table, side by side: pushes, pulls, counts
-(`verifier.py:866-876`). -/
+(`verifier.py:868-878`). -/
 def busBlocks (tableLogHeights : List ℕ) : List BusBlock × List BusBlock × List BusBlock :=
   let rows := List.zip tables tableLogHeights
   (rows.flatMap fun (t, h) ↦ t.flushes.push.map fun c ↦ ⟨h, c, t.opcode⟩,
@@ -478,19 +478,19 @@ def busBlocks (tableLogHeights : List ℕ) : List BusBlock × List BusBlock × L
     rows.flatMap fun (t, h) ↦ t.countColumns.map fun l ↦ ⟨h, [Form.col l], t.opcode⟩)
 
 /-- The Flock slot of a global column that is an embedded `BLAKE2S` limb
-(`verifier.py:886`). -/
+(`verifier.py:888`). -/
 def limbSlot (column : ℕ) : Option ℕ :=
   blake2sSlots.zipIdx.findSome? fun (name?, slot) ↦ name?.bind fun name ↦
     if globalColumnBases.getD opBlake2s 0 + colIdx blake2sColumns name = column then some slot
     else none
 
-/-- Every column's log-size, in global order (`verifier.py:879-882`). -/
+/-- Every column's log-size, in global order (`verifier.py:881-884`). -/
 def columnKappas (logMemory logBytecode : ℕ) (tableLogHeights : List ℕ) : List ℕ :=
   let qflockKappa := tableLogHeights.getD opBlake2s 0 + qflockSlotBits
   [logMemory, logMemory, logMemory, logMemory, logBytecode, qflockKappa] ++
     tables.flatMap fun t ↦ List.replicate t.width (tableLogHeights.getD t.opcode 0)
 
-/-- The placements of every column, and the stack's log-size (`verifier.py:884-894`): the
+/-- The placements of every column, and the stack's log-size (`verifier.py:886-896`): the
 committed columns stacked by `stack_offsets`, each limb at `q_flock`'s offset plus its slot. -/
 def placementsOf (kappas : List ℕ) : List Placement × ℕ :=
   let blockCols := (List.range kappas.length).filter fun c ↦ (limbSlot c).isNone
@@ -503,7 +503,7 @@ def placementsOf (kappas : List ℕ) : List Placement × ℕ :=
     | none => { vars := kappa, index := offsetOf column }
   (placements, max minStackedLog totalLog)
 
-/-- `build_layout(bytecode, log_memory, table_log_heights)` (`verifier.py:856-895`); `none`
+/-- `build_layout(bytecode, log_memory, table_log_heights)` (`verifier.py:858-897`); `none`
 where the Python raises. -/
 def buildLayout (bytecode : List K) (logMemory : ℕ) (tableLogHeights : List ℕ) : Option Layout :=
   match log2Strict bytecode.length with

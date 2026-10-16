@@ -18,8 +18,8 @@ import Mathlib.Algebra.BigOperators.Fin
 /-!
 # The table sumcheck phase
 
-Specification §5.5 (`doc/leanvm/body/05-arithmetization.tex:125-155` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`), over an abstract instance `I`.
+Specification §5.5 (`doc/leanvm/body/05-arithmetization.tex:125-150` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`), over an abstract instance `I`.
 
 The bus phase ends at a point `ζ` and leaves two kinds of claim on the rows of the *sumcheck
 tables* (those with a constraint, a flush or a count column): every constraint `C_{t,i}` of table
@@ -61,8 +61,8 @@ true values being fixed before it (`trueValues`); `3/|E|` on each round's challe
 the final values, which the table seam determines (`finalClaims_holds_iff`).
 
 Written from the specification; the order of the powers, the shared side powers, the weights and
-the order of the final values are checked against `crates/lean_vm/src/cpu/mod.rs:404-441,
-726-743` and `crates/lean_vm/src/constraints.rs:243-291` at the pin.
+the order of the final values are checked against `crates/leanvm_core/src/cpu/mod.rs:388-406`,
+`crates/verifier/src/lib.rs:231-249` and `crates/verifier/src/bus.rs:211-260` at the pin.
 -/
 
 namespace LeanerVM.Protocol

@@ -17,7 +17,7 @@ public import LeanerVM.Protocol.ToArkLib.Whir.Johnson
 /-!
 # The code of a level and the fold step
 
-Annex B of the leanVM specification (leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`,
+Annex B of the leanVM specification (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`), proof of Theorem `thm:rbr`, "Fold
 challenge", for the deployed code: level `i` uses the novel-basis Reed–Solomon code
 `C_i = RS[E, D_{κ,R}, 2^κ]` (`enc κ R`, `range_enc`) on `n = 2^(κ+R)` points, and the analysis
@@ -40,7 +40,9 @@ runs at ArkLib's Johnson radius `1 − √ρ₋ − η` with `ρ₋ = (2^κ − 
   `2·listMax + 2^m·mcaMax` challenges `s` leave a member of the list of `rowsOf m (foldN s O)`
   satisfying `(Φ(s, ·), h(s))`. The two terms are the bad events `B₁` (sumcheck, two points per
   member) and `B₂` (the fold-list lemma `card_foldBad_le_johnson`, one pair of rows per lane of
-  the folded word) of the Annex.
+  the folded word) of the Annex. At `127510d1` the Annex bounds `B₂` by `ε` alone (`lem:fold-list`,
+  citing Jo, ePrint 2026/891, Thm 4.4), without the row-union factor `2^m` proved here; see
+  `LeanerVM.Protocol.Whir.Params.Deployed`.
 -/
 
 namespace LeanerVM.Protocol.Whir.Sound

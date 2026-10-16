@@ -13,8 +13,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockSetup
 /-!
 # The Flock zerocheck as a specification
 
-`verifyFlockZerocheck (14 + k)` (`verifier.py:1135-1150` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) is, against the Flock argument's components
+`verifyFlockZerocheck (14 + k)` (`verifier.py:1134-1149` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is, against the Flock argument's components
 (`ToArkLib/Flock/Zerocheck.lean`), at `flockParams k`:
 
 | program | component | doom after it (no candidate alive) | escape per challenge |

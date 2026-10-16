@@ -13,15 +13,17 @@ public import LeanerVM.Protocol.EndToEnd.Front.LayoutInstance
 /-!
 # The announced sizes
 
-Step 1 of the verifier program (`readSizes`, `verifier.py:1371-1379` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) reads eight scalars, the memory's and the six tables'
+Step 1 of the verifier program (`readSizes`, `verifier.py:1364-1372` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) reads eight scalars, the memory's and the six tables'
 log-sizes and the WHIR rate, checks them, and builds the layout. For the program's bytecode
 (`bytecodeWords prog`):
 
 * `readSizes_ret`: what the program checks, on the history it read;
 * `readSizes_ret_sizes`: it returns `(layout, ρ)` only after reading `announce s ρ` for sizes
-  `s` with `Sizes.Admissible prog s` (the Rust's `read_public` checks, `cpu/mod.rs:157-176`) and a
-  rate with `validRate ρ`, and `layout = verifierLayout prog s`; so its `stackLog` is
+  `s` with `Sizes.Admissible prog s` (the Rust verifier's checks,
+  `crates/verifier/src/layout.rs:381-395` and `crates/verifier/src/lib.rs:215-220`; until
+  `127510d1` they were `read_public`'s, `crates/lean_vm/src/cpu/mod.rs:157-176` at `a386121f`)
+  and a rate with `validRate ρ`, and `layout = verifierLayout prog s`; so its `stackLog` is
   `leanIsaμ prog s` (`stackLog_verifierLayout`) and its placements are the instance's.
 
 The `require`s of `readSizes` are exactly `Sizes.Admissible` and `validRate`: `buildLayout`'s

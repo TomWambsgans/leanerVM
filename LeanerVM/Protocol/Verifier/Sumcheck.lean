@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.Verifier.Arith
 # Sumcheck rounds
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 406-413 (`Transcript.sumcheck_round_poly`) and
-420-427 (`sumcheck`).
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 405-412 (`Transcript.sumcheck_round_poly`) and
+419-426 (`sumcheck`).
 
 A round polynomial `q(X) = c0 + c1·X + c2·X² + …` of `count` coefficients is sent with one
 coefficient left out, which the verifier derives from the running claim:
@@ -44,7 +44,7 @@ def liftOption {α : Type} : Option α → Prog α
 
 /-- `Transcript.sumcheck_round_poly(count, claim, eq_factor)`: read a round polynomial of `count`
 coefficients, deriving the one the claim fixes; its coefficients, constant first
-(`verifier.py:406-413`). -/
+(`verifier.py:405-412`). -/
 def sumcheckRoundPoly (count : ℕ) (claim : E) : Option E → Prog (List E)
   | none => do
     let constant ← Prog.readE
@@ -56,7 +56,7 @@ def sumcheckRoundPoly (count : ℕ) (claim : E) : Option E → Prog (List E)
 
 /-- `sumcheck(transcript, claim, count, equalities)`: one round per entry of `equalities`, each
 reading its polynomial and sampling its challenge; the challenges in order, and the final claim
-(`verifier.py:420-427`). -/
+(`verifier.py:419-426`). -/
 def sumcheck (claim : E) (count : ℕ) : List (Option E) → Prog (List E × E)
   | [] => return ([], claim)
   | equality :: equalities => do

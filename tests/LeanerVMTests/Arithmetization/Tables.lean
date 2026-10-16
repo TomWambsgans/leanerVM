@@ -39,7 +39,7 @@ a wrong but canonical word, consistently in row and image, is locally complete
 (`blake2sRow_complete`) and fails `Blake2sRelation` and `Blake2sSpec`, the failure Flock
 enforces.
 
-The `MUL_NATIVE` row reproduces the executor's `mul_192bit_word` product (`cpu/mod.rs:981-998`,
+The `MUL_NATIVE` row reproduces the executor's `mul_192bit_word` product (`cpu/mod.rs:887-904`,
 `scripts/dump-mul-rust.sh`) from the twelve-product coordinates (acceptance test 9), and the
 `BLAKE2S` row the cells of `blake2s_computes_the_compression` (`scripts/dump-blake2s-rust.sh`).
 -/

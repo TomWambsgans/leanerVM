@@ -16,10 +16,10 @@ public import LeanerVM.Protocol.ToCompPoly.Multilinear
 /-!
 # Column weights
 
-Two parts, both against leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`.
+Two parts, both against leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`.
 
-**Category A**, Annex B Lemma `lem:colweight`
-(`doc/leanvm/body/b-polynomial-commitment-scheme.tex:309-327`): for `x ∈ D_{κ,R}` the weight
+**Category A**, Annex D Lemma `lem:colweight` (`doc/leanvm/body/d-novel-basis.tex:99-117`; in
+Annex B until `127510d1`): for `x ∈ D_{κ,R}` the weight
 `W_x(u) = ∏_i Ŵ_i(x)^{u_i}` (`colWeight`) satisfies
 
 * `Enc_{κ,R}(g)[x] = ⟨W_x, g⟩ = Σ_u W_x(u)·g(u)` (`enc_eq_sum_colWeight`, for `κ ≤ 64`), and
@@ -31,7 +31,7 @@ Two parts, both against leanVM pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`.
 (`LeanerVM.Protocol.ToArkLib.InnerProduct`), whose evaluator is the product; `enc_eq_pair` reads
 a codeword entry as `Weight.pair` against the message table `msgTable g`.
 
-**Category B**, the pinned Python verifier `python-verifier/verifier.py:962-990`:
+**Category B**, the pinned Python verifier `python-verifier/verifier.py:964-992`:
 `subspaceRoots` transcribes `_subspace_roots` and `inducedWeight` transcribes `_induced_weight`,
 line by line: the roots `W_i(e_i)` by the layer recurrence `value ← value² + root·value`, their
 inverses (zero kept as zero), and per query the running product
@@ -130,7 +130,7 @@ theorem enc_eq_pair {κ : ℕ} (R : ℕ) (hκ : κ ≤ 64) (g : (Fin κ → Bool
 
 /-! ## The Python verifier's induced weight (Category B) -/
 
-/-- `_subspace_roots(log_n)` (`verifier.py:962-968`):
+/-- `_subspace_roots(log_n)` (`verifier.py:964-970`):
 
 ```python
 roots = [ONE]
@@ -150,7 +150,7 @@ where
       let layer := layer.map fun value ↦ value ^ 2 + roots.getLastD 0 * value
       loop k (roots ++ [layer.headD 0]) layer.tail
 
-/-- `_induced_weight(message_log, queries, query_weights, point)` (`verifier.py:971-990`):
+/-- `_induced_weight(message_log, queries, query_weights, point)` (`verifier.py:973-992`):
 
 ```python
 require(len(point) == message_log, "bad induced-basis dimensions")

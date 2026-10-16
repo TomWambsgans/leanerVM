@@ -14,7 +14,7 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Claims
 # The facts an honest run threads
 
 The verifier program's phases (`LeanerVM.Protocol.Verifier.verifyExecution`,
-`python-verifier/verifier.py:1365-1413` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+`python-verifier/verifier.py:1358-1407` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 pass data to each other: the bus's `BusResult` to the table sumcheck, Flock's point and slices to
 ring switching. Against the honest prover of a stack `q` (`inst prog s`), that data is true of
 `q`; this module names what "true" means, the interface between the phases' completeness proofs.

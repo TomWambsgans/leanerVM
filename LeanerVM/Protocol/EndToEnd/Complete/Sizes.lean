@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Whir.Complete.Opening
 # The announced sizes and the commitment
 
 Steps 1 and 2 of `verify_execution` (`readSizes`, `commitStack`; `python-verifier/verifier.py:
-1371-1382` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`). The honest prover sends the
+1364-1375` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`). The honest prover sends the
 eight scalars `announce s ρ` (`Front.announce`: the memory's and the six tables' log-sizes, then
 the WHIR rate, each the Python's `E(n)`), then the stack's level-0 word.
 

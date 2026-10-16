@@ -66,7 +66,7 @@ walk row for row (`Front/WalkFaithful.lean`), and WHIR (`Whir/Sound/`).
 ## Findings along the way
 
 * **Model fidelity (fixed)**: the Clean DEREF table flushed its memory reads in the order ptr,
-  local, target; the deployed verifier uses ptr, target, local (`tables.rs:637-642`), which
+  local, target; the deployed verifier uses ptr, target, local (`tables.rs:642-647`), which
   matters for the bus's leaf stacking. Fixed at the source (`Arithmetization/Tables/Deref.lean`).
 * **Roadmap statements**: `no_row_at_sentinel` as written over `w.interactions` is false (the
   verifier's own sentinel pull); proved over the tables' rows. The blueprint's

@@ -16,7 +16,7 @@ public import LeanerVM.Protocol.ToCompPoly.Multilinear
 # The verifier's arithmetic as multilinear algebra
 
 The verifier program (`LeanerVM.Protocol.Verifier`, transcribed from `python-verifier/verifier.py`
-at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) computes with lists of `E`; the oracle
+at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) computes with lists of `E`; the oracle
 protocol computes with CompPoly's tables `CMlPolynomialEval` and their extension `evalMle`. This
 module proves the two agree where the verifier calls them:
 

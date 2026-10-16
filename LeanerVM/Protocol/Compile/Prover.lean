@@ -16,17 +16,18 @@ public import LeanerVM.Protocol.ToArkLib.Merkle
 # The honest prover and the completeness of the compilation
 
 Category B for the prover, transcribed from the pinned leanVM
-(`a386121f84292f6fa663aaa3e570c15bc0240ea2`):
+(`127510d14c98ade4e8a97646c44fa7f1ff5e752d`):
 
 * the Fiat–Shamir chain is the one `run` checks (`crates/fiat_shamir/src/lib.rs:85-99`,
   `observe`, `sample`): a scalar sent is absorbed with tag `1`, a challenge squeezed with tag `2`;
-* the proof of work is `grind_pow` (`lib.rs:47-51, 108-155`): at `bits = 0` the canonical nonce `0`,
+* the proof of work is `grind_pow` (`lib.rs:47-51, 108-174`): at `bits = 0` the canonical nonce `0`,
   otherwise the smallest `u64` nonce `n`, as the scalar with limbs `(n, 0, 0)`, whose digest
   `H(H(cv ‖ (0, 3)) ‖ (n, 4))` has its low `bits` bits zero; the nonce is then absorbed with
   tag `4`. Here the search is bounded by a `fuel`: nonces `0, …, fuel - 1` (`findNonce`);
-* a commitment is the Merkle tree of `merkle_tree` (`crates/pcs/src/merkle.rs:119-142`): the
-  `2^height` rows of the word hashed as the little-endian bytes of their `K` words, each parent
-  the hash of the 64 bytes of its children, left first (`crates/fiat_shamir/src/merkle.rs:40-67`);
+* a commitment is the Merkle tree of `merkle_tree` (`crates/pcs/src/merkle.rs:50-61`): the
+  `2^height` rows of the word hashed as the little-endian bytes of their `K` words (`:401-404`),
+  each parent the hash of the 64 bytes of its children, left first
+  (`crates/fiat_shamir/src/merkle.rs:21-34`);
   its root goes on the stream as two scalars (`digestScalars`, `hash_to_scalars`);
 * an opening is the row at the position's low `height` bits and its authentication path,
   leaf level first, one per queried position, in the order the verifier reads them (the

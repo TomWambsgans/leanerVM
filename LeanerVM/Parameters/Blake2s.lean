@@ -16,8 +16,8 @@ Both tables were dumped mechanically by `scripts/dump-blake2s.py constants` from
 https://www.rfc-editor.org/rfc/rfc7693.txt (SHA-256
 `c943754888364fe29bbd0bb3c71c6658ef392371497eaa4a9d9dde015b0721e5`) and pasted verbatim.
 
-The pinned leanVM carries the same tables at `crates/primitives/src/hash.rs:19-49`
-(`IV`, `SIGMA`, commit `a386121f84292f6fa663aaa3e570c15bc0240ea2`); the RFC is the authority
+The pinned leanVM carries the same tables at `crates/primitives/src/hash/mod.rs:30-61`
+(`IV`, `SIGMA`, commit `127510d14c98ade4e8a97646c44fa7f1ff5e752d`); the RFC is the authority
 cited here, and `tests/LeanerVMTests/Parameters/Blake2s.lean` checks `iv` against the RFC's
 defining formula and `sigma` for being ten permutations.
 -/

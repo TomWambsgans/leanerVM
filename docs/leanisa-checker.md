@@ -2,9 +2,10 @@
 
 The checker validates a fixed final image against the existing Lean ISA. It does not generate
 memory, prove Rust correct, or check an executable proof verifier. The semantic reference
-remains pinned to leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The optional Rust
-regression lane separately tests `48a904208d682848dac0e18ef8b01ebfc40df9ad`; it does
-not change that pin or claim coverage of every change between those revisions.
+remains pinned to leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, whose ISA and memory
+semantics are those of the previous pin `a386121f84292f6fa663aaa3e570c15bc0240ea2`. The
+optional Rust regression lane separately tests `48a904208d682848dac0e18ef8b01ebfc40df9ad`; it
+does not change that pin or claim coverage of every change between those revisions.
 
 ## Proved interfaces
 

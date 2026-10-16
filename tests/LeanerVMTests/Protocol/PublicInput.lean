@@ -590,7 +590,7 @@ example {σ : Type} (init : ProbComp σ) (impl : QueryImpl []ₒ (StateT σ Prob
 /-- The pool with every unsent line's claim at the constant `0`, as earlier deployed verifiers
 pooled the top limb (`cpu/mod.rs:674-682` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`),
 instead of the value computed from the statement, which the verifiers at leanVM
-`127510d14c98ade4e8a97646c44fa7f1ff5e752d` compute for every limb (`verifier.py:1393`). -/
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` compute for every limb (`verifier.py:1393-1394`). -/
 def poolZero (I : M3Instance) (s : I.Stmt × TableOut I) (r : E) (cs : List E)
     (h : cs.length = sentCount I (I.publicLines s.1)) : I.Stmt × PubOut I :=
   (s.1, ⟨s.2.columns ++ claimsWith I r (fun _ ↦ 0) (I.publicLines s.1) cs h⟩)

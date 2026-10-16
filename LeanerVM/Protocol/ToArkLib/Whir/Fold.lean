@@ -16,10 +16,15 @@ public import ArkLib.Data.CodingTheory.ReedSolomon.MutualCorrelatedAgreement.Lin
 /-!
 # Folding interleaved words
 
-Annex B of the leanVM specification (leanVM `a386121f`,
+Annex B of the leanVM specification (leanVM `127510d1`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`): the fold of `def:interleaved`, the fact
 `fact:fold-decode` that folding commutes with decoding, and the lemma `lem:fold-list` that
 folding preserves lists outside few challenges, in count form.
+
+The count bounds here are the row-by-row union bound of the Annex at `a386121f` (`|ρ|` times the
+pair bound, the `2^{ℓ-1} ε` of that revision). At `127510d1` `lem:fold-list` states the bound `ε`
+without the row-union factor, from Jo's interleaving stability theorem (`Jo26`, Thm. 4.4,
+`b-polynomial-commitment-scheme.tex:189-205`); that sharper statement is not formalized here.
 
 ## One coordinate
 

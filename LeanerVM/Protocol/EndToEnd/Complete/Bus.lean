@@ -14,8 +14,8 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Gkr
 /-!
 # The bus phase
 
-The verifier program's bus phase (`verifyBusBalance`, `python-verifier/verifier.py:536-592` at
-leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`), against the honest prover of a stack `q`
+The verifier program's bus phase (`verifyBusBalance`, `python-verifier/verifier.py:534-593` at
+leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`), against the honest prover of a stack `q`
 satisfying the leanISA instance's relation.
 
 **The leaves.** Each side of the bus is a grand product over the cube of `2^D` leaves, `D` the
@@ -52,7 +52,7 @@ open LeanerVM.Protocol.Whir.Complete Finset
 @[expose] public section
 
 /-- The tail of `verify_bus_balance` after the reads: the claims, the point, the forms and the
-totals (`verifier.py:571-592`). -/
+totals (`verifier.py:572-593`). -/
 def busOut (layout : Verifier.Layout) (alphas : List E) (beta : E)
     (point treeValues memory : List E)
     (memoryFinal bytecodeFinal : E) : BusResult :=

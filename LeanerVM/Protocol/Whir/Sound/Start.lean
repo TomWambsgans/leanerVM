@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.Whir.Sound.Candidates
 # The starting relation
 
 The opening's input (`verify_whir(log_n, log_inv_rate, target, root, evaluate_basis)`,
-`python-verifier/verifier.py:1006` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) is the
+`python-verifier/verifier.py:1008` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is the
 level-0 commitment `W₀`, a weight function `w` (the batched `evaluate_basis`, a function of a point
 of the stack's cube, bit `0` first) and a target `t`. Its relation, in the terms of
 `LeanerVM.Protocol.EndToEnd.Candidates`: **every candidate `q` of `W₀` at the Johnson threshold

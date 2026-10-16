@@ -19,7 +19,7 @@ public import Mathlib.Basic.ENNReal.Operations
 # The verifier language
 
 leanVM's verifier (`python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, class `Transcript`, lines 346-417) touches the proof
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, class `Transcript`, lines 345-416) touches the proof
 through five operations, and computes everything else from their results:
 
 * `next_scalar`: read the next field element of the proof stream and absorb it into the
@@ -55,7 +55,7 @@ verifier.
 ## Conventions
 
 * A committed matrix is a `Word`: position `p` holds the row `word (p % 2^height)`, the reading
-  the Merkle path gives a position (its low `height` bits pick the leaf, `verifier.py:398`).
+  the Merkle path gives a position (its low `height` bits pick the leaf, `verifier.py:397`).
 * A history records a commitment with its shape and word, an opening with the rows the words
   give (`answer`); `Reachable P h` says `h` is a run of `P` with every opening answered from the
   words committed before it, and every committed word well shaped.

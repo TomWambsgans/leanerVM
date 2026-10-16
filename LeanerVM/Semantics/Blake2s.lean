@@ -22,13 +22,13 @@ Wilcox-O'Hearn, Winnerlein, *BLAKE2: simpler, smaller, fast as MD5*, §2.3–§2
 implementation `blake2s-ref.c` initialises `v[14] = f[0] ^ IV[6]` and `v[15] = f[1] ^ IV[7]`,
 where `f[0]` (last block) and `f[1]` (last node) are 32-bit words equal to `0xFFFFFFFF` when set.
 The pinned leanVM computes exactly this function, taking both flags as words:
-`crates/flock/src/hash.rs:191-231` (`g_fn`, `initial_state`, `blake2s_compress`) at
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. The RFC's Boolean `f` is the word `0xFFFFFFFF`.
+`crates/flock/src/hash.rs:189-229` (`g_fn`, `initial_state`, `blake2s_compress`) at
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. The RFC's Boolean `f` is the word `0xFFFFFFFF`.
 
-**The cell encoding** is transcribed from `crates/lean_vm/src/hash_flock.rs:117-139` and
-`:162-185` (`words_of`, `pack_words`, `metadata`, `unpack_metadata`, `compression`, `digest`)
-and `crates/lean_vm/src/cpu/execute.rs:779-812` at the pin, and agrees with specification §2
-(`doc/leanvm/body/02-vm-specification.tex:90-93`) and §7 (`07-instruction-tables.tex:114-123`):
+**The cell encoding** is transcribed from `crates/leanvm_core/src/hash_flock.rs:110-132` and
+`:155-178` (`words_of`, `pack_words`, `metadata`, `unpack_metadata`, `compression`, `digest`)
+and `crates/leanvm_core/src/cpu/execute.rs:872-902` at the pin, and agrees with specification §2
+(`doc/leanvm/body/02-vm-specification.tex:92-95`) and §7 (`07-instruction-tables.tex:114-123`):
 
 * a canonical cell `a0 + a1·y` is the little-endian 128-bit value `a0 ‖ a1`, read as four 32-bit
   words, low word of `a0` first (`cellWords`);
@@ -121,23 +121,23 @@ def highWord (a : K) : UInt32 := ⟨a.toBitVec.extractLsb' 32 32⟩
 def ofWords (lo hi : UInt32) : K := BF64.ofBitVec (hi.toBitVec ++ lo.toBitVec)
 
 /-- The four little-endian words of a canonical cell `a0 + a1·y`: the low and high words of `a0`,
-then those of `a1` (`hash_flock.rs:117-121`, `words_of`; the top limb is ignored). -/
+then those of `a1` (`hash_flock.rs:110-114`, `words_of`; the top limb is ignored). -/
 def cellWords (x : E) : Vector UInt32 4 :=
   #v[lowWord (x.limb 0), highWord (x.limb 0), lowWord (x.limb 1), highWord (x.limb 1)]
 
-/-- The canonical cell holding four little-endian words (`hash_flock.rs:123-126`,
+/-- The canonical cell holding four little-endian words (`hash_flock.rs:116-119`,
 `pack_words`). -/
 def wordsCell (w : Vector UInt32 4) : E :=
   E.ofLimbs (ofWords w[0] w[1]) (ofWords w[2] w[3]) 0
 
-/-- The metadata cell `counter ‖ final ‖ last_node` (`hash_flock.rs:128-139`; specification §2):
+/-- The metadata cell `counter ‖ final ‖ last_node` (`hash_flock.rs:121-132`; specification §2):
 the counter is limb 0, the last-block and last-node flag words are the low and high halves of
 limb 1. -/
 def unpackMetadata (md : E) : UInt64 × UInt32 × UInt32 :=
   (⟨(md.limb 0).toBitVec⟩, lowWord (md.limb 1), highWord (md.limb 1))
 
 /-- The sixteen message words of the four message cells, in operand order
-(`hash_flock.rs:162-172`). -/
+(`hash_flock.rs:155-165`). -/
 def messageWords (m : Fin 4 → E) : Vector UInt32 16 :=
   cellWords (m 0) ++ cellWords (m 1) ++ cellWords (m 2) ++ cellWords (m 3)
 

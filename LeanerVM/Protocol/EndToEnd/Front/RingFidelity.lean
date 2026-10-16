@@ -12,8 +12,8 @@ public import LeanerVM.Protocol.EndToEnd.Front.RingSwitch
 /-!
 # The fidelity of ring switching
 
-The program (`_phi`, `_ring_weight`, `ring_switch`, `verifier.py:1311-1347` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) against ArkLib's ring switching
+The program (`_phi`, `_ring_weight`, `ring_switch`, `verifier.py:1304-1340` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) against ArkLib's ring switching
 (`ToArkLib/Flock/RingSwitch.lean`):
 
 * `phiMap_eq`: the program's `Φ`, a fold over the six coefficients with shifts

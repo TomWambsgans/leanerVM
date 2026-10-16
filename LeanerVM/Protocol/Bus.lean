@@ -20,7 +20,7 @@ import CompPoly.Multivariate.MvPolyEquiv.Eval
 # The bus phase
 
 Specification §5.2–§5.4 (`doc/leanvm/body/05-arithmetization.tex:18-123` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`), over an abstract instance `I`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`), over an abstract instance `I`.
 
 The bus has three sides: the pushed tuples, the pulled tuples, and the count columns. Each side's
 tuples come in *blocks*: a boundary block's `2 ^ κ` tuples, one flush of one table (a tuple per
@@ -60,8 +60,12 @@ it this way.
 
 The phase's side conditions (`Conditions`): the degree bound is at least one (a count column's
 form is its variable); a table with a constraint fits in the leaf stacks' depth, so that `ζ` has
-a point for it (`constraints.rs:250-253`); and the pull and count sides fit in `2 ^ μ_bus`, the
-push side's depth, which the deployed verifier asserts of its layouts (`leaf.rs:123-138`).
+a point for it (the verifier reads `ζ` at every variable below the tallest table's height,
+`crates/verifier/src/bus.rs:221-230`; its explicit rejection of a shorter `ζ`,
+`crates/lean_vm/src/constraints.rs:250-253` at `a386121f`, is removed at `127510d1`); and the pull
+and count sides fit in `2 ^ μ_bus`, the push side's depth, which the deployed prover asserts of
+its layouts (`crates/leanvm_core/src/leaf.rs:115-130`, called at `:628`; the verifier's own call,
+`leaf.rs:875` at `a386121f`, is removed at `127510d1`).
 
 Perfect completeness (`busComplete`), from `Seam.commit` to `Seam.bus`: on a stack satisfying
 `M3Holds`, the products of the push and pull sides agree at every `(α, β)` (balance is a
@@ -70,9 +74,10 @@ vanish, lines and Flock predicate hold), and at the end the honest values make e
 and the forms sum to the totals.
 
 Written from the specification; the layout and its tie order, the count blocks and the order of
-the messages are transcribed from `crates/lean_vm/src/leaf.rs` at the pin (the layout `:149-156`,
-the leaves `:187-262`, the decomposition `:389-461`, the verifier `:864-935`) and
-`crates/lean_vm/src/gkr.rs:247-430`.
+the messages are transcribed from `crates/leanvm_core/src/leaf.rs` at the pin (the layout
+`:141-148`, the leaves `:179-255`, the decomposition `:381-451`), the verifier
+`crates/verifier/src/bus.rs:107-209` (`verify_bus_balance`), the prover's grand product
+`crates/leanvm_core/src/gkr.rs:299-418` and its verifier `crates/verifier/src/bus.rs:12-49`.
 -/
 
 namespace LeanerVM.Protocol

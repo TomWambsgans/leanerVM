@@ -14,8 +14,8 @@ public import LeanerVM.Protocol.ToArkLib.Whir.Counting
 /-!
 # Uniformity of the query positions
 
-`sample_queries(transcript, 2^depth, t)` (`python-verifier/verifier.py:943-951` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, `LeanerVM.Protocol.Verifier.sampleQueries`) draws
+`sample_queries(transcript, 2^depth, t)` (`python-verifier/verifier.py:945-953` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, `LeanerVM.Protocol.Verifier.sampleQueries`) draws
 samples `c ∈ E` and reads `int(c)` (`eToNat`, the three limbs as one 192-bit integer); the chunks
 `(int(c) >> (k·depth)) mod 2^depth`, `k < min(192/depth, remaining)`, are the positions.
 

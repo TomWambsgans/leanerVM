@@ -14,16 +14,16 @@ import Mathlib.Data.Nat.Log
 # The fill plan
 
 leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Category B, the arithmetic of
-`crates/lean_vm/src/cpu/filler.rs:112-177` (`decompose`, `decompose_jump`, `solve`), identical at
-leanVM `48a904208d682848dac0e18ef8b01ebfc40df9ad`. Only the arithmetic is here; the rows a plan
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Category B, the arithmetic of
+`crates/leanvm_core/src/cpu/filler.rs:116-181` (`decompose`, `decompose_jump`, `solve`), identical
+at leanVM `48a904208d682848dac0e18ef8b01ebfc40df9ad`. Only the arithmetic is here; the rows a plan
 delivers are `Semantics.PaddedRows`.
 
 **Every table but `JUMP`.** A table with `n` rows is filled to `fillTarget n (minRows op)`, the
-least power of two at least `n`, the table's floor and `1` (`cpu/filler.rs:123-126`, `:163`; the
+least power of two at least `n`, the table's floor and `1` (`cpu/filler.rs:127-130`, `:167`; the
 floor is `8` for `BLAKE2S` only, `:43`). The fill `p = target - n` is delivered by traversals of
 the blocks of `fillSizes`: `fillGreedy p` is as many of the largest block as fit, then the binary
-digits of the rest (`:112-121`). A traversal of the size-`s` block gives the table `s` rows and
+digits of the rest (`:116-125`). A traversal of the size-`s` block gives the table `s` rows and
 the `JUMP` table one (the closing jump), so the traversals of one table cost `fillTraversals p`
 `JUMP` rows, at most one per `128` rows of fill plus seven. That a traversal costs the `JUMP`
 table a row whichever table it fills is forced, not chosen: a closed run shorter than `2^64 - 1`
@@ -35,7 +35,7 @@ its own fill is delivered by its own blocks, whose traversals give it `s + 1` ro
 (`s` dummies that fall through, and the closing jump). The smallest traversal gives two rows, so a
 gap of exactly one row is the one amount that cannot be delivered, and every other gap is a sum of
 twos and threes (`jump_gap_decomp`). `JumpFeasible owed` says some power of two within the row cap
-is at least the rows owed and is not one more than them (`cpu/filler.rs:131-132`, `:169-176`).
+is at least the rows owed and is not one more than them (`cpu/filler.rs:135-136`, `:173-180`).
 
 This is a plan, not the Rust's `solve`: Layer 10 needs the existence of one, and matching the
 Rust's choices (its greedy loop for `JUMP`) is the witness generator's job (T2).
@@ -63,11 +63,11 @@ def minRows : Opcode → ℕ
   | _ => 1
 
 /-- The height a table with `n` rows is filled to: the least power of two at least `n`, `floor`
-and `1` (`cpu/filler.rs:123-126`, `ceil_pow2`, and `:163`). -/
+and `1` (`cpu/filler.rs:127-130`, `ceil_pow2`, and `:167`). -/
 def fillTarget (n floor : ℕ) : ℕ := 2 ^ Nat.clog 2 (max (max n floor) 1)
 
 /-- The traversals that deliver a fill of `p` rows, per size of `fillSizes`: as many of the
-largest block as fit, then one per set bit of the remainder (`cpu/filler.rs:112-121`). -/
+largest block as fit, then one per set bit of the remainder (`cpu/filler.rs:116-125`). -/
 def fillGreedy (p : ℕ) : List ℕ :=
   [p / 128, p % 128 / 64, p % 64 / 32, p % 32 / 16, p % 16 / 8, p % 8 / 4, p % 4 / 2, p % 2]
 
@@ -76,14 +76,14 @@ def fillTraversals (p : ℕ) : ℕ := (fillGreedy p).sum
 
 /-- The rows the `JUMP` table owes before its own fill, given the rows `rows` each table has: its
 own, and one closing jump for every traversal of the fill of every other table
-(`cpu/filler.rs:166-167`, `owed`). -/
+(`cpu/filler.rs:170-171`, `owed`). -/
 def jumpOwed (rows : Opcode → ℕ) : ℕ :=
   rows .jump + ((fillTables.filter (· ≠ .jump)).map fun op ↦
     fillTraversals (fillTarget (rows op) (minRows op) - rows op)).sum
 
 /-- The `JUMP` table owing `owed` rows can be filled within the row cap: some power of two at most
 `2^maxLogRows` is at least `owed` and is not `owed + 1`, since no traversal delivers a single row
-(`cpu/filler.rs:131-132`). -/
+(`cpu/filler.rs:135-136`). -/
 def JumpFeasible (owed : ℕ) : Prop :=
   ∃ τ ≤ maxLogRows, owed ≤ 2 ^ τ ∧ 2 ^ τ ≠ owed + 1
 
@@ -129,7 +129,7 @@ theorem fill_rows_sum (n floor : ℕ) :
   exact Nat.add_sub_cancel' (le_fillTarget n floor)
 
 /-- The bulk of a fill rides the largest block: one closing jump per `128` rows, and at most seven
-more for the remainder (`cpu/filler.rs:262-275`, `fill_uses_bulk_blocks`). -/
+more for the remainder (`cpu/filler.rs:283-296`, `fill_uses_bulk_blocks`). -/
 theorem fillTraversals_le (p : ℕ) : fillTraversals p ≤ p / 128 + 7 := by
   -- Each remaining digit is at most one. Proved one at a time: `omega` over all of the nested
   -- quotients and remainders at once does not terminate in reasonable time.
@@ -147,7 +147,7 @@ theorem fillTraversals_le (p : ℕ) : fillTraversals p ≤ p / 128 + 7 := by
 
 /-- The traversals that deliver a `JUMP` gap, as the pair (size-one, size-two): a gap is twos from
 the size-one block (a dummy jump and the closing jump) and threes from the size-two block, so an
-even gap is all twos and an odd one takes one three (`cpu/filler.rs:128-147`). -/
+even gap is all twos and an odd one takes one three (`cpu/filler.rs:132-151`). -/
 def jumpMix (gap : ℕ) : ℕ × ℕ :=
   if gap % 2 = 0 then (gap / 2, 0) else ((gap - 3) / 2, 1)
 
@@ -158,7 +158,7 @@ theorem jumpMix_spec {gap : ℕ} (h : gap ≠ 1) :
   split_ifs with he <;> simp only <;> omega
 
 /-- Every gap but one is a sum of twos and threes, the rows of a traversal of the size-one and the
-size-two `JUMP` block (`cpu/filler.rs:128-147`). -/
+size-two `JUMP` block (`cpu/filler.rs:132-151`). -/
 theorem jump_gap_decomp (gap : ℕ) (h : gap ≠ 1) : ∃ a b : ℕ, gap = 2 * a + 3 * b :=
   ⟨_, _, (jumpMix_spec h).symm⟩
 

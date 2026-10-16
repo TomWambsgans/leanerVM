@@ -17,10 +17,10 @@ public import LeanerVM.Protocol.ToArkLib.Whir.Counting
 /-!
 # Escapes at the level interface
 
-Annex B of the leanVM specification (leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`,
+Annex B of the leanVM specification (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`), proof of Theorem `thm:rbr`, "OOD
 challenge", "Query message" and "Batching challenge", for the deployed order of messages
-(`verify_whir`, `python-verifier/verifier.py:1026-1063`): commitment of the next oracle `O'`, the
+(`verify_whir`, `python-verifier/verifier.py:1026-1062`): commitment of the next oracle `O'`, the
 out-of-domain point `z` and answer `y` with its intro polynomial, the proof of work, the query
 positions, `λ`, the openings, the query intro polynomial. The level's claims are glued with
 powers of `λ`: the running claim with `λ⁰`, the out-of-domain claim with `λ`, the `t` consistency

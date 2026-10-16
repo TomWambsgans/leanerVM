@@ -19,17 +19,17 @@ public import Clean.Utils.Tactics.CircuitProofStart
 # The `BLAKE2S` table
 
 leanISA roadmap Layer 6 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the columns
-are `crates/lean_vm/src/tables.rs:833-863` (`mod blake2st`, in that order), the flushes
-`tables.rs:873-908` (`Blake2sTable::flushes`), matching specification §7.6
-(`doc/leanvm/body/07-instruction-tables.tex:114-141`). There is no table constraint: the
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the columns
+are `crates/leanvm_core/src/tables.rs:838-868` (`mod blake2st`, in that order), the flushes
+`tables.rs:878-913` (`Blake2sTable::flushes`), matching specification §7.6
+(`doc/leanvm/body/07-instruction-tables.tex:114-139`). There is no table constraint: the
 compression relation is proved by Flock on the eighteen limbs committed to `q_flock`.
 
 **The row** `Blake2sRow` is the column list: `pc, fp`; the operands `o_{m₀}, …, o_{m₃}, o_cv,
 o_out, o_md`; the eighteen limbs, two per cell, in the Rust order (the four message cells, the
 output pair, the chaining-value pair, the metadata cell); one memory count per cell; the
 bytecode count `r_bc`. Every cell is canonical: its top limb is a literal zero on the bus
-(`memory_128`, `tables.rs:180-182`), never a column.
+(`memory_128`, `tables.rs:184-186`), never a column.
 
 **The relation.** `Blake2sBindings mem r` binds the row to an image: the nine cells
 `fp·o_{mᵢ}`, `fp·o_cv`, `fp·(g·o_cv)`, `fp·o_out`, `fp·(g·o_out)`, `fp·o_md` hold the row's
@@ -85,7 +85,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `BLAKE2S` columns, in the order of `tables.rs:833-863`: a cell's two limbs `(lo, hi)`
+/-- The `BLAKE2S` columns, in the order of `tables.rs:838-868`: a cell's two limbs `(lo, hi)`
 are a `Vector F 2`. -/
 structure Blake2sRow (F : Type) where
   /-- The program counter. -/
@@ -221,7 +221,7 @@ def Blake2sSpec (r : Blake2sRow K) (next : Regs K) (data : ProverData K) : Prop 
 
 /-! ## The table -/
 
-/-- The `BLAKE2S` table (specification §7.6; `tables.rs:833-951`): state step, bytecode read of
+/-- The `BLAKE2S` table (specification §7.6; `tables.rs:838-956`): state step, bytecode read of
 `(B2S, o_{m₀}, …, o_md)`, and the nine canonical cell reads. Returns the pushed successor
 `(g·pc, fp)`; sound under `Blake2sRelation`. -/
 def blake2sTable : GeneralFormalCircuit K Blake2sRow Regs where

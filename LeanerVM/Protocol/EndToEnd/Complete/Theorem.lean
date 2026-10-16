@@ -24,7 +24,7 @@ public import LeanerVM.Arithmetization.Completeness.Theorem
 
 The verifier is the program `leanVmProgram` (`LeanerVM.Protocol.Verifier.Verify`), the
 transcription of `verify_execution` of `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`. Its honest prover (`honestStrategy`) is assembled
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Its honest prover (`honestStrategy`) is assembled
 (`Complete.Assemble`) from the phases' honest scripts: the announcement and the commitment
 (`Complete.Sizes`), the bus (`Complete.Bus`), the table sumcheck (`Complete.Table`), the public
 input (`Complete.Public`), Flock (`Complete.Flock`), ring switching (`Complete.Ring`) and the WHIR
@@ -48,7 +48,7 @@ halves are the input's two memory words (`digestScalars_publicDigest`).
 ## The one open hypothesis
 
 Every theorem here takes `WalkFaithful blake2sFlockSpec` (`Front.FlockTerminal`): the verifier's
-forward walk of the BLAKE2s circuit (`blake2sRowValues`, `verifier.py:1180-1295`) computes the left
+forward walk of the BLAKE2s circuit (`blake2sRowValues`, `verifier.py:1179-1288`) computes the left
 and right products of the R1CS of `blake2sCircuit`. The lincheck's terminal check passes for the
 honest prover exactly when the program's terminal value is ArkLib's (`TerminalFaithful`), which
 `Front.terminalFaithful` derives from it. It is a fidelity fact of the transcription, shared with

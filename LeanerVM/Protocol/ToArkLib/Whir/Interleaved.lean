@@ -12,7 +12,7 @@ public import ArkLib.Data.CodingTheory.ReedSolomon
 /-!
 # Interleaved words and their lists
 
-The objects of Annex B, `def:interleaved`, of the leanVM specification (leanVM `a386121f`,
+The objects of Annex B, `def:interleaved`, of the leanVM specification (leanVM `127510d1`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`), for an arbitrary linear code
 `C : Submodule F (ι → F)` over a field and a finite row index `ρ`.
 

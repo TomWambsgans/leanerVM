@@ -190,8 +190,8 @@ def cells : Column 3 :=
 -- selector bit, the block filling the stack.
 #guard (strided.extend 1 #v[u, u + 1]).toList = [1, u, u + 1]
 
-/-- The Python verifier's `Placement.stack_point` (`python-verifier/verifier.py:287-297` at
-leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`): the bits of `index` as a point of
+/-- The Python verifier's `Placement.stack_point` (`python-verifier/verifier.py:285-295` at
+leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`): the bits of `index` as a point of
 `stackLog` coordinates, low bit first; the low `low` of them, then the claim's point, then the
 bits above the window. -/
 def stackPoint (nvars index low : ℕ) (point : List E) (stackLog : ℕ) : List E :=

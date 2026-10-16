@@ -13,7 +13,7 @@ public import VCVio.OracleComp.Constructions.SampleableType.Basic
 /-!
 # Out-of-domain separation
 
-Annex B of the leanVM specification (leanVM `a386121f`,
+Annex B of the leanVM specification (leanVM `127510d1`,
 `doc/leanvm/body/b-polynomial-commitment-scheme.tex`), `lem:ood`, in count form, for CompPoly's
 hypercube tables `CMlPolynomialEval F κ` and their multilinear extension `evalMle`, evaluated at
 points `z : Vector F κ`.

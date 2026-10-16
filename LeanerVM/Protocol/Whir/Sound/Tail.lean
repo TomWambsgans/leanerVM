@@ -15,8 +15,8 @@ public import LeanerVM.Protocol.Whir.Sound.LevelMidSpec
 
 On the final level the prover sends the residual table `f_final` (`2^κ` entries), so no list is
 involved: after the query group the verifier holds a claim about `f_final` itself, and the tail
-(`LeanerVM.Protocol.Verifier.tailRounds`, `python-verifier/verifier.py:1068-1074` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) is a plain sumcheck on it.
+(`LeanerVM.Protocol.Verifier.tailRounds`, `python-verifier/verifier.py:1067-1073` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is a plain sumcheck on it.
 
 * `tailMsg τ res n`: the residual folded by the tail challenges `τ` so far, as a message on `n`
   lane bits (the remaining variables) and no message bits.

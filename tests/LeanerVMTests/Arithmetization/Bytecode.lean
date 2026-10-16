@@ -10,7 +10,7 @@ One instruction per constructor, `DEREF` in each of its three modes, laid out by
 back by `decode` under compiled evaluation (roadmap acceptance test 16). The slot positions are
 pinned against the table of specification §8.1 (`08-end-to-end-protocol.tex:12-23`):
 `SET_CONSTANT`'s `k₂` at slot 7 and `BLAKE2S`'s `o_{m₃}, o_cv, o_out, o_md` at slots 7–10. The
-flag pairs and the opcode words are pinned against `cpu/isa.rs:69-78` and `tables.rs:95-100`.
+flag pairs and the opcode words are pinned against `cpu/isa.rs:68-75` and `tables.rs:99-104`.
 The mutations at the end reject the flag pair `(1, 1)` and a non-Boolean flag (acceptance test
 18), an unknown opcode, and a nonzero spare slot; the first is also derived from
 `decode_eq_none_iff`, so the rejection is a theorem and not only an evaluation.
@@ -38,7 +38,7 @@ def blakeI : Instr := .blake2s ![gpow 6, gpow 7, gpow 8, gpow 9] (gpow 10) (gpow
 
 /-! ## The flags and the codes -/
 
--- `Cell = (0, 0)`, `Pc = (1, 0)`, `Fp = (0, 1)` (`isa.rs:69-78`).
+-- `Cell = (0, 0)`, `Pc = (1, 0)`, `Fp = (0, 1)` (`isa.rs:68-75`).
 #guard derefFlags .cell = (0, 0)
 #guard derefFlags .pc = (1, 0)
 #guard derefFlags .fp = (0, 1)

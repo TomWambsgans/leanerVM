@@ -6,7 +6,7 @@ use std::fmt::Write;
 
 #[test]
 fn blake2s_distinct_non_boolean_flag_words() {
-    // leanVM a386121f: flock::hash::blake2s_compress consumes both raw u32 words.
+    // leanVM 127510d1: flock::hash::blake2s_compress consumes both raw u32 words.
     // The corresponding Lean vector is in Semantics/Blake2s.lean.
     let h = [7, 0, 0, 0, 11, 0, 0, 0];
     let m = [

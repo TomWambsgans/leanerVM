@@ -19,7 +19,7 @@ import Mathlib.Algebra.Polynomial.BigOperators
 # Honest sumcheck rounds on the wire
 
 The verifier program's `sumcheck claim count modes` (`LeanerVM.Protocol.Verifier.sumcheck`,
-`python-verifier/verifier.py:406-427` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) reads,
+`python-verifier/verifier.py:405-426` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) reads,
 per round, a polynomial of `count` coefficients with one coefficient left out: in plain mode
 (`none`) the linear one, in equality mode (`some r`) the constant one, which it derives from the
 running claim. Then it samples the challenge and moves to the polynomial's value there.

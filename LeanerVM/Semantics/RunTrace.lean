@@ -12,7 +12,7 @@ public import LeanerVM.Semantics.Execution
 # Relational steps and finite traces
 
 These relations expose the existing fixed-image semantics at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` without introducing a second instruction model.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` without introducing a second instruction model.
 Failed reads or checks have no successor. `RunTrace` includes the pre-fetch halting rule;
 its equivalence to exact `run` provides the finite-trace interface for state extraction
 and application proofs. No constraint-system or cryptographic soundness result is assumed.

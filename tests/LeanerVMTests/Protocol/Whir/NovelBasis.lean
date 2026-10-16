@@ -20,7 +20,8 @@ Compiled checks (`#guard`) at `κ = 3`, `R = 1` (a 16-point domain):
 * `inducedWeight` against the naive `Σ_q w_q Σ_u W_{x_q}(u)·eq(p, u)`, its `none` branch, and the
   column weight's evaluator against CompPoly's `evalMle` and `Weight.pair`;
 * constants from the pinned Python verifier (`python-verifier/verifier.py` at leanVM
-  `a386121f84292f6fa663aaa3e570c15bc0240ea2`, run with CPython): `_subspace_roots(3)` and
+  `a386121f84292f6fa663aaa3e570c15bc0240ea2`, run with CPython; both functions are unchanged at
+  `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 964-992): `_subspace_roots(3)` and
   `_subspace_roots(4)`, and `_induced_weight(3, [0, 1, 5, 13], powers(E(2, 3, 4), 4), p)` at
   `p = [E(5, 7, 1), E(0x1234, 0, 9), E(3, 1, 0)]`.
 -/

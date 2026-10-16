@@ -18,9 +18,9 @@ public import Clean.Utils.Tactics.CircuitProofStart
 # The `XOR` table
 
 leanISA roadmap Layer 6 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` and Clean pin `42fe4b26`. Category B: the columns
-are `crates/lean_vm/src/tables.rs:436-456` (`mod arith`, in that order), the flushes
-`tables.rs:483-495` (`Arith::flushes` with `is_xor`), the result coordinates `tables.rs:461-473`
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category B: the columns
+are `crates/leanvm_core/src/tables.rs:441-461` (`mod arith`, in that order), the flushes
+`tables.rs:488-500` (`Arith::flushes` with `is_xor`), the result coordinates `tables.rs:466-478`
 (`arith_result`, the lane-wise sum), all matching specification §7.1
 (`doc/leanvm/body/07-instruction-tables.tex:9-26`). There is no constraint: the bus balance is
 the assertion `[o_C] = [o_A] + [o_B]` (§5, "M3").
@@ -38,7 +38,7 @@ Layer 3's `execute` of the instruction the row names, `XOR o_A o_B o_C`, from th
 registers to `next`: the relation an `XOR` row refines, stated over the image itself, so that
 execution and witness proofs state their obligations over theirs. The program is not in it:
 the table is program-free, as leanVM's `XOR` AIR is (its bytecode flush is the constant opcode
-and its own operand columns, `tables.rs:143-152`), and which instruction the program holds at
+and its own operand columns, `tables.rs:147-156`), and which instruction the program holds at
 the row's counter is the bus's to bind (Layer 5's program paragraph; Layer 9).
 `xor_refines_iff` expands it into the opcode's equation, the word at `fp·o_C` is the sum of the
 two words in `E` (addition in `E`, whose limbs are bitwise `XOR` in `K`, never integer
@@ -113,7 +113,7 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The row -/
 
-/-- The `XOR` columns, in the order of `tables.rs:436-456`. -/
+/-- The `XOR` columns, in the order of `tables.rs:441-461`. -/
 structure XorRow (F : Type) where
   /-- The program counter. -/
   pc : F
@@ -190,7 +190,7 @@ def XorSpec (r : XorRow K) (next : Regs K) (data : ProverData K) : Prop :=
 
 /-! ## The table -/
 
-/-- The `XOR` table (specification §7.1; `tables.rs:436-521`): state step, bytecode read of
+/-- The `XOR` table (specification §7.1; `tables.rs:441-526`): state step, bytecode read of
 `(XOR, o_A, o_B, o_C, 0, 0, 0, 0)`, the two operand reads, and the result read carrying the
 limb-wise sum. Returns the pushed successor `(g·pc, fp)`. -/
 def xorTable : GeneralFormalCircuit K XorRow Regs where
