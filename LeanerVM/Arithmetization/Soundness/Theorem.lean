@@ -19,8 +19,8 @@ leanISA roadmap Layer 10 (`docs/roadmap/leanisa-blueprint.md`), soundness half, 
 `127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A, soundness
 direction of T1, for the proof system's constraint statement (`SatisfiedBy`). Artifact:
 `constraintSoundness`. Direction: soundness. Boundary: the Layer 8 statement, whose three
-hypotheses Clean cannot yet express and whose BLAKE2s validity are conjuncts; `WellFormedBytecode`,
-of which only `sentinelSafe` is used.
+hypotheses Clean cannot yet express and whose BLAKE2s validity are conjuncts; `SentinelSafe`
+(the last instruction is not a `JUMP`), the one condition on the program.
 
 **The trace.** The witness names its trace: the image the prover data names (`imageOf`), and as
 step count the length of the run Layer 9 extracts from the balanced state channel
@@ -57,10 +57,10 @@ constraint statement of well-formed bytecode on `input` represents a valid execu
 program on `input`: the trace is the image the data names and the run the state channel's balance
 contains, each of whose steps is a row of the witness. -/
 theorem constraintSoundness {prog : Program} {input : PublicInput}
-    {w : EnsembleWitness (leanIsaEnsemble prog)} (hwf : WellFormedBytecode prog)
+    {w : EnsembleWitness (leanIsaEnsemble prog)} (hsafe : SentinelSafe prog)
     (h : SatisfiedBy prog input w) :
     ∃ t, AssignmentRepresents w t ∧ ValidExecution prog input t := by
-  obtain ⟨f, hf, n, hn, hsteps⟩ := exists_walk hwf h
+  obtain ⟨f, hf, n, hn, hsteps⟩ := exists_walk hsafe h
   let t : Trace prog := ⟨(imageOf w.data).1, (imageOf w.data).2, n⟩
   have hv : run prog t.image t.steps Regs.initial = some (Regs.final prog) := hn
   refine ⟨t, ⟨rfl, fun _ _ ↦ rfl, ?_⟩,

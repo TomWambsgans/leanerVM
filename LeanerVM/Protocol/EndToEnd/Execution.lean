@@ -31,10 +31,10 @@ open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization LeanerVM.Pr
 stack satisfying the leanISA instance's relation reads back to a witness that represents a valid
 execution of the program on the input. -/
 theorem execution_of_extracted (F : FlockSpec) {prog : Program} {input : PublicInput}
-    {s : Sizes} {q : Column (leanIsaμ prog s)} (hwf : WellFormedBytecode prog)
+    {s : Sizes} {q : Column (leanIsaμ prog s)} (hsafe : SentinelSafe prog)
     (hs : s.Admissible prog) (h : M3Holds (leanIsaInstance F prog s) input q) :
     ∃ t, AssignmentRepresents (witnessOf F prog s q) t ∧ ValidExecution prog input t :=
-  constraintSoundness hwf (satisfiedBy_witnessOf F prog s q hs h)
+  constraintSoundness hsafe (satisfiedBy_witnessOf F prog s q hs h)
 
 end
 end LeanerVM.Protocol.EndToEnd

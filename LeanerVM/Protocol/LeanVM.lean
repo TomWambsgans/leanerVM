@@ -135,39 +135,65 @@ oracle's answers. -/
 noncomputable def experiment (prog : Program) (input : PublicInput) (A : Adversary) :=
   Rom.romExperiment A (verifier queryH prog input)
 
-/-- **The extractor**: from the oracle's answers and the proof, the witness of the committed
-stack (the committed word is read off the answers to the Merkle queries; the stack is a codeword
-of its Johnson list satisfying the relation, chosen classically). -/
+/-- The execution of `prog` on a memory image: the image, run from `(1, 1)` for the least number
+of steps after which it halts at `(g^(N − 1), 1)`; `none` if it never does. -/
+noncomputable def haltingRun (prog : Program) {κ : ℕ} (image : MemImage κ) : Option (Trace prog) :=
+  open Classical in
+  if h : ∃ n, run prog image n Regs.initial = some (Regs.final prog) then
+    some ⟨κ, image, Nat.find h⟩
+  else none
+
+/-- **The extractor**: from the oracle's answers and the proof, the execution the proof commits
+to: the memory image of the committed stack (the stack's commitment is read off the answers to
+the Merkle queries, and the stack is the codeword of its Johnson list satisfying the constraints,
+chosen classically), run until it halts. -/
 noncomputable def extract (prog : Program) (input : PublicInput) (answers : HashSpec.QueryCache)
-    (proof : Proof) : Option (EnsembleWitness (leanIsaEnsemble prog)) :=
-  (Sound.extractStack prog input answers proof).map fun x ↦
-    witnessOf Blake2sFlock.blake2sFlockSpec prog x.1 x.2
+    (proof : Proof) : Option (Trace prog) :=
+  (Sound.extractStack prog input answers proof).bind fun x ↦
+    let image := imageOf (witnessOf Blake2sFlock.blake2sFlockSpec prog x.1 x.2).data
+    haltingRun prog image.2
 
 /-- **The soundness error** of an adversary of `Q` queries: one `2^-128` per query of the
 adversary and the verifier (at most `13213`), plus collisions. -/
 noncomputable def soundnessError (Q : ℕ) : ℝ≥0∞ :=
   ((Q + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 + ((6 * (Q + 13213) : ℕ) : ℝ≥0∞) / 2 ^ 256)
 
-/-- **Knowledge soundness in the random-oracle model.** For well-formed bytecode and an adversary
-making at most `Q` queries, the verifier accepts while the extracted witness represents no valid
-execution of `prog` on `input` with probability at most `soundnessError Q`. -/
-theorem knowledgeSoundness {prog : Program} (input : PublicInput) (hwf : WellFormedBytecode prog)
+/-- A witness representing a valid execution has its image's halting run, valid. -/
+theorem haltingRun_valid {prog : Program} {input : PublicInput}
+    {w : EnsembleWitness (leanIsaEnsemble prog)} {t : Trace prog}
+    (hrep : AssignmentRepresents w t) (hv : ValidExecution prog input t) :
+    ∃ t', haltingRun prog (imageOf w.data).2 = some t' ∧ ValidExecution prog input t' := by
+  obtain ⟨κ, image, steps⟩ := t
+  obtain ⟨hκ, himage, -⟩ := hrep
+  generalize imageOf w.data = p at hκ himage ⊢
+  obtain ⟨κ', image'⟩ := p
+  dsimp only at hκ himage ⊢
+  subst hκ
+  obtain rfl : image' = image := funext fun i ↦ himage i i.isLt
+  have h : ∃ n, run prog image' n Regs.initial = some (Regs.final prog) := ⟨steps, hv.2⟩
+  exact ⟨⟨_, image', Nat.find h⟩, by simp only [haltingRun, h, ↓reduceDIte], hv.1, Nat.find_spec h⟩
+
+/-- **Knowledge soundness in the random-oracle model.** For a program whose last instruction is
+not a `JUMP`, and an adversary making at most `Q` queries, the verifier accepts while the
+extracted execution is not a valid execution of `prog` on `input` with probability at most
+`soundnessError Q`. -/
+theorem knowledgeSoundness {prog : Program} (input : PublicInput) (hsafe : SentinelSafe prog)
     {A : Adversary} {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
     Pr{let z ← experiment prog input A}[z.1.2 = true ∧
-      ¬ ∃ w t, extract prog input z.2 z.1.1 = some w ∧
-        AssignmentRepresents w t ∧ ValidExecution prog input t] ≤ soundnessError Q := by
+      ¬ ∃ t, extract prog input z.2 z.1.1 = some t ∧ ValidExecution prog input t] ≤
+      soundnessError Q := by
   have hV : verifier queryH prog input =
       verifierComp (leanVmSeed (Front.bytecodeWords prog) (Complete.publicDigest input))
         (leanVmProgram (Front.bytecodeWords prog) (Complete.publicDigest input)) :=
     funext fun π ↦ (verifierComp_leanVm _ _ π).symm
   have h := Sound.romSound_of_imp _ (Sound.leanVmCert prog input) _ Sound.εLean
     (Sound.leanVmCert_bound prog input) A Q hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
-    (fun π c ↦ ¬ ∃ w t, extract prog input c π = some w ∧
-      AssignmentRepresents w t ∧ ValidExecution prog input t)
+    (fun π c ↦ ¬ ∃ t, extract prog input c π = some t ∧ ValidExecution prog input t)
     (fun _ _ hv hb ↦ Sound.doomed_of_not_extracted prog input hv fun ⟨s, q, hx, hs, hM⟩ ↦
       hb (by
-        obtain ⟨t, ht⟩ := execution_of_extracted Blake2sFlock.blake2sFlockSpec hwf hs hM
-        exact ⟨_, t, by simp [extract, hx], ht⟩))
+        obtain ⟨t, hrep, ht⟩ := execution_of_extracted Blake2sFlock.blake2sFlockSpec hsafe hs hM
+        obtain ⟨t', ht', hv'⟩ := haltingRun_valid hrep ht
+        exact ⟨t', by simp only [extract, hx, Option.bind_some]; exact ht', hv'⟩))
   rw [leanVmQueryBound_eq] at h
   unfold experiment
   rw [hV]

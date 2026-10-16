@@ -51,7 +51,7 @@ example (prog : Program) (input : PublicInput)
   leanVm_knowledge prog input A QA hA
 
 example (prog : Program) (input : PublicInput)
-    (hwf : WellFormedBytecode prog) (A : OracleComp HashSpec Proof) (QA : ℕ)
+    (hsafe : SentinelSafe prog) (A : OracleComp HashSpec Proof) (QA : ℕ)
     (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
@@ -61,7 +61,7 @@ example (prog : Program) (input : PublicInput)
           ValidExecution prog input t] ≤
       ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
         failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
-  leanVm_execution prog input hwf A QA hA
+  leanVm_execution prog input hsafe A QA hA
 
 example (bytecode : List K) (publicInput : Digest) (QA : ℕ) (hQ : QA ≤ 2 ^ 64) :
     ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +

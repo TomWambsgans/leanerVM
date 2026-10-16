@@ -19,8 +19,8 @@ statement quantifies over the rows of `w.tables`.
 
 **The hypotheses of Lemma 6.3 are load-bearing.** A zero count is closed under multiplication by
 `g` (`zero_closed`), and so are the `2^64 - 1` powers of `g` (`powers_closed`): neither the nonzero
-count product nor the read bound can be dropped from the lookup argument. The `sentinelSafe` field
-of `WellFormedBytecode` is shown load-bearing at the semantic level by
+count product nor the read bound can be dropped from the lookup argument. Soundness's one program
+condition, `SentinelSafe`, is shown load-bearing at the semantic level by
 `tests/LeanerVMTests/Semantics/Execution.lean` (a `JUMP` at the sentinel chains two steps from the
 initial to the final registers, yet no run is a `ValidExecution`).
 -/
@@ -108,7 +108,7 @@ theorem bad_roundtrip :
       ∃ t, AssignmentRepresents w t ∧ ValidExecution ladderJumpProg badInput t ∧ t.steps = 1 := by
   obtain ⟨t', hp, hv', w, hs, hr'⟩ :=
     constraintCompleteness ladderJump_wellFormed badTrace_valid badTrace_fits
-  obtain ⟨t, hr, hv⟩ := constraintSoundness ladderJump_wellFormed hs
+  obtain ⟨t, hr, hv⟩ := constraintSoundness ladderJump_wellFormed.sentinelSafe hs
   refine ⟨w, hs, t, hr, hv, ?_⟩
   have himg := (assignmentRepresents_image hr).symm.trans (assignmentRepresents_image hr')
   show t.steps = badTrace.steps

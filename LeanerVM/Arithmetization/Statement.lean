@@ -474,13 +474,13 @@ theorem bytecode_channel_sound (h : SatisfiedBy prog input w) :
 
 /-- No row sits at the sentinel counter: its bytecode entry is not a `JUMP`, so the row would
 push `(g^N_prog, fp)`, a counter no bytecode read can balance (acceptance test 20). -/
-theorem no_row_at_sentinel (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w) :
+theorem no_row_at_sentinel (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w) :
     ∀ i ∈ w.interactions, i.channel.name = StatePull.name →
       ∀ pc fp : K, i.msg = #[pc, fp] → pc ≠ prog.finalPc
 
 /-- Specification Prop. 6.1: a balanced state channel over rows that are steps contains a run
 from `(1, 1)` to `(g^(N_prog - 1), 1)`; the remaining rows are closed walks. -/
-theorem exists_run_of_balanced (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w) :
+theorem exists_run_of_balanced (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w) :
     ∃ n, run prog (imageOf w.data).2 n Regs.initial = some (Regs.final prog)
 ```
 

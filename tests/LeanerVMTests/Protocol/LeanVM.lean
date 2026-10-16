@@ -14,12 +14,12 @@ example (prog : Program) (input : PublicInput) (proof : LeanVM.Proof) :
     verify prog input proof = Id.run (verifier LeanerVM.Protocol.Blake2sHash.blake2sBytes prog
       input proof) := rfl
 
-example {prog : Program} (input : PublicInput) (hwf : WellFormedBytecode prog) {A : Adversary}
+example {prog : Program} (input : PublicInput) (hsafe : SentinelSafe prog) {A : Adversary}
     {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
     Pr{let z ← experiment prog input A}[z.1.2 = true ∧
-      ¬ ∃ w t, extract prog input z.2 z.1.1 = some w ∧
-        AssignmentRepresents w t ∧ ValidExecution prog input t] ≤ soundnessError Q :=
-  knowledgeSoundness input hwf hA
+      ¬ ∃ t, extract prog input z.2 z.1.1 = some t ∧ ValidExecution prog input t] ≤
+      soundnessError Q :=
+  knowledgeSoundness input hsafe hA
 
 example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ ^ 63 := soundnessError_le hQ
 

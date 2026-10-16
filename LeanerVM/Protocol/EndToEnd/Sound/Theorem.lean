@@ -307,7 +307,7 @@ adversary of `QA` queries makes the deployed verifier accept a proof from which 
 does not extract sizes `s` and a stack `q` whose witness `witnessOf blake2sFlockSpec prog s q`
 represents a valid execution of `prog` on `input` with probability at most
 `(QA + 13213) · (2^-128 + failBound σ (QA + 13213))`. -/
-theorem leanVm_execution (hwf : WellFormedBytecode prog) (A : OracleComp HashSpec Proof)
+theorem leanVm_execution (hsafe : SentinelSafe prog) (A : OracleComp HashSpec Proof)
     (QA : ℕ) (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
@@ -322,7 +322,7 @@ theorem leanVm_execution (hwf : WellFormedBytecode prog) (A : OracleComp HashSpe
         extractStack prog input c π = some ⟨s, q⟩ ∧
         ∃ t, AssignmentRepresents (witnessOf F₀ prog s q) t ∧ ValidExecution prog input t)
     (fun _ _ hv hb ↦ doomed_of_not_extracted prog input hv fun ⟨s, q, hx, hs, hM⟩ ↦
-      hb ⟨s, q, hx, execution_of_extracted F₀ hwf hs hM⟩)
+      hb ⟨s, q, hx, execution_of_extracted F₀ hsafe hs hM⟩)
   rwa [leanVmQueryBound_eq] at h
 
 /-! ## The numbers -/

@@ -20,7 +20,7 @@ leanISA roadmap Layer 9 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
 `127510d14c98ade4e8a97646c44fa7f1ff5e752d` and Clean pin `42fe4b26`. Category A: specification
 Proposition 6.1 (`doc/leanvm/body/06-bus-interactions.tex`, §6.1) and roadmap acceptance tests 20
 and 21. Artifact: `no_row_at_sentinel` and `exists_run_of_balanced`. Direction: soundness.
-Boundary: the Layer 8 statement and `WellFormedBytecode`, of which only `sentinelSafe` is used;
+Boundary: the Layer 8 statement and `SentinelSafe` (the last instruction is not a `JUMP`);
 contributes to T1 (soundness).
 
 **The rows are steps** (`opRecs_step`). For a row of the six tables, the table's `Assumptions`
@@ -189,7 +189,7 @@ theorem two_pow_logSize_lt (prog : Program) : 2 ^ prog.logSize < 2 ^ 64 - 1 :=
 
 /-- **No row of the six tables sits at the sentinel counter**: its instruction is not a `JUMP`, so
 it would push `(g^N_prog, fp)`, which no pull balances. -/
-theorem opRecs_pc_ne_finalPc (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w)
+theorem opRecs_pc_ne_finalPc (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w)
     {f : Air.Flat.Table K × Array K → RowRec} (hf : OpRecs w f) {p : Air.Flat.Table K × Array K}
     (hp : p ∈ opPairs w) : (f p).pc ≠ prog.finalPc := by
   intro hfin
@@ -204,7 +204,7 @@ theorem opRecs_pc_ne_finalPc (hwf : WellFormedBytecode prog) (h : SatisfiedBy pr
     have hk' : k = ⟨2 ^ prog.logSize - 1, Nat.sub_lt (Nat.two_pow_pos _) (by decide)⟩ :=
       Fin.ext hkN
     rw [hk']
-    exact hwf.sentinelSafe
+    exact hsafe
   have hnext := hnj hsafe
   have hpush : regsArr ⟨gpow (2 ^ prog.logSize), (f p).fp⟩ ∈ messagesOn w StatePush.toRaw := by
     rw [statePush_eq h hf]
@@ -231,7 +231,7 @@ theorem opRecs_pc_ne_finalPc (hwf : WellFormedBytecode prog) (h : SatisfiedBy pr
 witness's tables carries the counter `g^(N_prog - 1)`. Its bytecode entry is not a `JUMP`, so the
 row would push `(g^N_prog, fp)`, a counter no bytecode read can balance. The verifier's own pull
 of the final registers is not a row (the module docstring). -/
-theorem no_row_at_sentinel (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w) :
+theorem no_row_at_sentinel (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w) :
     ∀ t ∈ w.tables, ∀ i ∈ t.interactions, i.channel.name = StatePull.name →
       ∀ pc fp : K, i.msg = #[pc, fp] → pc ≠ prog.finalPc := by
   obtain ⟨f, hf⟩ := exists_opRecs w
@@ -245,7 +245,7 @@ theorem no_row_at_sentinel (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog
     rw [(hf _ hp).1, RowRec.sends, chanOf, sendsOf_statePull, hmsg] at hsend
     have : pc = (f (t, row)).pc := (by simpa using hsend : _ ∧ _).1
     rw [this]
-    exact opRecs_pc_ne_finalPc hwf h hf hp
+    exact opRecs_pc_ne_finalPc hsafe h hf hp
   · exfalso
     have hblock : i.msg ∈ chanOf StatePull.name (tableSends t) :=
       (chanOf_flatMap' _ _ _).symm ▸ List.mem_flatMap.mpr ⟨row, hrow, hsend⟩
@@ -265,7 +265,7 @@ theorem no_row_at_sentinel (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog
 
 /-- **The walk of a satisfying witness**: records for its rows and a run from the initial to the
 final registers over the image the data names, each of whose steps is a row. -/
-theorem exists_walk (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w) :
+theorem exists_walk (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w) :
     ∃ f, OpRecs w f ∧ ∃ n, run prog (imageOf w.data).2 n Regs.initial = some (Regs.final prog) ∧
       ∀ k < n, ∃ p ∈ opPairs w, run prog (imageOf w.data).2 k Regs.initial = some (f p).src ∧
         run prog (imageOf w.data).2 (k + 1) Regs.initial = some (f p).next := by
@@ -277,13 +277,13 @@ theorem exists_walk (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input 
   have hperm := hb.map arrRegs
   simp only [List.map_cons, List.map_map, Function.comp_def, arrRegs_regsArr] at hperm
   exact exists_run_of_perm (fun p ↦ (f p).src) (fun p ↦ (f p).next) (opPairs w)
-    (fun p hp ↦ ⟨opRecs_pc_ne_finalPc hwf h hf hp, (opRecs_step h hf hp).1⟩) Regs.initial hperm
+    (fun p hp ↦ ⟨opRecs_pc_ne_finalPc hsafe h hf hp, (opRecs_step h hf hp).1⟩) Regs.initial hperm
 
 /-- **Specification Proposition 6.1**: a balanced state channel over rows that are steps contains a
 run from `(1, 1)` to `(g^(N_prog - 1), 1)`; the remaining rows are closed walks. -/
-theorem exists_run_of_balanced (hwf : WellFormedBytecode prog) (h : SatisfiedBy prog input w) :
+theorem exists_run_of_balanced (hsafe : SentinelSafe prog) (h : SatisfiedBy prog input w) :
     ∃ n, run prog (imageOf w.data).2 n Regs.initial = some (Regs.final prog) := by
-  obtain ⟨-, -, n, hn, -⟩ := exists_walk hwf h
+  obtain ⟨-, -, n, hn, -⟩ := exists_walk hsafe h
   exact ⟨n, hn⟩
 
 end LeanerVM.Arithmetization
