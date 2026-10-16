@@ -99,6 +99,7 @@ import LeanerVMTests.Protocol.EndToEnd.Front.Layout
 import LeanerVMTests.Protocol.EndToEnd.Complete.Basic
 import LeanerVMTests.Protocol.EndToEnd.Complete.Gkr
 import LeanerVMTests.Protocol.EndToEnd.Complete.Theorem
+import LeanerVMTests.Protocol.EndToEnd.Complete.Small
 import LeanerVMTests.Protocol.EndToEnd.Front.Stack
 import LeanerVMTests.Protocol.EndToEnd.Sound.Theorem
 import LeanerVMTests.Protocol.EndToEnd.Sound.Moves
