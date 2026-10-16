@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.TraceInput
-import LeanerVM.Semantics.FillerRows
+import LeanerVM.Arithmetization.Padding.TraceInput
+import LeanerVM.Arithmetization.Padding.FillerRows
 
 /-!
 # Rust export diagnostic harness
@@ -11,7 +11,7 @@ does not validate access-count columns, a complete assignment, or verifier accep
 hint list is passed to the carrier for speed only (`LeanerVM.Semantics.Executable`).
 -/
 
-namespace LeanerVMTests.Semantics.RustExport
+namespace LeanerVMTests.Arithmetization.Padding.RustExport
 
 open LeanerVM.Parameters LeanerVM.Semantics
 
@@ -42,4 +42,4 @@ def checkExport (prog : Program) (publicInput : PublicInput) (input : TraceInput
         (mainStates prog t.image hints t.steps (some Regs.initial))) &&
       checkFillerRows prog t.image hints fillerStarts
 
-end LeanerVMTests.Semantics.RustExport
+end LeanerVMTests.Arithmetization.Padding.RustExport

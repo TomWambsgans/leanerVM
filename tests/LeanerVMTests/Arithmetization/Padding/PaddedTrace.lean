@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.PaddedTrace
+import LeanerVM.Arithmetization.Padding.PaddedTrace
 import LeanerVMTests.Semantics.Execution
 
 /-!
@@ -11,7 +11,7 @@ changes a word below `2^κ` is not. The program with a single slot has the empty
 rows per table are all zero: the final state is not a row.
 -/
 
-namespace LeanerVMTests.Semantics.PaddedTrace
+namespace LeanerVMTests.Arithmetization.Padding.PaddedTrace
 
 open LeanerVM.Parameters LeanerVM.Semantics
 open LeanerVMTests.Semantics.Execution
@@ -109,4 +109,4 @@ example : (fillTables.map mulTrace.runRows).sum = mulTrace.steps := Trace.sum_ru
 example : mulTrace.steps ≤ 6 * 2 ^ maxLogRows :=
   mulTrace_fits.steps_le mul_run
 
-end LeanerVMTests.Semantics.PaddedTrace
+end LeanerVMTests.Arithmetization.Padding.PaddedTrace

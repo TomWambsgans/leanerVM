@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.FillRows
-import LeanerVMTests.Semantics.FillCycle
+import LeanerVM.Arithmetization.Padding.FillRows
+import LeanerVMTests.Arithmetization.Padding.FillCycle
 
 /-!
 # Layer 10 tests: the rows of a fill
@@ -10,11 +10,11 @@ rejections: the dummies of a block without its closing jump are not valid filler
 starts is not the multiset of successors), and a skeleton at the sentinel is not.
 -/
 
-namespace LeanerVMTests.Semantics.FillRows
+namespace LeanerVMTests.Arithmetization.Padding.FillRows
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.FillBlocks
-open LeanerVMTests.Semantics.FillSteps LeanerVMTests.Semantics.FillCycle
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.FillSteps LeanerVMTests.Arithmetization.Padding.FillCycle
 
 /-! ## Every fill is valid -/
 
@@ -93,4 +93,4 @@ theorem sentinel_skel_invalid (prog : Program) {κ : ℕ} (image : MemImage κ) 
     (ins : Instr) : ¬ SkelsValid prog image [⟨prog.finalPc, fp, ins⟩] := fun h ↦
   h.1 ⟨prog.finalPc, fp⟩ (by simp [Skel.regs]) rfl
 
-end LeanerVMTests.Semantics.FillRows
+end LeanerVMTests.Arithmetization.Padding.FillRows

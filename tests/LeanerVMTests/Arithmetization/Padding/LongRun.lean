@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.FillCycle
-import LeanerVM.Semantics.FillSteps
+import LeanerVM.Arithmetization.Padding.FillCycle
+import LeanerVM.Arithmetization.Padding.FillSteps
 
 /-!
 # Layer 10 tests: a valid run no fitting trace can have
@@ -19,7 +19,7 @@ no witness satisfies `Caps` and represents this trace needs `Caps` and `Assignme
 is checked with the completeness theorem.
 -/
 
-namespace LeanerVMTests.Semantics.LongRun
+namespace LeanerVMTests.Arithmetization.Padding.LongRun
 
 open LeanerVM.Parameters LeanerVM.Semantics
 
@@ -308,4 +308,4 @@ example : ∃ (input : PublicInput) (t : Trace shapeProg), ValidExecution shapeP
     ¬ t.Fits :=
   long_run_not_fits shapeProg shapeProg_shape
 
-end LeanerVMTests.Semantics.LongRun
+end LeanerVMTests.Arithmetization.Padding.LongRun

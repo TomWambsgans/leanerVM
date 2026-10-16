@@ -1,6 +1,6 @@
-import LeanerVM.Semantics.PaddedRows
-import LeanerVMTests.Semantics.FillPlan
-import LeanerVMTests.Semantics.PaddedTrace
+import LeanerVM.Arithmetization.Padding.PaddedRows
+import LeanerVMTests.Arithmetization.Padding.FillPlan
+import LeanerVMTests.Arithmetization.Padding.PaddedTrace
 
 /-!
 # Layer 10 tests: the rows of a padded trace
@@ -13,11 +13,11 @@ mutations: a `JUMP` gap of one, a `JUMP` table below what it owes, and no closin
 break the count.
 -/
 
-namespace LeanerVMTests.Semantics.PaddedRows
+namespace LeanerVMTests.Arithmetization.Padding.PaddedRows
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.FillPlan LeanerVMTests.Semantics.Execution
-open LeanerVMTests.Semantics.PaddedTrace
+open LeanerVMTests.Arithmetization.Padding.FillPlan LeanerVMTests.Semantics.Execution
+open LeanerVMTests.Arithmetization.Padding.PaddedTrace
 
 /-! ## The rows of a cycle -/
 
@@ -93,4 +93,4 @@ example (κ : ℕ) (pcs : Opcode → ℕ → ℕ) (op : Opcode) :
 #guard planDummies (planCount mulRows 3) .jump = 3
 #guard planDummies (planCount mulRows 3) .jump ≠ 2 ^ 3
 
-end LeanerVMTests.Semantics.PaddedRows
+end LeanerVMTests.Arithmetization.Padding.PaddedRows

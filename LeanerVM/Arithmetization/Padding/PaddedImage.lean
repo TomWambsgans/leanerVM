@@ -1,13 +1,13 @@
 /-
-  LeanerVM.Semantics.PaddedImage
+  LeanerVM.Arithmetization.Padding.PaddedImage
 
   The padded image: the committed image, extended by the frames the fill blocks run in.
 -/
 
 module
 
-public import LeanerVM.Semantics.Blake2sOutput
-public import LeanerVM.Semantics.PaddedRun
+public import LeanerVM.Arithmetization.Padding.Blake2sOutput
+public import LeanerVM.Arithmetization.Padding.PaddedRun
 
 /-!
 # The padded image

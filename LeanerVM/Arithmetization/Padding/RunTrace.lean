@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.RunTrace
+  LeanerVM.Arithmetization.Padding.RunTrace
 
   Relational views and finite ordered traces of the reference semantics.
 -/

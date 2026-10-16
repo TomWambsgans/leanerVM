@@ -1,12 +1,12 @@
 /-
-  LeanerVM.Semantics.PaddedRun
+  LeanerVM.Arithmetization.Padding.PaddedRun
 
   A run on a padded image is the run on the original: reading is monotone under extension.
 -/
 
 module
 
-public import LeanerVM.Semantics.PaddedTrace
+public import LeanerVM.Arithmetization.Padding.PaddedTrace
 
 /-!
 # Padding keeps the run
@@ -26,7 +26,7 @@ memory grows, not that it stays within what the verifier accepts.
 
 * The extension may not change a word below `2^t.κ`: `image_ext` is what the run's reads need, and
   a trace that changes a cell the run reads is not a padding and is not valid
-  (`tests/LeanerVMTests/Semantics/PaddedRun.lean`).
+  (`tests/LeanerVMTests/Arithmetization/Padding/PaddedRun.lean`).
 * Monotonicity is for success only: an unsuccessful read on the original (an address past the end)
   may succeed on the extension, so the extension can make more runs valid, never fewer.
 -/

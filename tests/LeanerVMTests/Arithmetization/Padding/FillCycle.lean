@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.FillCycle
-import LeanerVMTests.Semantics.FillSteps
+import LeanerVM.Arithmetization.Padding.FillCycle
+import LeanerVMTests.Arithmetization.Padding.FillSteps
 
 /-!
 # Layer 10 tests: the fill-block lemma
@@ -11,11 +11,11 @@ jump a block does not return, and the same closing slot run in another cycle's f
 that frame says, not to its own block.
 -/
 
-namespace LeanerVMTests.Semantics.FillCycle
+namespace LeanerVMTests.Arithmetization.Padding.FillCycle
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.FillBlocks
-open LeanerVMTests.Semantics.FillSteps
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.FillSteps
 
 /-- The table of a table's index is the table. -/
 theorem tableOf_tableIdx (t : Opcode) : tableOf (tableIdx t) = t := by
@@ -107,4 +107,4 @@ theorem close_goes_where_the_frame_says :
   revert this
   decide
 
-end LeanerVMTests.Semantics.FillCycle
+end LeanerVMTests.Arithmetization.Padding.FillCycle

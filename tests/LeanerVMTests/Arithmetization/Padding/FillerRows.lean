@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.FillerRows
+import LeanerVM.Arithmetization.Padding.FillerRows
 import LeanerVMTests.Semantics.Executable
 
 /-!
@@ -9,7 +9,7 @@ including duplicate rows. Failure, an open path, or a sentinel row invalidates t
 Hints, useless or duplicated, leave the check unchanged.
 -/
 
-namespace LeanerVMTests.Semantics.FillerRows
+namespace LeanerVMTests.Arithmetization.Padding.FillerRows
 
 open LeanerVM.Parameters LeanerVM.Semantics
 open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.Executable
@@ -38,4 +38,4 @@ example : checkFillerRows loopProgram loopImage [1000, 1, 1] [Regs.initial] =
   Bool.eq_iff_iff.mpr ((checkFillerRows_eq_true_iff (by decide) _ _ _ _).trans
     (checkFillerRows_eq_true_iff (by decide) _ _ _ _).symm)
 
-end LeanerVMTests.Semantics.FillerRows
+end LeanerVMTests.Arithmetization.Padding.FillerRows

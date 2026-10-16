@@ -48,7 +48,7 @@ def main() -> None:
                        cwd=source, env=env, check=True)
         if (source / "Cargo.lock").read_bytes() != lock:
             raise SystemExit("The reference Cargo.lock changed")
-        subprocess.run(["lake", "build", "LeanerVMTests.Semantics.RustExport"],
+        subprocess.run(["lake", "build", "LeanerVMTests.Arithmetization.Padding.RustExport"],
                        cwd=ROOT, check=True)
         for name in ("zero", "plain", "stale", "fillers", "unwritten_zero",
                      "xor_cancellation", "stale_mul"):

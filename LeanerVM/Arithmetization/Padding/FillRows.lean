@@ -1,13 +1,13 @@
 /-
-  LeanerVM.Semantics.FillRows
+  LeanerVM.Arithmetization.Padding.FillRows
 
   The rows the fill blocks add: one skeleton per row, and the proof that they are valid fillers.
 -/
 
 module
 
-public import LeanerVM.Semantics.FillCycle
-public import LeanerVM.Semantics.FillerRows
+public import LeanerVM.Arithmetization.Padding.FillCycle
+public import LeanerVM.Arithmetization.Padding.FillerRows
 
 /-!
 # The rows of a fill

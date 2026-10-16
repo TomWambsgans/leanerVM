@@ -1,5 +1,5 @@
 import LeanerVM.Arithmetization.Completeness.Theorem
-import LeanerVMTests.Semantics.PaddedImageRefutation
+import LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
 
 /-!
 # Layer 10 tests: constraint completeness
@@ -16,8 +16,8 @@ has one step, and a padded trace has the same.
 namespace LeanerVMTests.Arithmetization.Completeness.Theorem
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
-open LeanerVMTests.Semantics.PaddedImageRefutation
-open LeanerVMTests.Semantics.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
+open LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-- The sentinel counter of a `2^11`-slot program, as a literal term (status finding E8). -/
 local notation "d₀" => (gpow 2047 : K)

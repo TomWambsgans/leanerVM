@@ -1,6 +1,6 @@
 import LeanerVM.Arithmetization.Completeness.Theorem
-import LeanerVMTests.Semantics.FillBlocks
-import LeanerVMTests.Semantics.LongRun
+import LeanerVMTests.Arithmetization.Padding.FillBlocks
+import LeanerVMTests.Arithmetization.Padding.LongRun
 
 /-!
 # Layer 10 tests: no witness represents a run that does not fit
@@ -24,7 +24,7 @@ namespace LeanerVMTests.Arithmetization.Completeness.LongRun
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
 open Air.Flat (EnsembleWitness)
-open LeanerVMTests.Semantics.FillBlocks LeanerVMTests.Semantics.LongRun
+open LeanerVMTests.Arithmetization.Padding.FillBlocks LeanerVMTests.Arithmetization.Padding.LongRun
 
 /-! ## Distinct states -/
 

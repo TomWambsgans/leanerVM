@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.PaddedImage
-import LeanerVMTests.Semantics.PaddedRun
+import LeanerVM.Arithmetization.Padding.PaddedImage
+import LeanerVMTests.Arithmetization.Padding.PaddedRun
 
 /-!
 # Layer 10 tests: the padded image
@@ -13,10 +13,10 @@ compression of zero, which is not the pair of zero cells. The cells past the for
 zero.
 -/
 
-namespace LeanerVMTests.Semantics.PaddedImage
+namespace LeanerVMTests.Arithmetization.Padding.PaddedImage
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.PaddedRun
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.PaddedRun
 
 /-- Any assignment of starting slots will do for the layout. -/
 def pcsAny : Opcode → ℕ → ℕ := fun t s ↦ 7 * tableIdx t + s
@@ -95,4 +95,4 @@ example : ¬ (frameBase 9 47 + 11 < 2 ^ (9 + 1)) := by decide
 /-- Frames are adjacent and none shares a cell: the second starts twelve cells after the first. -/
 example (κ : ℕ) : frameBase κ 1 = frameBase κ 0 + 12 := frameBase_succ κ 0
 
-end LeanerVMTests.Semantics.PaddedImage
+end LeanerVMTests.Arithmetization.Padding.PaddedImage

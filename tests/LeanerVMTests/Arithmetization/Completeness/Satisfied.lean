@@ -1,6 +1,6 @@
 import LeanerVM.Arithmetization.Completeness.Satisfied
 import LeanerVMTests.Arithmetization.Completeness.Rows
-import LeanerVMTests.Semantics.FillBlocks
+import LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-!
 # Layer 10 tests: the padded witness satisfies the statement
@@ -18,8 +18,8 @@ namespace LeanerVMTests.Arithmetization.Completeness.Satisfied
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
 open Air.Flat (Component)
-open LeanerVMTests.Semantics.PaddedImageRefutation
-open LeanerVMTests.Semantics.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
+open LeanerVMTests.Arithmetization.Padding.FillBlocks
 open LeanerVMTests.Arithmetization.Completeness.Rows
 
 /-- The sentinel counter of a `2^11`-slot program, as a literal term (status finding E8). -/

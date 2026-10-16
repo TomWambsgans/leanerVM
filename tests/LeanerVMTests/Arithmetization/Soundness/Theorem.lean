@@ -1,5 +1,5 @@
 import LeanerVM.Arithmetization.Soundness.Theorem
-import LeanerVMTests.Semantics.PaddedImageRefutation
+import LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
 
 /-!
 # Layers 9 and 10 tests: constraint soundness
@@ -29,8 +29,8 @@ namespace LeanerVMTests.Arithmetization.Soundness.Theorem
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
 open Air.Flat (EnsembleWitness)
-open LeanerVMTests.Semantics.PaddedImageRefutation
-open LeanerVMTests.Semantics.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
+open LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-! ## The trust base -/
 

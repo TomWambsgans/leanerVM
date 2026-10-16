@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.FillSteps
+  LeanerVM.Arithmetization.Padding.FillSteps
 
   The steps of a fill block over the padded image: each dummy executes to the fall-through
   successor, in a frame of its own.
@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.PaddedImage
+public import LeanerVM.Arithmetization.Padding.PaddedImage
 
 /-!
 # The dummy steps of a fill block
@@ -31,7 +31,7 @@ elements.
 
 * The dummy of one table does not step in the frame of another: the `DEREF` dummy at an `XOR`
   frame finds `0` in its scratch cell and `w0` in memory cell `0`, and fails unless `w0 = 0`
-  (`tests/LeanerVMTests/Semantics/FillSteps.lean`).
+  (`tests/LeanerVMTests/Arithmetization/Padding/FillSteps.lean`).
 * A dummy never changes the frame pointer: only the closing jump does.
 -/
 

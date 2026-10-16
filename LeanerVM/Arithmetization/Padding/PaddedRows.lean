@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.PaddedRows
+  LeanerVM.Arithmetization.Padding.PaddedRows
 
   The rows of a padded trace: the run's skeletons, the traversal counts of the fill plan, and the
   number of rows each table ends up with.
@@ -7,8 +7,8 @@
 
 module
 
-public import LeanerVM.Semantics.FillRows
-public import LeanerVM.Semantics.PaddedTrace
+public import LeanerVM.Arithmetization.Padding.FillRows
+public import LeanerVM.Arithmetization.Padding.PaddedTrace
 
 /-!
 # The rows of a padded trace

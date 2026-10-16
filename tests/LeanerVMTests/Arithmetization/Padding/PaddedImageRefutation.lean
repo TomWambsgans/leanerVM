@@ -1,6 +1,6 @@
-import LeanerVM.Semantics.FillCycle
-import LeanerVM.Semantics.FillerRows
-import LeanerVMTests.Semantics.FillBlocks
+import LeanerVM.Arithmetization.Padding.FillCycle
+import LeanerVM.Arithmetization.Padding.FillerRows
+import LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-!
 # Layer 10 tests: the blueprint's completeness fails on the image
@@ -23,10 +23,10 @@ everywhere else; the program is the ladder program with its first slot replaced 
 g^3]` to the sentinel, so every block of the ladder is still there.
 -/
 
-namespace LeanerVMTests.Semantics.PaddedImageRefutation
+namespace LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-- The sentinel counter of a `2^11`-slot program, as a literal term. The elaborator unifies two
 `K` terms by evaluating powers of `g`, so it is never a definition (status finding E8). -/
@@ -286,4 +286,4 @@ theorem padded_bad_xor_step :
   exact fill_dummy_step (by decide) (by decide) (badImage d₀) (fun _ _ ↦ 1) .xor
     (k := 0) (by norm_num) hf
 
-end LeanerVMTests.Semantics.PaddedImageRefutation
+end LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation

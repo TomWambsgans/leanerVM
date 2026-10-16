@@ -1,5 +1,5 @@
 import LeanerVM.Arithmetization.Completeness.Witness
-import LeanerVMTests.Semantics.PaddedImageRefutation
+import LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
 
 /-!
 # Layer 10 tests: the prover data of the padded witness
@@ -13,7 +13,7 @@ unfold (`imageOf_imageData`). The memory log-size at most `maxLogMem` is load-be
 namespace LeanerVMTests.Arithmetization.Completeness.Witness
 
 open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Arithmetization
-open LeanerVMTests.Semantics.PaddedImageRefutation
+open LeanerVMTests.Arithmetization.Padding.PaddedImageRefutation
 
 /-- The sentinel counter of a `2^11`-slot program, as a literal term (status finding E8). -/
 local notation "d₀" => (gpow 2047 : K)

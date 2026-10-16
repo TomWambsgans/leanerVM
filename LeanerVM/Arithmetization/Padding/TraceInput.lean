@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.TraceInput
+  LeanerVM.Arithmetization.Padding.TraceInput
 
   Checked adaptation of finite memory exports and main/filler instruction counts.
 -/

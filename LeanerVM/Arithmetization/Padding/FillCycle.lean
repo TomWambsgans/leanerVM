@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.FillCycle
+  LeanerVM.Arithmetization.Padding.FillCycle
 
   The closing jump of a fill block, and the cycle: a traversal returns to its start, any number of
   times.
@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.FillSteps
+public import LeanerVM.Arithmetization.Padding.FillSteps
 
 /-!
 # The fill-block lemma
@@ -28,7 +28,7 @@ and `Semantics.FillPlan` counts it.
 ## Wrong readings excluded
 
 * The closing jump is not the last dummy: after `s` steps the state is the closing slot, not the
-  start, so a block is a cycle only with its jump (`tests/LeanerVMTests/Semantics/FillCycle.lean`).
+  start, so a block is a cycle only with its jump (`tests/LeanerVMTests/Arithmetization/Padding/FillCycle.lean`).
 * A closing jump run in another cycle's frame does not close its own: that frame names another
   block's first slot.
 -/

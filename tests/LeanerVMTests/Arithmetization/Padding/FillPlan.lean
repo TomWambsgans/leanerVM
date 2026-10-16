@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.FillPlan
+import LeanerVM.Arithmetization.Padding.FillPlan
 
 /-!
 # Layer 10 tests: the fill plan arithmetic
@@ -10,7 +10,7 @@ load-bearing: a `JUMP` table owing `2^32 - 1` rows has no plan, and one owing `2
 by taking the next power of two.
 -/
 
-namespace LeanerVMTests.Semantics.FillPlan
+namespace LeanerVMTests.Arithmetization.Padding.FillPlan
 
 open LeanerVM.Parameters LeanerVM.Semantics
 
@@ -140,4 +140,4 @@ theorem no_plan_above_cap : ¬ JumpFeasible (2 ^ 32 + 1) := by
   have := Nat.pow_le_pow_right (show 0 < 2 by norm_num) (show τ ≤ 32 from hτ)
   omega
 
-end LeanerVMTests.Semantics.FillPlan
+end LeanerVMTests.Arithmetization.Padding.FillPlan

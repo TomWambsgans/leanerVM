@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.TraceInput
+import LeanerVM.Arithmetization.Padding.TraceInput
 import LeanerVMTests.Semantics.Executable
 
 /-!
@@ -8,7 +8,7 @@ These test the Lean adapter's count and exact-image contract, independently of t
 Rust producer fixtures. Counts alone do not certify filler rows or actual opcode frequencies.
 -/
 
-namespace LeanerVMTests.Semantics.TraceInput
+namespace LeanerVMTests.Arithmetization.Padding.TraceInput
 
 open LeanerVM.Parameters LeanerVM.Semantics
 open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.Executable
@@ -65,4 +65,4 @@ def emptyRun : TraceInput where
 #guard validateInput oneProg zeroInput emptyRun
 #guard (emptyRun.adapt oneProg).map (·.steps) = some 0
 
-end LeanerVMTests.Semantics.TraceInput
+end LeanerVMTests.Arithmetization.Padding.TraceInput

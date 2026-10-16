@@ -248,7 +248,7 @@ fn emit_fixture(name: &str, p: &Program, e: &Execution, public_input: [F192; 2],
     let Some(directory) = std::env::var_os("LEANISA_EXPORT_DIR") else {
         return;
     };
-    let mut out = String::from("import LeanerVMTests.Semantics.RustExport\n\nopen LeanerVM.Parameters LeanerVM.Semantics\nopen LeanerVMTests.Semantics.RustExport\n\n");
+    let mut out = String::from("import LeanerVMTests.Arithmetization.Padding.RustExport\n\nopen LeanerVM.Parameters LeanerVM.Semantics\nopen LeanerVMTests.Arithmetization.Padding.RustExport\n\n");
     let encoded: Vec<_> = p.prog.iter().map(|op| instruction(*op)).collect();
     let mut blocks = Vec::new();
     let mut start = 0;

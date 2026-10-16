@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.FillBlocks
+import LeanerVM.Arithmetization.Padding.FillBlocks
 
 /-!
 # Layer 10 tests: the fill block shape
@@ -9,7 +9,7 @@ rejections: a program with no block has no `HasFillBlocks`, and a block whose cl
 sentinel slot fails `IsFillBlock.below` alone (its dummies and its closing jump are fetched).
 -/
 
-namespace LeanerVMTests.Semantics.FillBlocks
+namespace LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 open LeanerVM.Parameters LeanerVM.Semantics
 
@@ -226,4 +226,4 @@ theorem ladderNoXor_no_blocks : ¬ HasFillBlocks ladderNoXor := by
     exact absurd hop (by decide)
   · simp only [h1, ↓reduceIte] at hop
 
-end LeanerVMTests.Semantics.FillBlocks
+end LeanerVMTests.Arithmetization.Padding.FillBlocks

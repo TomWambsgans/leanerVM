@@ -1,21 +1,21 @@
-import LeanerVM.Semantics.FillSteps
-import LeanerVMTests.Semantics.FillBlocks
+import LeanerVM.Arithmetization.Padding.FillSteps
+import LeanerVMTests.Arithmetization.Padding.FillBlocks
 import LeanerVMTests.Semantics.Execution
 
 /-!
 # Layer 10 tests: the dummy steps of a fill block
 
-The ladder program (`LeanerVMTests.Semantics.FillBlocks`) over the executor's image
+The ladder program (`LeanerVMTests.Arithmetization.Padding.FillBlocks`) over the executor's image
 (`mul_192bit_word`), padded with the fill frames. For every table the smallest block's dummy steps
 in the frame of its own cycle: one slot on, the same frame. The mutation that shows frames are
 table-specific: the `DEREF` dummy run in an `XOR` frame is not a step, because the `XOR` frame's
 scratch cell is zero while memory cell `0` holds the public input's first word.
 -/
 
-namespace LeanerVMTests.Semantics.FillSteps
+namespace LeanerVMTests.Arithmetization.Padding.FillSteps
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.FillBlocks
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.FillBlocks
 
 /-- The first slot of the block of each size within a table's `263` slots. -/
 def blockStart : ℕ → ℕ
@@ -124,4 +124,4 @@ theorem deref_dummy_in_xor_frame :
   exact ⟨pc, hf, deref_dummy_fails_elsewhere (by decide) (by decide) mulImage pcsLadder
     (by decide) (by norm_num) hf mulImage_word0_ne_zero⟩
 
-end LeanerVMTests.Semantics.FillSteps
+end LeanerVMTests.Arithmetization.Padding.FillSteps

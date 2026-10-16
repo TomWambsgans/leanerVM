@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.FillPlan
+  LeanerVM.Arithmetization.Padding.FillPlan
 
   The arithmetic of filling a table to a power of two: the target height, the traversals of the
   fill blocks that deliver it, and what the `JUMP` table can be filled to.
@@ -7,7 +7,7 @@
 
 module
 
-public import LeanerVM.Semantics.FillBlocks
+public import LeanerVM.Arithmetization.Padding.FillBlocks
 import Mathlib.Data.Nat.Log
 
 /-!
@@ -28,7 +28,7 @@ the `JUMP` table one (the closing jump), so the traversals of one table cost `fi
 `JUMP` rows, at most one per `128` rows of fill plus seven. That a traversal costs the `JUMP`
 table a row whichever table it fills is forced, not chosen: a closed run shorter than `2^64 - 1`
 steps contains a taken jump, since `g` has that order
-(`tests/LeanerVMTests/Semantics/ClosedWalk.lean`).
+(`tests/LeanerVMTests/Arithmetization/Padding/ClosedWalk.lean`).
 
 **The `JUMP` table.** It receives a closing jump from every traversal of every other table, and
 its own fill is delivered by its own blocks, whose traversals give it `s + 1` rows

@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.FillerRows
+  LeanerVM.Arithmetization.Padding.FillerRows
 
   Checking an unordered collection of candidate filler rows.
 -/

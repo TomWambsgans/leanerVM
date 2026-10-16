@@ -9,7 +9,7 @@ module
 
 public import LeanerVM.Arithmetization.Completeness.Rows
 public import LeanerVM.Arithmetization.Completeness.Balance
-public import LeanerVM.Semantics.PaddedRows
+public import LeanerVM.Arithmetization.Padding.PaddedRows
 
 @[expose] public section
 

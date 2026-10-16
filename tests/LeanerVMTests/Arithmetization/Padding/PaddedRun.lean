@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.PaddedRun
-import LeanerVMTests.Semantics.PaddedTrace
+import LeanerVM.Arithmetization.Padding.PaddedRun
+import LeanerVMTests.Arithmetization.Padding.PaddedTrace
 
 /-!
 # Layer 10 tests: padding keeps the run
@@ -10,10 +10,10 @@ image. The mutation that makes `image_ext` necessary: with the first operand's c
 is not valid, because the first `SET_CONSTANT` compares that cell with its immediate.
 -/
 
-namespace LeanerVMTests.Semantics.PaddedRun
+namespace LeanerVMTests.Arithmetization.Padding.PaddedRun
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.PaddedTrace
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.PaddedTrace
 
 /-! ## A padding keeps the run -/
 
@@ -59,4 +59,4 @@ theorem altered_not_valid :
   rw [run_succ_of_ne hne, altered_step0] at hrun
   exact absurd hrun (by simp)
 
-end LeanerVMTests.Semantics.PaddedRun
+end LeanerVMTests.Arithmetization.Padding.PaddedRun

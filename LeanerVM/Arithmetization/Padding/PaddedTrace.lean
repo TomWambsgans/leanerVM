@@ -1,12 +1,12 @@
 /-
-  LeanerVM.Semantics.PaddedTrace
+  LeanerVM.Arithmetization.Padding.PaddedTrace
 
   Padded traces, and the room and size conditions a trace must meet for its tables to be filled.
 -/
 
 module
 
-public import LeanerVM.Semantics.FillPlan
+public import LeanerVM.Arithmetization.Padding.FillPlan
 
 /-!
 # Padded traces
@@ -20,12 +20,12 @@ each refuted by a test:
   `MemImage` is total. The padding rows of every table read and write cells of that same image, so
   the image must hold frames on which the fill blocks step. A valid trace whose image admits no
   `XOR` step exists for every program that starts with a `JUMP` to the sentinel
-  (`tests/LeanerVMTests/Semantics/PaddedImageRefutation.lean`).
+  (`tests/LeanerVMTests/Arithmetization/Padding/PaddedImageRefutation.lean`).
 * **The size.** `Caps.heights` bounds every table by `2^32` rows while `Trace.steps` is unbounded:
   a witness needs at least `steps` rows over its eight tables, and a valid run of
   `1 + 33 * 2^30` steps exists. A trace that fits has at most `6 * 2^32` steps
   (`Trace.Fits.steps_le`), so that run is no fitting trace
-  (`tests/LeanerVMTests/Semantics/LongRun.lean`).
+  (`tests/LeanerVMTests/Arithmetization/Padding/LongRun.lean`).
 
 **The corrected target.** Completeness is stated for a *padded* trace and under a named condition
 on the trace (roadmap decisions D1, D7 of the pull request):

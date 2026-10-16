@@ -1,5 +1,5 @@
-import LeanerVM.Semantics.FillCycle
-import LeanerVMTests.Semantics.FillCycle
+import LeanerVM.Arithmetization.Padding.FillCycle
+import LeanerVMTests.Arithmetization.Padding.FillCycle
 
 /-!
 # Layer 10 tests: padding is coupled to the `JUMP` table
@@ -14,11 +14,11 @@ the closing jumps (`jumpOwed`) and why a `JUMP` gap of exactly one row is undeli
 The theorem is for a walk, then for a run, then for the forty-eight cycles of the ladder program.
 -/
 
-namespace LeanerVMTests.Semantics.ClosedWalk
+namespace LeanerVMTests.Arithmetization.Padding.ClosedWalk
 
 open LeanerVM.Parameters LeanerVM.Semantics
-open LeanerVMTests.Semantics.Execution LeanerVMTests.Semantics.FillBlocks
-open LeanerVMTests.Semantics.FillSteps LeanerVMTests.Semantics.FillCycle
+open LeanerVMTests.Semantics.Execution LeanerVMTests.Arithmetization.Padding.FillBlocks
+open LeanerVMTests.Arithmetization.Padding.FillSteps LeanerVMTests.Arithmetization.Padding.FillCycle
 
 /-- Every instruction but a `JUMP` executes to the fall-through successor, or fails. -/
 theorem execute_next_of_ne_jump {κ : ℕ} (L : MemImage κ) (r r' : Regs K) (ins : Instr)
@@ -131,4 +131,4 @@ theorem ladder_traversal_has_jump (t : Opcode) {k : ℕ} (hk : k < 8) :
     (by simpa using ladder_cycle_closed t hk 1) (Nat.succ_pos _)
     (by have := sizeAt_le hk; norm_num; omega)
 
-end LeanerVMTests.Semantics.ClosedWalk
+end LeanerVMTests.Arithmetization.Padding.ClosedWalk

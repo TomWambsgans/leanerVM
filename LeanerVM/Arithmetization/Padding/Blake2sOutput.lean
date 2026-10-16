@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.Blake2sOutput
+  LeanerVM.Arithmetization.Padding.Blake2sOutput
 
   The output cells of a compression exist: the cell encoding is invertible, so `CompressCells` is
   satisfiable on any canonical inputs.

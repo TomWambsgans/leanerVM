@@ -1,4 +1,4 @@
-import LeanerVM.Semantics.Blake2sOutput
+import LeanerVM.Arithmetization.Padding.Blake2sOutput
 
 /-!
 # Layer 10 tests: the output cells of a compression
@@ -8,7 +8,7 @@ cells, and those cells are not zero: the digest of zero input is a nonzero pair,
 the `BLAKE2S` fill frame relies on is not the trivial one.
 -/
 
-namespace LeanerVMTests.Semantics.Blake2sOutput
+namespace LeanerVMTests.Arithmetization.Padding.Blake2sOutput
 
 open LeanerVM.Parameters LeanerVM.Semantics
 
@@ -30,4 +30,4 @@ example : ∃ out0 out1 : E, CompressCells ![0, 0, 0, 0] 0 0 out0 out1 0 := comp
 example : ¬ CompressCells ![0, 0, 0, 0] 0 0 0 0 0 := by
   decide +kernel
 
-end LeanerVMTests.Semantics.Blake2sOutput
+end LeanerVMTests.Arithmetization.Padding.Blake2sOutput

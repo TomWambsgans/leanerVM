@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Semantics.FillBlocks
+  LeanerVM.Arithmetization.Padding.FillBlocks
 
   The fill blocks the compiler emits past `main`'s halt, and the program-shape condition that
   they are present.

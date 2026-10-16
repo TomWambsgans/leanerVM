@@ -30,14 +30,14 @@ statements are.
   frame pointer, with no hypothesis and for every hint list. A `SentinelSafe` premise is
   unnecessary for semantic checking; it remains a separate premise of global constraint
   soundness.
-- [`RunTrace.lean`](../LeanerVM/Semantics/RunTrace.lean) gives relational steps and ordered
+- [`RunTrace.lean`](../LeanerVM/Arithmetization/Padding/RunTrace.lean) gives relational steps and ordered
   finite traces, equivalent to `run`. A failed step has no successor. The empty run has one
   state and zero transitions.
-- [`TraceInput.lean`](../LeanerVM/Semantics/TraceInput.lean) preserves the entire finite export,
+- [`TraceInput.lean`](../LeanerVM/Arithmetization/Padding/TraceInput.lean) preserves the entire finite export,
   checks its power-of-two memory shape and count accounting, and uses `sum(mainCounts)` as
   `Trace.steps`. `adapt_preserves` and `validateInput_eq_true_iff` specify these guarantees.
   Announced counts alone do not prove that the rows exist.
-- [`FillerRows.lean`](../LeanerVM/Semantics/FillerRows.lean) accepts unordered row starts when
+- [`FillerRows.lean`](../LeanerVM/Arithmetization/Padding/FillerRows.lean) accepts unordered row starts when
   every reference successor succeeds and the starting/successor multisets agree
   (`FillerRowsValid`, the audited statement; `checkFillerRows`, its carrier). This standalone
   interface does not take a main run or check memory/bytecode access-count columns or budgets.
