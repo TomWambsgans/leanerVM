@@ -112,7 +112,7 @@ zero-round step whose verifier asks an input oracle one question and checks the 
 combined by powers (`ToArkLib/WeightBatch.lean`). On the branch of #86, the Flock phase's
 definition and completeness (`Protocol/Flock.lean`: `flockPhase` at the slot `flockSpec`,
 `flockComplete`, `flockError_le`), the generic Flock argument for a batch of Boolean R1CS blocks
-at leanVM's sizes and constants (`ToArkLib/Flock/`, `Parameters/Flock.lean`); on the branch of
+at leanVM's sizes and constants (`ToArkLib/Flock/`, `Spec/Verifier.lean`); on the branch of
 #88, stacked on it, its knowledge soundness (`flockSecurity`, on the generic
 `ToArkLib/Flock/Security.lean` and the field facts of `Protocol/FlockFields.lean`). On the
 branches stacked on the oracle protocol's, the Clean bridge (`ToClean/ComponentPolynomial.lean`:
@@ -486,7 +486,7 @@ pinned sources is [archived](../reviews/protocol-spine-revision.md).
     is the R1CS, not any predicate an instance names). The verifier's lincheck terminal needs the
     circuit; an opaque predicate gives it nothing to evaluate.
   - `FlockSpec` (`Protocol/FlockSpec.lean`) is stated against the cell relation
-    `CompressCells` of `Semantics.lean` on eighteen limbs (`LimbsCompress`), in place of
+    `CompressCells` of `Spec/Isa.lean` on eighteen limbs (`LimbsCompress`), in place of
     the sketch's leanISA `Blake2sRelation` on `Blake2sRow`, which the wall forbids above the
     adaptor. The adaptor relates the two: `Blake2sRelation r` is `LimbsCompress` of `r`'s eighteen
     value limbs in column order (`blake2sRelation_ofFn`). Its fields are the R1CS (`r1cs : BlockR1CS E 14`, matching

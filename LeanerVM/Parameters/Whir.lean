@@ -1,104 +1,26 @@
 /-
   LeanerVM.Parameters.Whir
 
-  leanVM's WHIR parameters: the fold factors, the rate schedule, the residual size, the grinding
-  budget, the stacking window, the tabulated query counts, and the ladder of levels an opening of
-  a given size and rate runs.
+  The structure of leanVM's WHIR parameters (`LeanerVM.Spec.Verifier`): every admissible stack
+  size and rate has a ladder, one level per tabulated query count, and its blocks fit.
 -/
 
 module
 
-public import Mathlib.Data.Nat.Notation
+public import LeanerVM.Spec.Verifier
 
 /-!
-# WHIR parameters
+# The structure of the WHIR parameters
 
-Category B. The constants are transcribed from `crates/pcs/src/whir_config.rs:38-86` of the
-pinned leanVM (`127510d14c98ade4e8a97646c44fa7f1ff5e752d`), the ladder geometry from its
-`derive_ladder` and `derive_ladder_shape` (`:252-301`), the stacking window from
-`crates/leanvm_core/src/pcs.rs:49-51`, and the query counts from the second verifier,
-`python-verifier/verifier.py:902-937` (`WHIR_QUERIES`, `derive_config`), which the portable Rust
-verifier carries verbatim (`crates/verifier/src/whir.rs:10-56`). The specification
-describes the protocol these parameters instantiate (Annex B, Protocol B.1,
-`doc/leanvm/body/b-polynomial-commitment-scheme.tex`) and gives no numbers.
-
-An opening of a stack of `2^μ` elements of `K` at rate `2^-R` runs a *ladder* of levels. Level 0
-folds `initialFold = 6` variables; every later level folds `subsequentFold = 4`, or what remains,
-until at most `residualMaxLog = 5` variables remain, which are sent in the clear. The rate
-exponent of a level is the previous one plus the previous fold minus a domain reduction,
-`initialReduction = 3` after level 0 and `subsequentReduction = 1` after every later level. Each
-level opens `queries` positions after `queryGrindingBits = 17` bits of grinding; from level 1 on,
-one out-of-domain sample binds the level's commitment (`oodSamples`).
-
-The query counts are the Rust's *output*, not its derivation: `optimize_johnson_level`
-(`whir_config.rs:607-675`) minimises the queries of each level subject to the 128-bit
-round-by-round targets of Annex B's Theorem B.2 under a floating-point MCA formula, and this
-module does not restate that search. At this pin the formula charges each fold round the bare
-MCA error `ε` (`paper_thm_ca_johnson_log_a`, `whir_config.rs:431-447`, citing Jo, ePrint
-2026/891, Thm 4.4), not the row-union `2^(ℓ-j) ε` of the earlier pin, so 25 of the 56 shapes
-query one to three positions fewer. The table is the one the Python verifier carries, indexed
-by rate exponent `1..4` and stack size `15..28`; outside that window `ladder` is `none`, as both
-verifiers reject (`validate_log_inv_rate`, `whir_config.rs:48-56`; `verifier.py:925`).
-
-The Rust API takes the witness size as `m = μ + LOG_PACKING` bits, `LOG_PACKING = 6`
-(`crates/pcs/src/pack.rs:5`); `ladder` takes the stack size `μ`, as the Python `derive_config`
-does. `LOG_INV_RATE_0 = 1` (`whir_config.rs:41`) is the rate the Rust test suite proves at, not a
-verifier parameter: the rate exponent is announced with the sizes.
+The parameters are defined with the verifier that reads them, in `LeanerVM.Spec.Verifier` (Part
+1). This module proves what the proofs need of them: the folds and reductions are ordered, and on
+the 56 admissible pairs of stack size and rate the ladder exists (`ladder_isSome`), has one level
+per tabulated query count, and leaves a residual of at most `residualMaxLog` variables.
 -/
 
 namespace LeanerVM.Parameters.Whir
 
 @[expose] public section
-
-/-! ## Constants (`whir_config.rs`) -/
-
-/-- Variables folded at level 0: the lane fold (`INITIAL_FOLDING_FACTOR`, `whir_config.rs:67`). -/
-def initialFold : ℕ := 6
-
-/-- Variables folded at every later level (`SUBSEQUENT_FOLDING_FACTOR`, `whir_config.rs:68`). -/
-def subsequentFold : ℕ := 4
-
-/-- Bits the Reed–Solomon domain shrinks by after level 0, so that the rate exponent rises by
-`initialFold - initialReduction` (`RS_DOMAIN_INITIAL_REDUCTION_FACTOR`, `whir_config.rs:73`). -/
-def initialReduction : ℕ := 3
-
-/-- Bits the domain shrinks by after every later level (`RS_DOMAIN_SUBSEQUENT_REDUCTION_FACTOR`,
-`whir_config.rs:78`). -/
-def subsequentReduction : ℕ := 1
-
-/-- Folding stops once at most this many variables remain; the residual multilinear is sent in
-the clear (`RESIDUAL_MAX_LOG`, `whir_config.rs:86`). -/
-def residualMaxLog : ℕ := 5
-
-/-- Grinding bits before each level's query positions are sampled (`QUERY_GRINDING_BITS`,
-`whir_config.rs:60`). -/
-def queryGrindingBits : ℕ := 17
-
-/-- The round-by-round security target the query counts were derived for, in bits
-(`SECURITY_BITS`, `whir_config.rs:38`). -/
-def securityBits : ℕ := 128
-
-/-- The smallest stack the PCS commits: `MIN_MU` (`pcs.rs:49`;
-`MIN_STACKED_LOG`, `verifier.py:909`). A
-smaller witness is padded up to it. -/
-def minLogStack : ℕ := 15
-
-/-- The largest stack the PCS commits: `MAX_MU` (`pcs.rs:51`;
-`MAX_STACKED_LOG`, `verifier.py:910`). -/
-def maxLogStack : ℕ := 28
-
-/-- The smallest rate exponent of level 0 (`MIN_LOG_INV_RATE`, `whir_config.rs:44`). -/
-def minLogInvRate : ℕ := 1
-
-/-- The largest rate exponent of level 0 (`MAX_LOG_INV_RATE`, `whir_config.rs:45`). -/
-def maxLogInvRate : ℕ := 4
-
-/-- Out-of-domain samples taken after a level's commitment: none at level 0, whose commitment the
-opening's own evaluation claim binds, and one at every later level (`whir_config.rs:107-114`).
-The Rust production test fixes the count for stack sizes 22 to 28 (`whir_config.rs:983, 995`);
-for 15 to 21 it is the second verifier's, which takes one sample per level after the first
-(`verifier.py:1033-1037`). -/
-def oodSamples (level : ℕ) : ℕ := if level = 0 then 0 else 1
 
 /-- `whir_config.rs:80`: the first reduction never exceeds the first fold. -/
 theorem initialReduction_le_initialFold : initialReduction ≤ initialFold := by decide
@@ -109,82 +31,6 @@ theorem subsequentReduction_le_subsequentFold : subsequentReduction ≤ subseque
 
 /-- `whir_config.rs:92`: the residual is never longer than the lane fold. -/
 theorem residualMaxLog_le_initialFold : residualMaxLog ≤ initialFold := by decide
-
-/-! ## The ladder -/
-
-/-- One level of an opening: the number of sumcheck rounds it folds (`ℓ_i`), the rate exponent
-of the code its commitment is in (`R_i`), and the number of positions queried (`t_i`), in the
-notation of Annex B. -/
-structure Level where
-  fold : ℕ
-  logInvRate : ℕ
-  queries : ℕ
-  deriving DecidableEq
-
-/-- The levels after the first, as pairs (fold, rate exponent): while more than `residualMaxLog`
-variables remain, fold `subsequentFold` of them (or all that remain) at the rate exponent the
-previous level's fold and the pending domain reduction give (`derive_ladder`,
-`whir_config.rs:252-289`, with `derive_ladder_shape`'s rate rule, `:292-301`). `fuel` bounds the
-recursion; every level folds at least one variable, so `remaining` fuel is enough. -/
-def levelsFrom : (fuel remaining prevFold prevRate reduction : ℕ) → List (ℕ × ℕ)
-  | 0, _, _, _, _ => []
-  | fuel + 1, remaining, prevFold, prevRate, reduction =>
-    if remaining ≤ residualMaxLog then []
-    else
-      let rate := prevRate + prevFold - reduction
-      let fold := min subsequentFold remaining
-      (fold, rate) :: levelsFrom fuel (remaining - fold) fold rate subsequentReduction
-
-/-- The ladder geometry of a `μ`-variable stack at rate exponent `logInvRate`: level 0 folds
-`initialFold` at that rate, then `levelsFrom` (`derive_config`, `verifier.py:922-937`). -/
-def shape (μ logInvRate : ℕ) : List (ℕ × ℕ) :=
-  (initialFold, logInvRate) ::
-    levelsFrom μ (μ - initialFold) initialFold logInvRate initialReduction
-
-/-- The variables left after every fold: the size of the residual sent in the clear. -/
-def residualLog (μ logInvRate : ℕ) : ℕ := μ - ((shape μ logInvRate).map Prod.fst).sum
-
-/-- The query counts `WHIR_QUERIES` of `verifier.py:912`, verbatim: row `R - 1` for the rate
-exponent `R`, entry `μ - 15` for the stack size `μ`, one count per level. -/
-def queryTable : List (List (List ℕ)) := [
-  [[222, 55], [223, 56, 30], [223, 56, 31], [223, 56, 32], [223, 56, 32], [223, 56, 32, 22],
-   [223, 56, 32, 22], [224, 56, 32, 23], [224, 56, 32, 23], [224, 56, 32, 23, 17],
-   [224, 56, 32, 23, 17], [224, 56, 32, 23, 18], [225, 56, 32, 23, 18], [225, 56, 32, 23, 18, 14]],
-  [[111, 45], [112, 45, 27], [112, 45, 28], [112, 45, 28], [112, 45, 28], [112, 45, 28, 20],
-   [112, 45, 28, 20], [112, 45, 28, 21], [112, 45, 28, 21], [112, 45, 28, 21, 16],
-   [112, 45, 28, 21, 16], [112, 45, 28, 21, 16], [112, 45, 28, 21, 16], [112, 45, 28, 21, 16, 13]],
-  [[75, 37], [75, 37, 24], [75, 37, 25], [75, 38, 25], [75, 38, 25], [75, 38, 25, 18],
-   [75, 38, 25, 19], [75, 38, 25, 19], [75, 38, 25, 19], [75, 38, 25, 19, 15],
-   [75, 38, 25, 19, 15], [75, 38, 25, 19, 15], [75, 38, 25, 19, 15], [75, 38, 25, 19, 15, 13]],
-  [[56, 32], [56, 32, 22], [56, 32, 22], [56, 32, 23], [56, 32, 23], [56, 32, 23, 17],
-   [56, 32, 23, 17], [56, 32, 23, 18], [56, 32, 23, 18], [56, 32, 23, 18, 14],
-   [56, 32, 23, 18, 14], [56, 32, 23, 18, 14], [56, 32, 23, 18, 15], [56, 32, 23, 18, 15, 12]]]
-
-/-- The window the parameters are defined on: the stacking window and the rate range
-(`verifier.py:925`; `crates/verifier/src/whir.rs:33-36`; `whir_config.rs:48-56` the rate). -/
-def Admissible (μ logInvRate : ℕ) : Prop :=
-  minLogStack ≤ μ ∧ μ ≤ maxLogStack ∧ minLogInvRate ≤ logInvRate ∧ logInvRate ≤ maxLogInvRate
-
-instance {μ logInvRate : ℕ} : Decidable (Admissible μ logInvRate) :=
-  inferInstanceAs (Decidable (_ ∧ _ ∧ _ ∧ _))
-
-/-- The ladder of an admissible stack size and rate: the geometry of `shape` paired with the
-tabulated query counts, level by level. `none` outside the window, and `none` if the table did
-not have one count per level (`verifier.py:936`), so that no level is silently dropped. -/
-def ladder (μ logInvRate : ℕ) : Option (List Level) :=
-  if Admissible μ logInvRate then
-    let geometry := shape μ logInvRate
-    let queries := (queryTable.getD (logInvRate - minLogInvRate) []).getD (μ - minLogStack) []
-    if geometry.length = queries.length then
-      some (List.zipWith (fun (g : ℕ × ℕ) q ↦ ⟨g.1, g.2, q⟩) geometry queries)
-    else none
-  else none
-
-/-- The log block lengths `κ_i + R_i` of the levels' codes: the message log after a level's fold
-plus its rate exponent (`LevelShapes.block_len`, `whir_config.rs:121-156`). -/
-def blockLogs (μ : ℕ) : List Level → List ℕ
-  | [] => []
-  | l :: rest => (μ - l.fold + l.logInvRate) :: blockLogs (μ - l.fold) rest
 
 /-! ## Structure of the table
 

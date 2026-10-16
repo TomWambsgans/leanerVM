@@ -16,21 +16,24 @@ right, and supplies an independent reference for validating the existing Rust im
 That validation begins with differential testing against pinned Rust revisions and may grow into
 formal verification of the relevant Rust code.
 
-## What is proved, in three files
+## What is proved: `LeanerVM/Spec/`
 
-The end-to-end result is stated over three files; everything else in the repository is proof or
-library code.
+The end-to-end result is stated in one folder, [`LeanerVM/Spec/`](LeanerVM/Spec/README.md), which
+imports nothing else from the repository; everything else is proof or library code.
 
 | File | What it is |
 | --- | --- |
-| [`LeanerVM/Semantics.lean`](LeanerVM/Semantics.lean) | leanISA: memory, the six instructions, programs, one step, `ValidExecution` |
-| [`LeanerVM/Protocol/Verifier.lean`](LeanerVM/Protocol/Verifier.lean) | the verifier, `python-verifier/verifier.py` transcribed section by section, for any hash function |
-| [`LeanerVM/Protocol/LeanVM.lean`](LeanerVM/Protocol/LeanVM.lean) | the statements: knowledge soundness in the random-oracle model against an adversary that chooses the program, the public input and the proof, and completeness up to a negligible probability |
+| [`Field.lean`](LeanerVM/Spec/Field.lean) | the fields `K = GF(2^64)`, `E = GF(2^192)`, the generator `g` |
+| [`Blake2s.lean`](LeanerVM/Spec/Blake2s.lean) | BLAKE2s: the compression function and the hash of bytes |
+| [`Isa.lean`](LeanerVM/Spec/Isa.lean) | leanISA: memory, the six instructions, programs, one step, `ValidExecution` |
+| [`Verifier.lean`](LeanerVM/Spec/Verifier.lean) | the verifier, `python-verifier/verifier.py` transcribed section by section, for any hash function, with its constants and transcript |
+| [`Statement.lean`](LeanerVM/Spec/Statement.lean) | the statements: knowledge soundness in the random-oracle model against an adversary that chooses the program, the public input and the proof, and completeness up to a negligible probability |
 
-They import the fields, the protocol's constants (`LeanerVM/Parameters/`), BLAKE2s and the
-Fiat–Shamir layer (`LeanerVM/Protocol/Compile/`). The verifier runs compiled on proofs of the Rust
-prover (`lake exe leanvm-verify`), and `scripts/fuzz-verifier.py` compares it with the Rust verifier
-on mutated proofs. See [`docs/roadmap/e2e-status.md`](docs/roadmap/e2e-status.md).
+The proofs are `LeanVM.knowledgeSoundness_holds` and `LeanVM.completeness_holds`
+([`LeanerVM/Protocol/LeanVM.lean`](LeanerVM/Protocol/LeanVM.lean)). The verifier runs compiled on
+proofs of the Rust prover (`lake exe leanvm-verify`), and `scripts/fuzz-verifier.py` compares it
+with the Rust verifier on mutated proofs. See
+[`docs/roadmap/e2e-status.md`](docs/roadmap/e2e-status.md).
 
 ## Project status
 
@@ -129,7 +132,8 @@ it ([`docs/architecture.md`](docs/architecture.md)).
 
 | Layer | Responsibility |
 | --- | --- |
-| `LeanerVM/Semantics/` | ISA, state, memory, bytecode, transition relation, and executable interpreter |
+| `LeanerVM/Spec/` | The statements and what they mention: fields, BLAKE2s, leanISA, the verifier; imports no other layer |
+| `LeanerVM/Semantics/` | Lemmas about the ISA, and the executable interpreter |
 | `LeanerVM/Parameters/` | Versioned constants, encodings, layouts, and authoritative source bindings |
 | `LeanerVM/Arithmetization/` | Tables, buses, witness generation, constraints, and semantic refinement |
 | `LeanerVM/Applications/` | Guest specifications, exact programs, compiler boundaries, and application correctness |

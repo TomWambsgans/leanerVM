@@ -30,7 +30,8 @@ leanISA roadmap Layer 4 (`docs/roadmap/leanisa-blueprint.md`), at leanVM pin
   `fp = (0, 1)`.
 
 `entry i` is the bus entry of an instruction, the row of `bytecode_columns`; `encodeSlots i` is
-its sixteen-slot row of §8.1, the entry at slots 3–10; `decode` consumes an eight-coordinate
+its sixteen-slot row of §8.1, the entry at slots 3–10. Both are defined in `LeanerVM.Spec.Isa`,
+since the verifier receives a program through them; `decode`, here, consumes an eight-coordinate
 entry. It is exact: `decode v = some i ↔ v = entry i` (`decode_eq_some_iff`); on a `DEREF`
 tuple with free flags it names the mode whose flags they are (`decode_deref_eq_some_iff`).
 Unknown opcodes, invalid `DEREF` flag pairs and nonzero spare entry coordinates decode to
@@ -62,13 +63,6 @@ open LeanerVM.Parameters LeanerVM.Semantics
 
 /-! ## The store-mode flags -/
 
-/-- The `DEREF` store-mode flags `(f_pc, f_fp)`: `cell ↦ (0, 0)`, `pc ↦ (1, 0)`, `fp ↦ (0, 1)`
-(`isa.rs:68-75`; specification §7.4). -/
-def derefFlags : DerefMode → K × K
-  | .cell => (0, 0)
-  | .pc => (1, 0)
-  | .fp => (0, 1)
-
 /-- The store mode of a flag pair, if it is one of the three (acceptance test 18). -/
 def derefMode? (fpc ffp : K) : Option DerefMode :=
   if fpc = 0 ∧ ffp = 0 then some .cell
@@ -77,23 +71,6 @@ def derefMode? (fpc ffp : K) : Option DerefMode :=
   else none
 
 /-! ## The bus entry and the sixteen slots -/
-
-/-- The bus entry of an instruction, `(opcode, op₁, …, op₇)`: slots 3–10 of specification §8.1,
-the eight public columns of `layout.rs:228-289`. -/
-def entry : Instr → Vector K 8
-  | .xor oA oB oC => #v[Opcode.xor.code, oA, oB, oC, 0, 0, 0, 0]
-  | .mulNative oA oB oC => #v[Opcode.mulNative.code, oA, oB, oC, 0, 0, 0, 0]
-  | .setConstant o k => #v[Opcode.setConstant.code, o, k.limb 0, k.limb 1, k.limb 2, 0, 0, 0]
-  | .deref o1 o2 o3 mode =>
-      #v[Opcode.deref.code, o1, o2, o3, (derefFlags mode).1, (derefFlags mode).2, 0, 0]
-  | .jump oc od of => #v[Opcode.jump.code, oc, od, of, 0, 0, 0, 0]
-  | .blake2s om ocv oout omd => #v[Opcode.blake2s.code, om 0, om 1, om 2, om 3, ocv, oout, omd]
-
-/-- The sixteen slots of an instruction (specification §8.1): the entry at slots 3–10, zero
-elsewhere. -/
-def encodeSlots (i : Instr) : Vector K 16 :=
-  let e := entry i
-  #v[0, 0, 0, e[0], e[1], e[2], e[3], e[4], e[5], e[6], e[7], 0, 0, 0, 0, 0]
 
 /-! ## The decoder -/
 

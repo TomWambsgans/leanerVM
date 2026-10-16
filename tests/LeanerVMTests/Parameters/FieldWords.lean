@@ -6,7 +6,7 @@ meta import LeanerVM.Parameters.Field
 /-!
 # Tests: the field arithmetic as compiled
 
-`LeanerVM.Parameters.FieldWords` and `LeanerVM.Parameters.CubicExt` change what `K` and `E`
+`LeanerVM.Spec.Fast.FieldWords` and `LeanerVM.Spec.Fast.CubicExt` change what `K` and `E`
 arithmetic compiles to, never what it is: `mul_eq_mulWords` and `instMul_eq_instMulFast` are
 theorems. The compiled checks (`#guard`) below run the word-level product, inverse and the
 unrolled cubic product against vectors computed independently (Python's integers: the

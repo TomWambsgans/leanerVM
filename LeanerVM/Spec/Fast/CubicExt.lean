@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Parameters.CubicExt
+  LeanerVM.Spec.Fast.CubicExt
 
   The product of CompPoly's extension fields of degree three, unrolled: the nine coefficient
   products and the two reduced monomials, proved equal to `Ext.mul` and swapped in for
@@ -26,7 +26,7 @@ The `@[csimp]` lemmas swap the instances `Ext.instMul`, `Ext.instAdd`, `Ext.inst
 (`rfl`), so that their products are `mulFast`. Nothing here transcribes a source.
 
 This is a candidate for CompPoly, in `Parameters` for the reason given in
-`LeanerVM.Parameters.FieldWords`.
+`LeanerVM.Spec.Fast.FieldWords`.
 -/
 
 namespace CompPoly.Extension.Ext

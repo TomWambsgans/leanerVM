@@ -10,6 +10,7 @@ module
 public import LeanerVM.Protocol.Compile.Rom.History
 public import LeanerVM.Protocol.Compile.Rom.Potential
 public import LeanerVM.Protocol.ToVCVio.Rom.LoggedOracle
+public import LeanerVM.Spec.Statement
 
 /-!
 # The verifier against the random oracle
@@ -36,11 +37,7 @@ open OracleComp OracleSpec
 
 @[expose] public section
 
-/-- The random oracle of the compiled verifier: BLAKE2s-256 on byte strings. -/
-abbrev HashSpec : OracleSpec Bytes := Bytes →ₒ Digest
-
-/-- A query to the random oracle. -/
-def queryH (x : Bytes) : OracleComp HashSpec Digest := liftM (HashSpec.query x)
+export LeanVM (HashSpec queryH)
 
 /-- The seeded verifier as an oracle computation. -/
 def verifierComp (σ : Seed) (P : Prog Bool) (π : Proof) : OracleComp HashSpec Bool :=

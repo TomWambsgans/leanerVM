@@ -320,7 +320,7 @@ theorem getD_bytecodeWords (i : Fin (2 ^ prog.logSize)) (k : ℕ) (hk : k < 16) 
   have hlt : i.val + 2 ^ prog.logSize * k < 2 ^ (prog.logSize + 4) := by
     rw [pow_add]; exact add_mul_lt i.isLt (by norm_num; omega)
   rw [List.getD_eq_getElem _ _ (by simpa [length_bytecodeWords] using hlt)]
-  simp only [List.getElem_map, bytecodeWords, Vector.getElem_toList, bytecodeColumn,
+  simp only [List.getElem_map, bytecodeWords_eq_column, Vector.getElem_toList, bytecodeColumn,
     Vector.getElem_ofFn]
   have hs : (cubeSplit prog.logSize 4).symm ⟨i.val + 2 ^ prog.logSize * k, hlt⟩ =
       (i, ⟨k, by norm_num; omega⟩) := by

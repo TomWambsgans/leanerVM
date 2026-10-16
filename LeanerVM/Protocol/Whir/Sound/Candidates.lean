@@ -145,7 +145,7 @@ theorem blockOf_stackOf (hμ : laneBits ≤ μ)
     calc bitsToNat x + 2 ^ (μ - laneBits) * u < 2 ^ (μ - laneBits) * (u + 1) := by nlinarith
       _ ≤ 2 ^ (μ - laneBits) * 2 ^ laneBits := Nat.mul_le_mul_left _ hu
       _ = 2 ^ μ := by rw [← pow_add, Nat.sub_add_cancel hμ]
-  simp only [blockOf, stackOf, Vector.getD, Vector.toArray_ofFn, Array.getD_eq_getD_getElem?,
+  simp only [EndToEnd.blockOf, stackOf, Vector.getD, Vector.toArray_ofFn, Array.getD_eq_getD_getElem?,
     Array.getElem?_ofFn, hlt, dite_true, Option.getD_some]
   congr 2
   · apply Fin.ext
@@ -174,7 +174,7 @@ theorem eq_of_blockOf_eq (hμ : laneBits ≤ μ) {q q' : Column μ}
     rw [← bitsEquiv_val, Equiv.apply_symm_apply]
   have := congrFun (h ⟨i / 2 ^ (μ - laneBits), hu⟩) ((bitsEquiv (μ - laneBits)).symm
       ⟨i % 2 ^ (μ - laneBits), Nat.mod_lt _ (Nat.two_pow_pos _)⟩)
-  simp only [blockOf, hx, Nat.mod_add_div] at this
+  simp only [EndToEnd.blockOf, hx, Nat.mod_add_div] at this
   have := ofK_injective this
   simpa [Vector.getD, hi] using this
 

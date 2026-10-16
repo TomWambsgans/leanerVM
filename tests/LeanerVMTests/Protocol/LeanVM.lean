@@ -26,7 +26,7 @@ that outputs it. -/
 example (prog : Program) (input : PublicInput)
     (P : OracleComp LeanerVM.Protocol.Compile.Rom.HashSpec LeanVM.Proof) {Q : ℕ}
     (hP : P.IsTotalQueryBound Q) :
-    Pr{let z ← experiment ((fun proof ↦ ((prog, input), proof)) <$> P)}[Breaks z] ≤
+    Pr{let z ← experiment ((fun proof ↦ ((prog, input), proof)) <$> P)}[Breaks extract z] ≤
       soundnessError Q :=
   knowledgeSoundness ((OracleComp.isQueryBound_map_iff P _ Q _ _).mpr hP)
 
@@ -55,3 +55,19 @@ example : LeanerVM.Parameters.Whir.queryGrindingBits = 17 := rfl
 info: 'LeanVM.completenessError_le' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
 #guard_msgs in #print axioms completenessError_le
+
+/-! ## The statements of `LeanerVM/Spec/Statement.lean` -/
+
+example : KnowledgeSoundness := knowledgeSoundness_holds
+
+example : Completeness := completeness_holds
+
+/--
+info: 'LeanVM.knowledgeSoundness_holds' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in #print axioms knowledgeSoundness_holds
+
+/--
+info: 'LeanVM.completeness_holds' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in #print axioms completeness_holds

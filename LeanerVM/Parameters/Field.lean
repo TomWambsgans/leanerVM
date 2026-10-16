@@ -1,15 +1,13 @@
 /-
   LeanerVM.Parameters.Field
 
-  The leanVM fields `K = GF(2^64)` and `E = GF(2^192)` as CompPoly's computable carriers, and
-  the limb view of `E`.
+  Lemmas about the fields `K = GF(2^64)` and `E = GF(2^192)` of `LeanerVM.Spec.Field`: the limb
+  view of `E` and its arithmetic.
 -/
 
 module
 
-public import CompPoly.Fields.Binary.BF64
-public import LeanerVM.Parameters.CubicExt
-public import LeanerVM.Parameters.FieldWords
+public import LeanerVM.Spec.Field
 import Mathlib.Tactic.LinearCombination
 
 /-!
@@ -27,9 +25,9 @@ E = K[y]/(y^3 + y + 1),  |E| = 2^192         BF64.ext3Params_poly, BF64.ext3Poly
 
 `K` wraps a `BitVec 64` whose bit `i` is the coefficient of `x^i`
 (`crates/primitives/src/field/gf2_64.rs:16-19`, `F64`); `E` is a `Vector K 3` whose limb `i` is
-the coefficient of `y^i`. Everything below is an abbreviation or a one-line definition over those
-CompPoly declarations, so the trusted surface is the CompPoly rows of the roadmap's dependency
-table plus this file. The limb arithmetic under "Load-bearing lemmas" (`add_limbs`,
+the coefficient of `y^i`. The definitions are in `LeanerVM.Spec.Field`, abbreviations or one-line
+definitions over those CompPoly declarations; this module proves lemmas about them. The limb
+arithmetic under "Load-bearing lemmas" (`add_limbs`,
 `mul_limbs`, the `K`-word lemmas) is what the opcode tables of Layer 6 read their result
 coordinates with: a sum is bitwise `XOR` limb by limb, a product is the twelve limb products
 folded by `y^3 = y + 1`.
@@ -53,14 +51,6 @@ kernel reduces `K` arithmetic, `E.ofLimbs`, `E.limb`, and the two predicates on 
 through compiled evaluation (`#guard` under `meta import`), and any later-layer plan to decide an
 execution by `decide` depends on CompPoly or core lifting this.
 
-## Compiled arithmetic
-
-`LeanerVM.Parameters.FieldWords` and `LeanerVM.Parameters.CubicExt`, imported here, hold
-`@[csimp]` lemmas under which `K` arithmetic compiles to word operations (the carry-less product
-on `UInt64`) instead of arbitrary-precision `Nat` arithmetic, and `E` arithmetic to the unrolled
-cubic product. They change no definition and no statement; they affect compiled code only,
-everywhere downstream of this module.
-
 ## Clean's field interface
 
 Clean's `FiniteField K` is `instFiniteFieldK` in `LeanerVM.Parameters.CleanField`.
@@ -76,57 +66,11 @@ open CompPoly.Extension
 
 /-! ## The fields -/
 
-/-- `K = GF(2^64)`, CompPoly's `BF64`: a wrapper of `BitVec 64` with bit `i` the
-coefficient of `x^i`. -/
-abbrev K : Type := BF64
-
-/-- Decode a polynomial-basis word, reducing its integer representation modulo `2^64`.
-This is a wire encoding, distinct from the characteristic-two natural-number cast. -/
-def K.ofBits (n : ℕ) : K := BF64.ofBitVec (BitVec.ofNat 64 n)
-
-/-- Decide equality through bit coordinates, keeping kernel comparisons of computed words
-free of the dependent transport introduced by the upstream derived instance. -/
-instance instDecidableEqK : DecidableEq K := fun a b ↦
-  decidable_of_iff (a.toBitVec = b.toBitVec) BF64.toBitVec_injective.eq_iff
-
 /-- A proof-only enumeration of `K`; executable code uses its explicit bit coordinates. -/
 noncomputable instance : Fintype K := Fintype.ofFinite K
 
-/-- `E = K[y]/(y^3 + y + 1)`, CompPoly's `BF64.Ext3`: a `Vector K 3` in limb order
-`c0 + c1·y + c2·y²`. -/
-abbrev E : Type := BF64.Ext3
-
-/-- The adjoined root `y` of `y^3 + y + 1`. -/
-def y : E := BF64.ext3Gen
-
 /-- The defining relation of `E`: `y^3 = y + 1`. -/
 theorem y_pow_three : y ^ 3 = y + 1 := BF64.ext3Gen_pow_three
-
-/-! ## Limbs -/
-
-/-- The embedding `K ↪ E` as the `y^0` limb; it is `algebraMap K E` by `rfl`. -/
-abbrev ofK (a : K) : E := Ext.ofBase a
-
-/-- Limb `i` of a word: the coefficient of `y^i`. -/
-abbrev E.limb (x : E) (i : Fin 3) : K := Ext.coeff x i
-
-/-- The word `c0 + c1·y + c2·y²`, as the literal limb vector. -/
-def E.ofLimbs (c0 c1 c2 : K) : E := Ext.ofVector #v[c0, c1, c2]
-
-/-- A word lies in `K`: its `y` and `y²` limbs are zero. -/
-def IsInK (x : E) : Prop := x.limb 1 = 0 ∧ x.limb 2 = 0
-
-/-- A canonical 128-bit word: its `y²` limb is zero. -/
-def IsCanonical128 (x : E) : Prop := x.limb 2 = 0
-
-/-- The canonical word of a two-limb cell, `c0 + c1·y`: the cell shape `BLAKE2S` consumes. -/
-def E.ofCell (v : Vector K 2) : E := E.ofLimbs v[0] v[1] 0
-
-instance : DecidablePred IsInK :=
-  fun x ↦ inferInstanceAs (Decidable (x.limb 1 = 0 ∧ x.limb 2 = 0))
-
-instance : DecidablePred IsCanonical128 :=
-  fun x ↦ inferInstanceAs (Decidable (x.limb 2 = 0))
 
 /-- Hexadecimal rendering `E(0x<c2><c1><c0>)`, the Python verifier's `E.__repr__`
 (`python-verifier/verifier.py:177`). -/

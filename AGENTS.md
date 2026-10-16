@@ -36,8 +36,9 @@ python3 ./scripts/test-policy-checks.py
 
 ## Where To Work
 
-- `LeanerVM/Semantics/` — instruction set, state, memory, bytecode, transition relation, and
-  pure executable interpreter.
+- `LeanerVM/Spec/` — what is proved, for review: the fields, BLAKE2s, leanISA, the verifier and
+  the two statements. Definitions only; imports nothing else from `LeanerVM/`.
+- `LeanerVM/Semantics/` — lemmas about the instruction set, and the pure executable interpreter.
 - `LeanerVM/Parameters/` — versioned constants, encodings, layouts, and source bindings.
 - `LeanerVM/Arithmetization/` — tables, buses, witness generation, constraints, and refinement
   to the VM semantics.
@@ -52,9 +53,11 @@ python3 ./scripts/test-policy-checks.py
 The allowed production dependency flow is:
 
 ```text
-Parameters ──→ Semantics ──→ Arithmetization ──→ Protocol
-                         └──→ Applications ────────┘
+Spec ──→ Parameters ──→ Semantics ──→ Arithmetization ──→ Protocol
+                                  └──→ Applications ────────┘
 ```
+
+Every layer may import `Spec`; `Spec` imports only `Spec`.
 
 ## Lean and Proof Guardrails
 

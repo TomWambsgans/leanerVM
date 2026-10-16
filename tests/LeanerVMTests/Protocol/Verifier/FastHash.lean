@@ -1,9 +1,9 @@
-import LeanerVM.Protocol.Verifier.Fast.Hash
+import LeanerVM.Spec.Fast.Hash
 
 /-!
 # Tests: BLAKE2s as the verifier compiles it
 
-`LeanerVM.Protocol.Verifier.Fast.Hash` compiles `blake2sBytes` as `blake2sBytesWords`, with the
+`LeanerVM.Spec.Fast.Hash` compiles `blake2sBytes` as `blake2sBytesWords`, with the
 rotation on `UInt32` and the block read from an array; the equalities are theorems. The compiled
 checks run the restated hash on digests of CPython's `hashlib.blake2s` (the empty message,
 `"abc"` of RFC 7693 Appendix B, and a 200-byte ramp, four blocks with a short last one), with

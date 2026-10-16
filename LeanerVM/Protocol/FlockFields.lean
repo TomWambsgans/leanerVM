@@ -8,7 +8,10 @@
 
 module
 
-public import LeanerVM.Parameters.Flock
+public import LeanerVM.Spec.Verifier
+public import LeanerVM.Protocol.Compile.Prog
+public import LeanerVM.Protocol.Blake2sHash
+public import LeanerVM.Parameters.Field
 public import LeanerVM.Parameters.Generator
 public import LeanerVM.Protocol.Field
 public import LeanerVM.Protocol.ToCompPoly.Multilinear

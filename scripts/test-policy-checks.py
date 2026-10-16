@@ -248,6 +248,18 @@ def test_layer_gate() -> None:
         write(sibling, "module\n\npublic import LeanerVM.Arithmetization.Basic\n")
         require_failure(run(root, "check-layers.sh"), "wall: a sibling of EndToEnd", "the wall")
         sibling.unlink()
+        # The specification imports nothing of the repository outside `Spec/`.
+        spec = root / "LeanerVM" / "Spec" / "Violation.lean"
+        for declaration in import_forms:
+            write(spec, f"module\n\n{declaration.replace('Protocol', 'Parameters')}\n")
+            require_failure(
+                run(root, "check-layers.sh"), f"spec: {declaration}", "Forbidden Spec dependency"
+            )
+        for declaration in import_forms:
+            write(spec, f"module\n\n{declaration.replace('Protocol.Basic', 'Spec.Field')}\n")
+            require_pass(run(root, "check-layers.sh"), f"spec importing spec: {declaration}")
+        spec.unlink()
+        shutil.rmtree(spec.parent, ignore_errors=True)
         require_pass(run(root, "check-layers.sh"), "layer gate after cleanup")
 
 

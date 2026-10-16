@@ -10,12 +10,23 @@ behind specified interfaces as the implementation stabilizes.
 ## Lean layers
 
 ```text
-Parameters ──→ Semantics ──→ Arithmetization ──→ Protocol
-                         └──→ Applications ────────┘
+Spec ──→ Parameters ──→ Semantics ──→ Arithmetization ──→ Protocol
+                                  └──→ Applications ────────┘
 ```
 
 An arrow points from a lower layer to a layer allowed to depend on it.
 `scripts/check-layers.sh` enforces the forbidden reverse edges on every validation run.
+
+### Spec
+
+Owns what is proved, for review: the definitions the two end-to-end statements mention (the
+fields, BLAKE2s, leanISA, the instruction encoding, the fill blocks, the verifier with its
+constants and transcript, the random-oracle experiment) and the statements themselves, as
+propositions (`LeanerVM/Spec/Statement.lean`). It contains definitions only, plus the `@[csimp]`
+theorems of `Spec/Fast/` that make the compiled verifier fast, and imports nothing from
+`LeanerVM/` outside `Spec/`. Lemmas about these definitions live in the layer that owns the
+topic (`Parameters`, `Semantics`, `Protocol`). [`LeanerVM/Spec/README.md`](../LeanerVM/Spec/README.md)
+gives the reading order.
 
 ### Parameters
 
@@ -27,8 +38,8 @@ BLAKE2s constructions without making that selection permanent for future revisio
 
 ### Semantics
 
-Owns the ISA, state, memory, bytecode, transition relation, halting behavior, and pure
-executable interpreter. It must not import arithmetization or protocol code.
+Owns the lemmas about the ISA (defined in `Spec/Isa.lean`) and the pure executable interpreter.
+It must not import arithmetization or protocol code.
 Prefer generic machine definitions where practical; source-faithful leanVM semantics consume
 the versioned constants and encodings owned by `Parameters`.
 

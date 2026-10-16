@@ -1,7 +1,8 @@
 /-
   LeanerVM.Parameters.Generator
 
-  The generator `g = x` of `K^×`, its kernel-checked order certificate, and exponent addressing.
+  The order of the generator `g = x` of `K^×` (`LeanerVM.Spec.Field`): a kernel-checked
+  certificate, and what exponent addressing needs of it.
 -/
 
 module
@@ -18,7 +19,7 @@ leanISA roadmap Layer 0 (`docs/roadmap/leanisa-blueprint.md`). Category B: `g = 
 `ord(x) = 2^64 - 1`") at leanVM pin `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, cross-checked
 against `python-verifier/verifier.py:182` (`GEN = E(2)`). Specification §2
 (`02-vm-specification.tex:12`) fixes a generator of `K^×` of order `2^64 - 1` without naming it
-(status finding S4). The value appears exactly once, in `g`, and is symbolic everywhere else.
+(status finding S4). The value appears exactly once, in `g` (`LeanerVM.Spec.Field`), and is symbolic everywhere else.
 
 The order is certified, not asserted. `|K^×| = 2^64 - 1 = 3·5·17·257·641·65537·6700417`;
 `g^(2^64-1) = 1` is Lagrange (`FiniteField.pow_card_sub_one_eq_one` with `BF64.card_bf64`); and
@@ -36,14 +37,6 @@ address (`gpow_ne_zero`), and the fall-through successor of `pc` is `g * pc` (`g
 namespace LeanerVM.Parameters
 
 @[expose] public section
-
-/-! ## The generator -/
-
-/-- `g = x`, the word `0x2`; `crates/primitives/src/field/gf2_64.rs:25` (`F64::G = F64(2)`). -/
-def g : K := K.ofBits 0x2
-
-/-- Exponent addressing: logical index `i` is the address `g ^ i`. -/
-abbrev gpow (i : ℕ) : K := g ^ i
 
 /-! ## The order certificate -/
 

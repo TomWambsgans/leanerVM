@@ -32,6 +32,29 @@ check_forbidden() {
   fi
 }
 
+# The specification imports nothing of the rest of the repository: it is what a reviewer reads.
+check_spec() {
+  local pattern="${import_prefix}LeanerVM\.([A-Za-z]+)"
+  local matches
+  if matches="$(rg --line-number --glob '*.lean' "$pattern" LeanerVM/Spec)"; then
+    while IFS= read -r match; do
+      if [[ ! "$match" =~ import([[:space:]]+all)?[[:space:]]+LeanerVM\.Spec(\.|[[:space:]]|$) ]]; then
+        echo "Forbidden Spec dependency outside LeanerVM/Spec: $match" >&2
+        status=1
+      fi
+    done <<< "$matches"
+  else
+    local rg_status=$?
+    if [[ $rg_status -ne 1 ]]; then
+      exit "$rg_status"
+    fi
+  fi
+}
+
+if [[ -d LeanerVM/Spec ]]; then
+  check_spec
+fi
+
 check_forbidden LeanerVM/Parameters \
   'Semantics|Arithmetization|Applications|Protocol' 'Parameters'
 check_forbidden LeanerVM/Semantics \
@@ -72,7 +95,7 @@ if [[ -d LeanerVM/Protocol ]]; then
   check_wall
 fi
 
-allowed_layers='^(Applications|Arithmetization|Parameters|Protocol|Semantics)$'
+allowed_layers='^(Applications|Arithmetization|Parameters|Protocol|Semantics|Spec)$'
 while IFS= read -r entry; do
   name="${entry#LeanerVM/}"
   if [[ -d "$entry" ]]; then

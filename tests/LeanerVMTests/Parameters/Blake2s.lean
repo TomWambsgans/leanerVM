@@ -1,6 +1,6 @@
 module
 
-public import LeanerVM.Parameters.Blake2s
+public import LeanerVM.Spec.Blake2s
 
 /-!
 # BLAKE2s constants

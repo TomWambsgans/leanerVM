@@ -1,47 +1,26 @@
 /-
   LeanerVM.Protocol.Compile.Prog
 
-  The language the compiled verifier is written in: a free monad over the five transcript
-  operations of leanVM's Fiat–Shamir verifier (read a scalar, sample a challenge, check a
-  proof of work, read a Merkle commitment, open committed rows), with its interactive-oracle
-  reading (histories of prover messages, challenges and committed words) and the round-by-round
-  certificate whose escape probabilities the random-oracle theorem sums.
+  The interactive-oracle reading of the verifier language of `LeanerVM.Spec.Verifier`: histories
+  of prover messages, challenges and committed words, and the round-by-round certificate whose
+  escape probabilities the random-oracle theorem sums.
 -/
 
 module
 
-public import LeanerVM.Parameters.Field
+public import LeanerVM.Spec.Verifier
 public import LeanerVM.Protocol.Field
 public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 public import Mathlib.Basic.ENNReal.Operations
 
 /-!
-# The verifier language
+# The interactive reading of the verifier language
 
-leanVM's verifier (`python-verifier/verifier.py` at leanVM
-`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, class `Transcript`, lines 345-416) touches the proof
-through five operations, and computes everything else from their results:
-
-* `next_scalar`: read the next field element of the proof stream and absorb it into the
-  Fiat–Shamir chain (`read`);
-* `sample`: squeeze a challenge out of the chain (`sample`);
-* `grind_check`: read a nonce, check the proof of work at a number of bits, absorb the nonce
-  (`grind`);
-* `Digest.from_halves(*next_scalars(2))` at a commitment: read a Merkle root as two scalars
-  (`commit`, which also fixes the shape of the committed matrix: `2^height` leaves of `width`
-  words);
-* `merkle`: open rows of a committed matrix at positions, each with its authentication path
-  (`query`).
-
-`Prog α` is the free monad over these operations. A verifier written in it has two readings,
-and the point of the language is that they are one program:
-
-* the *compiled* reading (`LeanerVM.Protocol.Compile.Run`): the deployed non-interactive
-  verifier, run on a proof with a hash function, the challenges squeezed out of a BLAKE2s chain
-  and the rows authenticated by Merkle paths;
-* the *interactive-oracle* reading (this module): a public-coin protocol in which the prover
-  sends field elements and whole matrices (`Word`s), the verifier draws uniform challenges and
-  reads rows of the matrices directly. A run is a history (`List Ev`).
+The language (`Prog`, its five operations, and the compiled reading `runProof` on a proof with a
+hash function) is defined with the verifier, in `LeanerVM.Spec.Verifier` (Part 2). This module
+gives the second reading of the same programs: a public-coin protocol in which the prover sends
+field elements and whole matrices (`Word`s), and the verifier draws uniform challenges and reads
+rows of the matrices directly. A run is a history (`List Ev`).
 
 Soundness is stated on the interactive reading by a *doom certificate* (`Cert`): a predicate
 `D` on histories ("the prover has lost") that prover moves keep, that the verdict refutes, and
@@ -68,43 +47,9 @@ open LeanerVM.Parameters
 
 @[expose] public section
 
-/-! ## Programs -/
-
-/-- The verifier language: a program returns a value of type `α` after reading scalars,
-sampling challenges, checking proofs of work, reading commitments and opening rows, or fails. -/
-inductive Prog (α : Type) : Type where
-  /-- Return a value. -/
-  | ret (a : α)
-  /-- Reject. -/
-  | fail
-  /-- Read the next prover scalar (absorbed into the chain). -/
-  | read (k : E → Prog α)
-  /-- Sample a challenge (squeezed from the chain). -/
-  | sample (k : E → Prog α)
-  /-- Check a proof of work of `bits` bits (the nonce is read and absorbed). -/
-  | grind (bits : ℕ) (k : Prog α)
-  /-- Read a commitment to a matrix of `2^height` rows of `width` words. -/
-  | commit (height width : ℕ) (k : Prog α)
-  /-- Open rows of the `i`-th commitment at `positions`; continue with the rows. -/
-  | query (i : ℕ) (positions : List ℕ) (k : List (List K) → Prog α)
-
 namespace Prog
 
 variable {α β γ : Type}
-
-/-- Sequencing. -/
-def bind : Prog α → (α → Prog β) → Prog β
-  | ret a, f => f a
-  | fail, _ => fail
-  | read k, f => read fun x ↦ (k x).bind f
-  | sample k, f => sample fun x ↦ (k x).bind f
-  | grind b k, f => grind b (k.bind f)
-  | commit h w k, f => commit h w (k.bind f)
-  | query i ps k, f => query i ps fun r ↦ (k r).bind f
-
-instance : Monad Prog where
-  pure := ret
-  bind := bind
 
 @[simp] theorem pure_eq (a : α) : (pure a : Prog α) = ret a := rfl
 
@@ -138,43 +83,16 @@ instance : LawfulMonad Prog := LawfulMonad.mk'
   (pure_bind := fun _ _ ↦ rfl)
   (bind_assoc := fun p f g ↦ bind_assoc p f g)
 
-/-! ### The operations as programs -/
-
-/-- Read one prover scalar. -/
-def readE : Prog E := read ret
-
-/-- Read `n` prover scalars, in order. -/
-def readN : ℕ → Prog (List E)
-  | 0 => ret []
-  | n + 1 => do
-    let x ← readE
-    let xs ← readN n
-    return x :: xs
-
-/-- Sample one challenge. -/
-def sampleE : Prog E := sample ret
-
-/-- Sample `n` challenges, in order. -/
-def sampleN : ℕ → Prog (List E)
-  | 0 => ret []
-  | n + 1 => do
-    let x ← sampleE
-    let xs ← sampleN n
-    return x :: xs
-
-/-- Check a proof of work of `bits` bits. -/
-def grindP (bits : ℕ) : Prog Unit := grind bits (ret ())
-
-/-- Read a commitment to a matrix of `2^height` rows of `width` words. -/
-def commitP (height width : ℕ) : Prog Unit := commit height width (ret ())
-
-/-- Open rows of the `i`-th commitment. -/
-def queryP (i : ℕ) (positions : List ℕ) : Prog (List (List K)) := query i positions ret
-
-/-- Reject unless `c` holds (the Python verifier's `require`). -/
-def require (c : Prop) [Decidable c] : Prog Unit := if c then ret () else fail
-
 end Prog
+
+/-- Digests are finite: the uniform distribution of the random oracle ranges over them. A proof
+object only: its element list has `2^256` entries, and compiled code would build it when the
+program starts (a closed constant is evaluated at initialization), so it is `noncomputable`. -/
+noncomputable instance instFintypeDigest : Fintype Digest :=
+  Fintype.ofEquiv (Fin 8 → UInt32)
+    { toFun := Vector.ofFn, invFun := fun v i ↦ v[i]
+      left_inv := fun _ ↦ funext fun _ ↦ Vector.getElem_ofFn _
+      right_inv := fun _ ↦ Vector.ext fun _ _ ↦ Vector.getElem_ofFn _ }
 
 /-! ## The interactive reading -/
 

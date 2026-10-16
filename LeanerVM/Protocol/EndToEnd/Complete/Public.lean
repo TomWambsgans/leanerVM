@@ -12,6 +12,7 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Claims
 public import LeanerVM.Protocol.Whir.Complete.Script
 public import LeanerVM.Protocol.PublicInput
 public import LeanerVM.Protocol.Blake2sHash
+public import LeanerVM.Spec.Statement
 import LeanerVM.Protocol.Compile.Rom.Encoding
 
 /-!
@@ -44,12 +45,7 @@ open LeanerVM.Protocol.Blake2sHash LeanerVM.Protocol.PublicInput CompPoly CMlPol
 
 /-! ## The digest of a public input -/
 
-/-- The digest of a public input: the low and high 32-bit words of its four lanes, in order
-(`hash_to_scalars`, `crates/fiat_shamir/src/merkle.rs:8-19`, read backwards). -/
-def publicDigest (input : PublicInput) : Digest :=
-  #v[lowWord (input.lanes 0), highWord (input.lanes 0), lowWord (input.lanes 1),
-    highWord (input.lanes 1), lowWord (input.lanes 2), highWord (input.lanes 2),
-    lowWord (input.lanes 3), highWord (input.lanes 3)]
+export LeanVM (publicDigest)
 
 /-- **The digest names the public input.** -/
 theorem publicDigest_injective : Function.Injective publicDigest := by

@@ -9,7 +9,10 @@
 
 module
 
-public import LeanerVM.Protocol.Compile.Run
+public import LeanerVM.Spec.Verifier
+public import LeanerVM.Protocol.Compile.Prog
+public import LeanerVM.Protocol.Blake2sHash
+public import LeanerVM.Parameters.Field
 public import LeanerVM.Protocol.ToArkLib.Merkle
 
 /-!

@@ -1,13 +1,14 @@
 /-
   LeanerVM.Semantics.Lemmas
 
-  The lemmas about the definitions of `LeanerVM.Semantics`: addressing, fetching, the step, and the
+  The lemmas about the definitions of `LeanerVM.Spec.Isa`: addressing, fetching, the step, and the
   execution loop.
 -/
 
 module
 
-public import LeanerVM.Semantics
+public import LeanerVM.Spec.Isa
+public import LeanerVM.Parameters.Isa
 
 /-!
 # Lemmas about leanISA

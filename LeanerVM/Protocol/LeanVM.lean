@@ -1,9 +1,8 @@
 /-
   LeanerVM.Protocol.LeanVM
 
-  The leanVM verifier and what is proved about it, in one page: the verifier for any hash
-  function, the deployed verifier (BLAKE2s), knowledge soundness in the random-oracle model at
-  128 bits per query, and completeness.
+  The proof of the two statements of `LeanerVM/Spec/Statement.lean`: knowledge soundness of the
+  leanVM verifier in the random-oracle model, at 128 bits per query, and completeness.
 -/
 
 module
@@ -14,20 +13,9 @@ public import LeanerVM.Protocol.EndToEnd.Complete.Rom
 /-!
 # leanVM, end to end
 
-What the repository proves about leanVM's verifier at leanVM
-`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, stated over three files: the ISA
-(`LeanerVM/Semantics.lean`: `Program`, `PublicInput`, `Trace`, `ValidExecution`), the verifier
-(`LeanerVM/Protocol/Verifier.lean`), and this page. Everything else in the repository is proof.
-
-**The verifier.** `verifier H prog input proof` is `python-verifier/verifier.py` at that commit,
-transcribed into Lean, for a program `prog`, a public input `input` and a proof, with the hash
-function `H : Bytes → m Digest` a parameter in any monad `m`. Two instances:
-
-* `verify`: `H` is BLAKE2s-256 (`m = Id`), the deployed verifier, executable:
-  `lake exe leanvm-verify` checks a proof of the Rust prover in well under a second (the field
-  and BLAKE2s are swapped for word-level code by proven `@[csimp]` theorems);
-* the same `verifier` with `H` a query to a random oracle (`m = OracleComp`), which is what the
-  knowledge-soundness theorem is about.
+The statements are in `LeanerVM/Spec/` (the ISA, the verifier, and `Statement.lean`), which
+imports nothing else from the repository. This page proves them, `knowledgeSoundness_holds` and
+`completeness_holds`, with an explicit extractor and honest prover, and gives the numbers.
 
 **Knowledge soundness** (`knowledgeSoundness`): an adversary making at most `Q` queries to the
 random oracle outputs a statement (a program and a public input) and a proof, choosing all three
@@ -72,21 +60,6 @@ open scoped ENNReal
 
 @[expose] public section
 
-/-! ## The verifier -/
-
-/-- A proof: the scalar stream and the Merkle openings. -/
-abbrev Proof := Compile.Proof
-
-/-- **The leanVM verifier**, for a hash function `H` in any monad `m`: does `proof` show that
-`prog` runs on `input`? -/
-def verifier {m : Type → Type} [Monad m] (H : Bytes → m Digest) (prog : Program)
-    (input : PublicInput) (proof : Proof) : m Bool :=
-  verifyWith H (Front.bytecodeWords prog) (Complete.publicDigest input) proof
-
-/-- **The deployed verifier**: `verifier` with BLAKE2s-256. -/
-def verify (prog : Program) (input : PublicInput) (proof : Proof) : Bool :=
-  Id.run (verifier blake2sBytes prog input proof)
-
 /-- `verify` is the transcription of the deployed verifier, run with BLAKE2s
 (`LeanerVM.Protocol.Verifier.verify`, what `lake exe leanvm-verify` runs). -/
 theorem verify_eq (prog : Program) (input : PublicInput) (proof : Proof) :
@@ -95,20 +68,12 @@ theorem verify_eq (prog : Program) (input : PublicInput) (proof : Proof) :
         proof :=
   rfl
 
+/-- The experiment is the generic adversary-then-verifier experiment the proofs are about. -/
+theorem experiment_eq (A : Adversary) :
+    experiment A = Rom.romExperiment A fun z ↦ verifier queryH z.1.1 z.1.2 z.2 :=
+  rfl
+
 /-! ## Knowledge soundness -/
-
-/-- A statement: a program and a public input. -/
-abbrev Statement : Type := Program × PublicInput
-
-/-- An adversary: a computation with oracle access to the hash function that outputs a statement
-and a proof. -/
-abbrev Adversary : Type := OracleComp HashSpec (Statement × Proof)
-
-/-- **The random-oracle experiment**: the adversary, then the verifier on its statement and
-proof, both querying one lazily sampled random oracle. Its outcome is the statement and the
-proof, the verdict, and the oracle's answers. -/
-noncomputable def experiment (A : Adversary) :=
-  Rom.romExperiment A fun z ↦ verifier queryH z.1.1 z.1.2 z.2
 
 /-- The execution of `prog` on a memory image: the image, run from `(1, 1)` for the least number
 of steps after which it halts at `(g^(N − 1), 1)`; `none` if it never does. -/
@@ -127,20 +92,6 @@ noncomputable def extract (prog : Program) (input : PublicInput) (answers : Hash
   (Sound.extractStack prog input answers proof).bind fun x ↦
     let image := imageOf (witnessOf Blake2sFlock.blake2sFlockSpec prog x.1 x.2).data
     haltingRun prog image.2
-
-/-- **The adversary breaks soundness**: the verifier accepts its statement and proof, the
-program's last instruction is not a `JUMP`, and the extracted execution is not a valid execution
-of the program on the public input. -/
-def Breaks (z : ((Statement × Proof) × Bool) × HashSpec.QueryCache) : Prop :=
-  let prog := z.1.1.1.1
-  let input := z.1.1.1.2
-  z.1.2 = true ∧ SentinelSafe prog ∧
-    ¬ ∃ t, extract prog input z.2 z.1.1.2 = some t ∧ ValidExecution prog input t
-
-/-- **The soundness error** of an adversary of `Q` queries: one `2^-128` per query of the
-adversary and the verifier (at most `13213`), plus collisions. -/
-noncomputable def soundnessError (Q : ℕ) : ℝ≥0∞ :=
-  ((Q + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 + ((5 * (Q + 13213) : ℕ) : ℝ≥0∞) / 2 ^ 256)
 
 /-- A witness representing a valid execution has its image's halting run, valid. -/
 theorem haltingRun_valid {prog : Program} {input : PublicInput}
@@ -163,7 +114,7 @@ queries, which chooses the program, the public input and the proof, the verifier
 the program's last instruction is not a `JUMP` and the extracted execution is not a valid
 execution of the program on the public input with probability at most `soundnessError Q`. -/
 theorem knowledgeSoundness {A : Adversary} {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
-    Pr{let z ← experiment A}[Breaks z] ≤ soundnessError Q := by
+    Pr{let z ← experiment A}[Breaks extract z] ≤ soundnessError Q := by
   have hV : (fun z : Statement × Proof ↦ verifier queryH z.1.1 z.1.2 z.2) =
       Rom.verifierFam Sound.leanVmSeeds Sound.anyProgram := by
     funext z
@@ -182,8 +133,7 @@ theorem knowledgeSoundness {A : Adversary} {Q : ℕ} (hA : A.IsTotalQueryBound Q
       obtain ⟨t', ht', hv'⟩ := haltingRun_valid hrep ht
       exact ⟨t', by simp only [extract, hx, Option.bind_some]; exact ht', hv'⟩)
   rw [leanVmQueryBound_eq] at h
-  unfold experiment
-  rw [hV]
+  rw [experiment_eq, hV]
   refine (le_of_eq ?_).trans (h.trans (le_of_eq ?_))
   · rfl
   · rw [soundnessError, failBound]
@@ -205,13 +155,6 @@ of every phase through the Fiat–Shamir transform. -/
 noncomputable def honestProver (prog : Program) (input : PublicInput) (t : Trace prog)
     (ρ fuel : ℕ) : Adversary :=
   (fun proof ↦ ((prog, input), proof)) <$> Complete.honestComp prog input t ρ fuel
-
-/-- **The completeness error** at a fuel of `fuel` nonces per proof of work: each of the
-`Q` queries of the honest prover and the verifier may complete a proof of work whose nonces all
-failed, or meet a digest the oracle already gave. -/
-noncomputable def completenessError (fuel : ℕ) : ℝ≥0∞ :=
-  let Q : ℕ := 13216 + 13210 * (2 ^ 27 + fuel + 1)
-  Q * ((1 - (2 : ℝ≥0∞)⁻¹ ^ 17) ^ fuel + Q / 2 ^ 256)
 
 theorem completenessError_eq (fuel : ℕ) :
     completenessError fuel = Complete.completenessError fuel := by
@@ -238,7 +181,8 @@ theorem completeness {prog : Program} {input : PublicInput} {t : Trace prog}
     funext fun π ↦ (verifierComp_leanVm _ _ π).symm
   have h := Complete.romComplete_leanVm hfill hv ⟨hsteps, hmem, hcode⟩ hρ hfuel
   rw [← hV, ← completenessError_eq] at h
-  unfold experiment honestProver
+  rw [experiment_eq]
+  unfold honestProver
   rw [Rom.romExperiment_map]
   simp only [bind_map_left]
   exact h
@@ -248,6 +192,17 @@ below `2^-128`. -/
 theorem completenessError_le : completenessError (2 ^ 25) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 := by
   rw [completenessError_eq]
   exact Complete.completenessError_le
+
+/-! ## The statements of `LeanerVM/Spec/Statement.lean` -/
+
+/-- **Knowledge soundness holds**, with the extractor `extract`. -/
+theorem knowledgeSoundness_holds : KnowledgeSoundness :=
+  ⟨extract, fun _ _ hA ↦ knowledgeSoundness hA⟩
+
+/-- **Completeness holds**, with the honest prover `honestProver`. -/
+theorem completeness_holds : Completeness :=
+  ⟨Complete.honestComp, fun _ _ _ _ _ hfill hv hsteps hmem hcode hρ hfuel ↦
+    completeness hfill hv hsteps hmem hcode hρ hfuel⟩
 
 end
 end LeanVM

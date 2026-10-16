@@ -1,5 +1,5 @@
 /-
-  LeanerVM.Protocol.Verifier.Fast.Hash
+  LeanerVM.Spec.Fast.Hash
 
   BLAKE2s-256 as the compiled verifier runs it: the rotation on machine words and the block's
   words read from an array, each proved equal to the definition it replaces and swapped in for
@@ -8,7 +8,7 @@
 
 module
 
-public import LeanerVM.Protocol.Blake2sHash
+public import LeanerVM.Spec.Blake2s
 
 /-!
 # The compiled BLAKE2s
@@ -22,7 +22,7 @@ A `@[csimp]` lemma acts where code is compiled, and `mix`, `round`, `compress`, 
 `blake2sBytes` were compiled with the definitions above. Each is restated here, word for word,
 so that it is compiled with the replacements, and the lemma equating it with its restatement
 (`rfl`, or an induction for the recursive `absorb`) compiles `blake2sBytes` as the restatement
-in every module that imports this one. The verifier (`LeanerVM.Protocol.Verifier`) does.
+in every module that imports this one. The verifier (`LeanerVM.Spec.Verifier`) does.
 Nothing here transcribes a source.
 -/
 

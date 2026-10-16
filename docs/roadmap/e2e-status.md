@@ -7,11 +7,14 @@ locked in the tests).
 
 ## The front page
 
-The statements read over three files: the ISA,
-[`LeanerVM/Semantics.lean`](../../LeanerVM/Semantics.lean) (`Program`, `PublicInput`, `Trace`,
-`ValidExecution`, `SentinelSafe`); the verifier,
-[`LeanerVM/Protocol/Verifier.lean`](../../LeanerVM/Protocol/Verifier.lean); and the front page,
-[`LeanerVM/Protocol/LeanVM.lean`](../../LeanerVM/Protocol/LeanVM.lean) (namespace `LeanVM`):
+The statements are in [`LeanerVM/Spec/`](../../LeanerVM/Spec/README.md), which imports nothing
+else from the repository: the fields, BLAKE2s, the ISA (`Isa.lean`: `Program`, `PublicInput`,
+`Trace`, `ValidExecution`, `SentinelSafe`, `HasFillBlocks`), the verifier (`Verifier.lean`, with
+the WHIR and Flock constants and the Fiat–Shamir transcript), and `Statement.lean`, which states
+`KnowledgeSoundness` and `Completeness` as propositions, the extractor and the honest prover
+existentially quantified. [`LeanerVM/Protocol/LeanVM.lean`](../../LeanerVM/Protocol/LeanVM.lean)
+proves them (`knowledgeSoundness_holds`, `completeness_holds`) with an explicit extractor and
+honest prover:
 
 * `verifier H prog input proof : m Bool`: the verifier, for a hash function `H : Bytes → m Digest`
   in any monad; `verify` is the BLAKE2s instance (`m = Id`), the deployed verifier, and the
@@ -42,7 +45,7 @@ rows).
 ## The verifier the theorems are about
 
 `verifier` is `LeanerVM.Protocol.Verifier.verifyWith`. The whole verifier is one file,
-[`LeanerVM/Protocol/Verifier.lean`](../../LeanerVM/Protocol/Verifier.lean), in the sections of
+[`LeanerVM/Spec/Verifier.lean`](../../LeanerVM/Spec/Verifier.lean), in the sections of
 `verifier.py` (about 1700 lines against the Python's 1433). It is the compiled
 reading of `leanVmProgram`, a transcription of `python-verifier/verifier.py` at the pin in the
 verifier language `Compile/Prog.lean` (read, sample, grind, commit, query): the Fiat–Shamir chain
@@ -51,8 +54,8 @@ with proof of work and Merkle openings. The random-oracle side is the same progr
 
 **Running it.** `lake exe leanvm-verify bytecode public_input stream merkle_openings`
 (`cli/LeanvmVerify.lean`) runs `verify` compiled, on the four files the Rust prover writes. It
-checks a real Rust proof in about 0.3–0.7 s and 100 MB: the field (`Parameters/FieldWords.lean`,
-`Parameters/CubicExt.lean`) and BLAKE2s (`Verifier/Fast/Hash.lean`) are swapped for word-level
+checks a real Rust proof in about 0.3–0.7 s and 100 MB: the field (`Spec/Fast/FieldWords.lean`,
+`Spec/Fast/CubicExt.lean`) and BLAKE2s (`Spec/Fast/Hash.lean`) are swapped for word-level
 code by `@[csimp]` theorems, so the verifier's definitions are the readable ones and the compiler
 runs proven-equal code.
 

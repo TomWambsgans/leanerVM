@@ -3,7 +3,7 @@
 Local working note for the branch `e2e/rom-knowledge-soundness`. It fixes the architecture of the
 end-to-end theorem and, in detail, the random-oracle argument that turns a doom certificate of
 a verifier program (`LeanerVM/Protocol/Compile/Prog.lean`) into a bound on the compiled verifier
-(`LeanerVM/Protocol/Compile/Run.lean`).
+(`LeanerVM/Spec/Verifier.lean`, Part 2).
 
 ## The chain of theorems
 

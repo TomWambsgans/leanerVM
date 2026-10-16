@@ -1,16 +1,14 @@
 /-
-  LeanerVM.Semantics
+  LeanerVM.Spec.Isa
 
-  leanISA, the instruction set of leanVM: memory, instructions, programs, one step of the
-  machine, and valid executions.
+  leanISA, the leanVM instruction set: memory, instructions, programs, one step, valid
+  executions; and the encoding of an instruction as sixteen `K` slots.
 -/
 
 module
 
-public import LeanerVM.Parameters.Generator
-public import LeanerVM.Parameters.Isa
-public import LeanerVM.Parameters.Blake2s
-public import LeanerVM.Parameters.Field
+public import LeanerVM.Spec.Field
+public import LeanerVM.Spec.Blake2s
 
 /-!
 # leanISA
@@ -22,7 +20,50 @@ Words are elements of `E = K[y]/(y³ + y + 1)`, `K = GF(2^64)`. Addresses are po
 generator `g` of `K*`: memory word `i` and bytecode slot `i` both sit at `g^i`. The machine has two
 registers, `pc` and `fp`. The memory is fixed before the run and only read: every instruction
 checks a relation on the words it reads, so all nondeterminism is the choice of the memory.
+
+The encoding of an instruction as sixteen `K` slots (specification §8.1) is how the verifier
+receives a program.
 -/
+
+namespace LeanerVM.Parameters
+
+@[expose] public section
+
+/-! ## Opcodes -/
+
+/-- The six instructions, in bus-code order (`tables.rs:99-104`). -/
+inductive Opcode
+  | xor
+  | mulNative
+  | setConstant
+  | deref
+  | jump
+  | blake2s
+  deriving DecidableEq, Repr
+
+/-- The bus code of an opcode: `g^0, …, g^5` in constructor order (specification §6.4). -/
+def Opcode.code : Opcode → K
+  | .xor => gpow 0
+  | .mulNative => gpow 1
+  | .setConstant => gpow 2
+  | .deref => gpow 3
+  | .jump => gpow 4
+  | .blake2s => gpow 5
+
+/-! ## Size bounds (specification §2, §6.2) -/
+
+/-- The least memory log-size, `2^16` cells (`cpu/mod.rs:51`, `MIN_LOG_MEM`). -/
+def minLogMem : ℕ := 16
+
+/-- The greatest memory log-size, `2^32` cells (`cpu/mod.rs:52`, `MAX_LOG_MEM`). -/
+def maxLogMem : ℕ := 32
+
+/-- The greatest bytecode log-size (`crates/verifier/src/layout.rs:393`; `MAX_LOG_BYTECODE`,
+`cpu/mod.rs:64` at `a386121f`, is removed at `127510d1`). -/
+def maxLogBytecode : ℕ := 32
+
+end
+end LeanerVM.Parameters
 
 namespace LeanerVM.Semantics
 
@@ -107,74 +148,9 @@ structure Program where
 noncomputable def Program.fetch (prog : Program) (pc : K) : Option Instr :=
   (gLog? prog.logSize pc).map prog.code
 
-/-! ## BLAKE2s
+/-! ## `BLAKE2S`
 
-The compression function of RFC 7693 with the last-node flag of the BLAKE2 paper, as leanVM
-computes it; and how its 32-bit words are stored in memory words. -/
-
-namespace Blake2s
-
-/-- Rotate right by `n` bits. -/
-def rotr (x : UInt32) (n : ℕ) : UInt32 := ⟨x.toBitVec.rotateRight n⟩
-
-/-- The mixing function `G`. -/
-def mix (v : Vector UInt32 16) (a b c d : Fin 16) (x y : UInt32) : Vector UInt32 16 :=
-  let va := v[a] + v[b] + x
-  let vd := rotr (v[d] ^^^ va) 16
-  let vc := v[c] + vd
-  let vb := rotr (v[b] ^^^ vc) 12
-  let va := va + vb + y
-  let vd := rotr (vd ^^^ va) 8
-  let vc := vc + vd
-  let vb := rotr (vb ^^^ vc) 7
-  (((v.set a va).set b vb).set c vc).set d vd
-
-/-- One round: four column and four diagonal mixes, message words chosen by `s`. -/
-def round (v m : Vector UInt32 16) (s : Vector (Fin 16) 16) : Vector UInt32 16 :=
-  let v := mix v 0 4 8 12 m[s[0]] m[s[1]]
-  let v := mix v 1 5 9 13 m[s[2]] m[s[3]]
-  let v := mix v 2 6 10 14 m[s[4]] m[s[5]]
-  let v := mix v 3 7 11 15 m[s[6]] m[s[7]]
-  let v := mix v 0 5 10 15 m[s[8]] m[s[9]]
-  let v := mix v 1 6 11 12 m[s[10]] m[s[11]]
-  let v := mix v 2 7 8 13 m[s[12]] m[s[13]]
-  mix v 3 4 9 14 m[s[14]] m[s[15]]
-
-/-- The initial state: `h`, then `iv` with the counter and the two flag words XORed in. -/
-def initialState (h : Vector UInt32 8) (t : UInt64) (f0 f1 : UInt32) : Vector UInt32 16 :=
-  let v : Vector UInt32 16 := h ++ iv
-  let v := v.set 12 (v[12] ^^^ t.toUInt32)
-  let v := v.set 13 (v[13] ^^^ (t >>> 32).toUInt32)
-  let v := v.set 14 (v[14] ^^^ f0)
-  v.set 15 (v[15] ^^^ f1)
-
-end Blake2s
-
-/-- The compression of the message `m` under the chaining value `h`, with counter `t`, last-block
-flag word `f0` and last-node flag word `f1`: ten rounds, then `h[i] ^ v[i] ^ v[i + 8]`. -/
-def compress (h : Vector UInt32 8) (m : Vector UInt32 16) (t : UInt64) (f0 f1 : UInt32) :
-    Vector UInt32 8 :=
-  let v := sigma.foldl (fun v s ↦ Blake2s.round v m s) (Blake2s.initialState h t f0 f1)
-  #v[h[0] ^^^ v[0] ^^^ v[8], h[1] ^^^ v[1] ^^^ v[9], h[2] ^^^ v[2] ^^^ v[10],
-     h[3] ^^^ v[3] ^^^ v[11], h[4] ^^^ v[4] ^^^ v[12], h[5] ^^^ v[5] ^^^ v[13],
-     h[6] ^^^ v[6] ^^^ v[14], h[7] ^^^ v[7] ^^^ v[15]]
-
-/-- The low 32 bits of a `K` element. -/
-def lowWord (a : K) : UInt32 := ⟨a.toBitVec.extractLsb' 0 32⟩
-
-/-- The high 32 bits of a `K` element. -/
-def highWord (a : K) : UInt32 := ⟨a.toBitVec.extractLsb' 32 32⟩
-
-/-- The `K` element with these low and high 32 bits. -/
-def ofWords (lo hi : UInt32) : K := BF64.ofBitVec (hi.toBitVec ++ lo.toBitVec)
-
-/-- The four 32-bit words of a memory word `a₀ + a₁·y`, little-endian. -/
-def cellWords (x : E) : Vector UInt32 4 :=
-  #v[lowWord (x.limb 0), highWord (x.limb 0), lowWord (x.limb 1), highWord (x.limb 1)]
-
-/-- The memory word holding four 32-bit words. -/
-def wordsCell (w : Vector UInt32 4) : E :=
-  E.ofLimbs (ofWords w[0] w[1]) (ofWords w[2] w[3]) 0
+How the 32-bit words of the compression function are stored in memory words. -/
 
 /-- The metadata word: the counter is limb 0, the two flag words are the halves of limb 1. -/
 def unpackMetadata (md : E) : UInt64 × UInt32 × UInt32 :=
@@ -319,5 +295,125 @@ valid executions. -/
 def SentinelSafe (prog : Program) : Prop :=
   (prog.code ⟨2 ^ prog.logSize - 1, Nat.sub_lt (Nat.two_pow_pos _) (by decide)⟩).opcode ≠ .jump
 
+/-! ## The fill blocks
+
+Not part of the machine: the blocks the compiler appends to a program and the deployed prover
+pads its tables with (`crates/lean_compiler/src/lower.rs:435-506`,
+`crates/leanvm_core/src/cpu/filler.rs:36-87`). A table is proven over a power-of-two number of
+rows; to reach it, the prover runs, after the program halts, a *block* of `s` dummy instructions
+of the table's opcode closed by a `JUMP` back to the block's start. Completeness assumes the
+program carries them (`HasFillBlocks`). -/
+
+/-- The block sizes, largest first (`cpu/filler.rs:38`, `SIZES`): a fill of `f` rows takes `f / 128`
+traversals of the largest block and then one per set bit of the remainder. -/
+def fillSizes : List ℕ := [128, 64, 32, 16, 8, 4, 2, 1]
+
+/-- The six tables in the order of their bus codes (Layer 2's `Opcode`, `tables.rs:99-104`). -/
+def fillTables : List Opcode := [.xor, .mulNative, .setConstant, .deref, .jump, .blake2s]
+
+/-! ### The frame
+
+The cells of a fill block's twelve-cell frame, as exponents of `g` from the frame pointer
+(`cpu/filler.rs:73-87`). -/
+
+namespace FillFrame
+
+/-- Where the closing jump goes: `g^{pc}` of the block's first instruction, a nonzero word. -/
+abbrev dest : ℕ := 0
+
+/-- The frame the closing jump goes to: this frame's own pointer. -/
+abbrev nextFp : ℕ := 1
+
+/-- The pointer a `DEREF` dummy follows: `g^0`, memory cell `0`. -/
+abbrev ptr : ℕ := 2
+
+/-- A cell nothing ever writes, so it reads as zero. -/
+abbrev zero : ℕ := 3
+
+/-- The scratch cell every dummy but `JUMP` names as each operand. -/
+abbrev scratch : ℕ := 4
+
+/-- The `BLAKE2S` dummy's output pair; the four message cells follow at `digest + 2 ..`. -/
+abbrev digest : ℕ := 6
+
+/-- The cells a block's frame occupies. -/
+abbrev cells : ℕ := 12
+
+end FillFrame
+
+/-! ### The blocks -/
+
+/-- The dummy instruction of a table (`lower.rs:455-492`): the cheapest instruction of that opcode
+that can be executed any number of times in one frame. `XOR`, `MUL_NATIVE` and `SET_CONSTANT` name
+the scratch cell as every operand, `DEREF` reads memory cell `0` through the frame's pointer,
+`JUMP` reads a cell nothing writes (a zero condition falls through) and `BLAKE2S` compresses
+cells nothing writes. -/
+def fillDummy : Opcode → Instr
+  | .xor => .xor (gpow FillFrame.scratch) (gpow FillFrame.scratch) (gpow FillFrame.scratch)
+  | .mulNative =>
+    .mulNative (gpow FillFrame.scratch) (gpow FillFrame.scratch) (gpow FillFrame.scratch)
+  | .setConstant => .setConstant (gpow FillFrame.scratch) 0
+  | .deref => .deref (gpow FillFrame.ptr) (gpow 0) (gpow FillFrame.scratch) .cell
+  | .jump => .jump (gpow FillFrame.zero) (gpow FillFrame.zero) (gpow FillFrame.zero)
+  | .blake2s =>
+    .blake2s ![gpow (FillFrame.digest + 2), gpow (FillFrame.digest + 3),
+      gpow (FillFrame.digest + 4), gpow (FillFrame.digest + 5)]
+      (gpow FillFrame.scratch) (gpow FillFrame.digest) (gpow FillFrame.zero)
+
+/-- The jump that closes a block (`lower.rs:498-502`): condition and destination are the cell
+`DEST`, the new frame the cell `NEXT_FP`. -/
+def fillClose : Instr :=
+  .jump (gpow FillFrame.dest) (gpow FillFrame.dest) (gpow FillFrame.nextFp)
+
+/-- A block of size `s` for table `t` starts at slot `p`: `s` dummies, then the closing jump, all
+below the sentinel slot. -/
+structure IsFillBlock (prog : Program) (t : Opcode) (s p : ℕ) : Prop where
+  /-- The closing jump, the block's last slot, is below the sentinel slot `2^logSize - 1`. -/
+  below : p + s + 1 < 2 ^ prog.logSize
+  /-- Slots `p .. p + s - 1` fetch the table's dummy. -/
+  dummies : ∀ i, i < s → prog.fetch (gpow (p + i)) = some (fillDummy t)
+  /-- Slot `p + s` fetches the closing jump. -/
+  close : prog.fetch (gpow (p + s)) = some fillClose
+
+/-- The program has a block of every size for every table (`lower.rs:446-504`): the fill blocks
+the prover pads the tables with. -/
+def HasFillBlocks (prog : Program) : Prop :=
+  ∀ t : Opcode, ∀ s ∈ fillSizes, ∃ p, IsFillBlock prog t s p
+
 end
 end LeanerVM.Semantics
+
+namespace LeanerVM.Arithmetization
+
+open LeanerVM.Parameters LeanerVM.Semantics
+
+@[expose] public section
+
+/-! ## The bytecode encoding (specification §8.1) -/
+
+/-- The `DEREF` store-mode flags `(f_pc, f_fp)`: `cell ↦ (0, 0)`, `pc ↦ (1, 0)`, `fp ↦ (0, 1)`
+(`isa.rs:68-75`; specification §7.4). -/
+def derefFlags : DerefMode → K × K
+  | .cell => (0, 0)
+  | .pc => (1, 0)
+  | .fp => (0, 1)
+
+/-- The bus entry of an instruction, `(opcode, op₁, …, op₇)`: slots 3–10 of specification §8.1,
+the eight public columns of `layout.rs:228-289`. -/
+def entry : Instr → Vector K 8
+  | .xor oA oB oC => #v[Opcode.xor.code, oA, oB, oC, 0, 0, 0, 0]
+  | .mulNative oA oB oC => #v[Opcode.mulNative.code, oA, oB, oC, 0, 0, 0, 0]
+  | .setConstant o k => #v[Opcode.setConstant.code, o, k.limb 0, k.limb 1, k.limb 2, 0, 0, 0]
+  | .deref o1 o2 o3 mode =>
+      #v[Opcode.deref.code, o1, o2, o3, (derefFlags mode).1, (derefFlags mode).2, 0, 0]
+  | .jump oc od of => #v[Opcode.jump.code, oc, od, of, 0, 0, 0, 0]
+  | .blake2s om ocv oout omd => #v[Opcode.blake2s.code, om 0, om 1, om 2, om 3, ocv, oout, omd]
+
+/-- The sixteen slots of an instruction (specification §8.1): the entry at slots 3–10, zero
+elsewhere. -/
+def encodeSlots (i : Instr) : Vector K 16 :=
+  let e := entry i
+  #v[0, 0, 0, e[0], e[1], e[2], e[3], e[4], e[5], e[6], e[7], 0, 0, 0, 0, 0]
+
+end
+end LeanerVM.Arithmetization

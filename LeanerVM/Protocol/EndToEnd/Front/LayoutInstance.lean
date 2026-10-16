@@ -11,6 +11,7 @@ module
 public import LeanerVM.Protocol.EndToEnd.Front.LayoutStack
 public import LeanerVM.Protocol.LeanIsa
 public import LeanerVM.Protocol.Verifier
+public import LeanerVM.Spec.Statement
 
 /-!
 # The verifier's layout is the instance's
@@ -46,14 +47,31 @@ open LeanerVM.Protocol.LeanIsa CompPoly CMlPolynomialEval
 
 /-! ## The bytecode -/
 
-/-- The bytecode the verifier takes: the program's sixteen-slot bytecode column as a list of
-words, instruction bits low, slot bits high (`bytecodeColumn`). -/
-def bytecodeWords (prog : Program) : List K := (bytecodeColumn prog).values.toList
+export LeanVM (bytecodeWords)
+
+/-- The bytecode the verifier takes (`LeanVM.bytecodeWords`) is the program's sixteen-slot
+bytecode column as a list of words, instruction bits low, slot bits high (`bytecodeColumn`). -/
+theorem bytecodeWords_eq_column (prog : Program) :
+    bytecodeWords prog = (bytecodeColumn prog).values.toList := by
+  have h16 : 2 ^ prog.logSize * 16 = 2 ^ (prog.logSize + 4) := by rw [pow_add]; norm_num
+  rw [bytecodeColumn, Vector.toList_ofFn, List.ofFn_congr h16.symm, List.ofFn_mul',
+    LeanVM.bytecodeWords, List.flatMap_def]
+  simp only [← List.ofFn_eq_map]
+  congr 1
+  refine List.ofFn_inj.mpr (funext fun s ↦ List.ofFn_inj.mpr (funext fun i ↦ ?_))
+  have hs : (cubeSplit prog.logSize 4).symm
+      (Fin.cast h16 ⟨2 ^ prog.logSize * s + i, by have := s.isLt; have := i.isLt; nlinarith⟩) =
+        (i, s) := by
+    rw [Equiv.symm_apply_eq, cubeSplit_apply]
+    ext
+    simp only [Fin.val_cast, cubeIndex]
+    ring
+  simp only [hs]
 
 /-- The bytecode has `2 ^ (logSize + 4)` words. -/
 theorem length_bytecodeWords (prog : Program) :
     (bytecodeWords prog).length = 2 ^ (prog.logSize + 4) := by
-  simp [bytecodeWords]
+  simp [bytecodeWords_eq_column]
 
 /-- **The bytecode names the program.** -/
 theorem bytecodeWords_injective : Function.Injective bytecodeWords := by
@@ -63,7 +81,7 @@ theorem bytecodeWords_injective : Function.Injective bytecodeWords := by
   have hs : prog.logSize = prog'.logSize := by
     have := Nat.pow_right_injective (le_refl 2) hl
     omega
-  exact bytecodeColumn_injective hs h
+  exact bytecodeColumn_injective hs (by rwa [bytecodeWords_eq_column, bytecodeWords_eq_column] at h)
 
 /-- `log2_strict` of a power of two. -/
 theorem log2Strict_two_pow (n : ℕ) : log2Strict (2 ^ n) = some n := by
@@ -566,7 +584,7 @@ theorem multilinearEval_bytecodeWords (prog : Program) (z : Vector E prog.logSiz
   rw [← bytecodeColumnEval_eq_entries, ← bytecodeColumn_eval, ← Vector.toList_append]
   have : (bytecodeWords prog).map ofK =
       (CMlPolynomialEval.map (algebraMap K E) (bytecodeColumn prog).values).toList := by
-    simp [bytecodeWords, CMlPolynomialEval.map, Vector.toList_map]
+    simp [bytecodeWords_eq_column, CMlPolynomialEval.map, Vector.toList_map]
   rw [this, multilinearEval_eq_evalMle]
   rfl
 
