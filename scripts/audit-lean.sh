@@ -4,8 +4,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-paths=(LeanerVM LeanerVM.lean tests)
-pattern='\b(axiom|sorry|admit|unsafe|native_decide)\b'
+paths=()
+for path in LeanerVM LeanerVM.lean tests cli; do
+  [[ -e "$path" ]] && paths+=("$path")
+done
+# Constructs that add axioms or bypass the kernel or the compiler's proved code: `decide +native`
+# and `native_decide` trust the compiler, `implemented_by`/`extern` replace compiled code without a
+# proof, `addDecl`-style metaprograms and `ofReduceBool`/`trustCompiler` sidestep the kernel.
+pattern='\b(axiom|sorry|admit|unsafe|native_decide|implemented_by|extern|addDecl|addAndCompile|ofReduceBool|trustCompiler)\b|\+native\b'
 
 if matches="$(rg --line-number --glob '*.lean' "$pattern" "${paths[@]}")"; then
   echo "Forbidden trust-sensitive Lean construct found:" >&2

@@ -93,11 +93,21 @@ def test_source_audit() -> None:
             ("set_option warningAsError false", "must not be overridden"),
             ("set_option linter.unusedVariables false", "must not be overridden"),
             ("set_option weak.linter.mathlibStandardSet false", "must not be overridden"),
+            ("set_option debug.skipKernelTC true", "must not be overridden"),
+            ("theorem t : 2 ^ 10 = 1024 := by decide +native", "Forbidden trust-sensitive"),
+            ("@[implemented_by id] def f (n : Nat) : Nat := n", "Forbidden trust-sensitive"),
+            ('@[extern "f"] opaque f : Nat → Nat', "Forbidden trust-sensitive"),
+            ("run_cmd Lean.addDecl default", "Forbidden trust-sensitive"),
         )
         for source, expected in cases:
             write(probe, f"module\n\n{source}\n")
             require_failure(run(root, "audit-lean.sh"), source, expected)
         probe.unlink()
+        # The executable's sources are audited too.
+        cli = root / "cli" / "Probe.lean"
+        write(cli, "axiom planted : True\n")
+        require_failure(run(root, "audit-lean.sh"), "cli source", "Forbidden trust-sensitive")
+        shutil.rmtree(cli.parent)
         # Every protected option must be caught across Lean whitespace/comments, in both
         # production and imported-test source trees, including locally scoped overrides.
         for relative in ("LeanerVM/Semantics/Violation.lean", "tests/LeanerVMTests/Violation.lean"):

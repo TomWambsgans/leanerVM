@@ -75,9 +75,10 @@ inductive Instr
   | mulNative (oA oB oC : K)
   /-- `[o] = k`. -/
   | setConstant (o : K) (k : E)
-  /-- The word at address `[o₁] · o₂` is the source `mode` selects (`derefSource`). -/
+  /-- `[o₁]` is in `K`, and the word at address `[o₁] · o₂` is the source `mode` selects
+  (`derefSource`); `[o₃]` is read in every mode. -/
   | deref (o1 o2 o3 : K) (mode : DerefMode)
-  /-- Jump to `([o_d], [o_f])` if `[o_c] ≠ 0`. -/
+  /-- `[o_c]`, `[o_d]`, `[o_f]` are in `K`; jump to `([o_d], [o_f])` if `[o_c] ≠ 0`. -/
   | jump (oc od of : K)
   /-- `([o_out], [g·o_out])` is the BLAKE2s compression of the message `[o_m₀], …, [o_m₃]` under
   the chaining value `([o_cv], [g·o_cv])`, with counter and flags `[o_md]`. -/
@@ -312,7 +313,9 @@ def ValidExecution (prog : Program) (input : PublicInput) (t : Trace prog) : Pro
   HasPublicBoundary input t ∧ run prog t.image t.steps Regs.initial = some (Regs.final prog)
 
 /-- The last instruction is not a `JUMP`: the one condition knowledge soundness puts on a
-program. -/
+program. leanVM's compiler always pads the last slot with a `SET`; the verifier does not check
+it, and for bytecode whose last instruction is a `JUMP` its constraints accept runs that are not
+valid executions. -/
 def SentinelSafe (prog : Program) : Prop :=
   (prog.code ⟨2 ^ prog.logSize - 1, Nat.sub_lt (Nat.two_pow_pos _) (by decide)⟩).opcode ≠ .jump
 

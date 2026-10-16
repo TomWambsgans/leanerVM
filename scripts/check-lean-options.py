@@ -69,7 +69,7 @@ def check(path: Path) -> list[str]:
         except ValueError as error:
             failures.append(f"{path}:{line}: {error}")
             continue
-        if (len(name) == 1 and name[0] in PROTECTED) or name[:1] == ("linter",) or (
+        if (len(name) == 1 and name[0] in PROTECTED) or name[:1] in (("linter",), ("debug",)) or (
             name[:2] == ("weak", "linter")
         ):
             failures.append(f"{path}:{line}: set_option {'.'.join(name)}")

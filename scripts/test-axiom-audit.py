@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Check the real namespace audit and its rejection of transitive foreign assumptions."""
+"""Check the real first-party audit and its rejection of transitive foreign assumptions, in any
+namespace."""
 
 from pathlib import Path
 import subprocess
@@ -24,12 +25,14 @@ def main() -> None:
     prefix, marker, suffix = source.rpartition("\nauditValidation\n")
     if not marker or suffix:
         raise RuntimeError("Expected the audit invocation at the end of the driver")
-    # The deliberately untrusted fixture exists only in a temporary file. Neither project
-    # namespace declares the foreign assumption: recursive dependency inspection must find it.
+    # The deliberately untrusted fixture exists only in a temporary file. No first-party name
+    # declares the foreign assumption: recursive dependency inspection must find it, whatever the
+    # namespace of the declaration that uses it.
     injected = """
 axiom AuditNegative.hidden : False
 theorem LeanerVM.auditNegative : False := AuditNegative.hidden
 theorem LeanerVMTests.auditNegative : False := AuditNegative.hidden
+theorem Outside.auditNegative : False := AuditNegative.hidden
 
 auditValidation
 """
@@ -42,10 +45,11 @@ auditValidation
         )
         output = negative.stdout + negative.stderr
         expected = ("Unexpected axioms", "AuditNegative.hidden",
-                    "LeanerVM.auditNegative", "LeanerVMTests.auditNegative")
+                    "LeanerVM.auditNegative", "LeanerVMTests.auditNegative",
+                    "Outside.auditNegative")
         if negative.returncode == 0 or not all(text in output for text in expected):
             raise RuntimeError(f"Expected transitive rejection in both namespaces:\n{output}")
-    print("Transitive foreign-assumption rejection passed for production and test namespaces.")
+    print("Transitive foreign-assumption rejection passed, in and outside the project namespaces.")
 
 
 if __name__ == "__main__":

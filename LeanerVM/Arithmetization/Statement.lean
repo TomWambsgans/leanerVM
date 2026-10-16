@@ -139,12 +139,11 @@ two, and the image determines the run. The remaining rows are the closed walks o
 which nothing is claimed. `constraintSoundness` (Layer 10) yields a trace the witness
 represents, and `constraintCompleteness` a witness representing the trace.
 
-## Layer 9, blocked
+## Layer 9
 
-The bus-soundness statements of roadmap Layer 9 belong at the end of this file and are block
-comments there until Clean supplies direction-tagged, `ℕ`-counted balance (the roadmap's
-dependency table; issue #16, Clean #452), whose consumers are Clean's
-`addVm_soundVmChannel_of_soundChannels` and the `SoundChannels` machinery.
+The bus-soundness statements of roadmap Layer 9, recorded at the end of this file as their
+original interface, are proved in `LeanerVM.Arithmetization.Soundness` (`mem_channel_sound`,
+`bytecode_channel_sound`, `no_row_at_sentinel`, `exists_run_of_balanced`).
 
 ## Wrong readings excluded
 
@@ -448,13 +447,12 @@ theorem assignmentRepresents_image {w : EnsembleWitness (leanIsaEnsemble prog)} 
   funext ⟨i, hi⟩
   exact himage i hi
 
-/-! ## Layer 9: bus soundness, blocked
+/-! ## Layer 9: bus soundness, the interface
 
-The four statements of roadmap Layer 9 consume Clean's direction-tagged, `ℕ`-counted balance
-and `addVm_soundVmChannel_of_soundChannels` (the roadmap's dependency table; issue #16, Clean
-#452), which Clean `42fe4b26` does not supply. They are recorded here as the roadmap's
-convention requires, never as an unproved declaration. Channels are identified by name and a
-pulled message is read as its typed form, as the module does (`messagesOn`, `memRowAt`):
+The four statements of roadmap Layer 9, as first specified; they are proved in
+`LeanerVM.Arithmetization.Soundness` (`Soundness/MemChannel.lean`, `BytecodeChannel.lean`,
+`StateWalk.lean`), with `SentinelSafe` as the program condition. Channels are identified by name
+and a pulled message is read as its typed form, as the module does (`messagesOn`, `memRowAt`):
 
 ```lean
 /-- Specification Lemma 6.3, Thm. 6.4, Cor. 6.5: with nonzero counts and fewer than `2^64 - 1`

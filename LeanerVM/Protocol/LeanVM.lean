@@ -44,12 +44,21 @@ fill blocks the prover pads with, the honest prover's proof is accepted by `veri
 every hash function `H` whose 17-bit proof-of-work search succeeds within the prover's fuel. The
 honest prover (`honestProof`) is a specification, not an implementation.
 
-**Trust.** BLAKE2s is modelled as a random oracle. The statement is non-adaptive (`prog` and
-`input` are fixed before the oracle). That `verifier` is the deployed verifier is test evidence:
-it is a transcription of the Python, it accepts the Rust prover's proofs, and on 7500 mutated
-proofs it gives the deployed Rust verifier's verdict every time (`scripts/fuzz-verifier.py`). The
-extractor is a classical choice in the list of codewords near the committed word. Every theorem
-depends only on `propext`, `Classical.choice` and `Quot.sound`.
+**Scope and trust.**
+
+* BLAKE2s is modelled as a random oracle.
+* The statement is non-adaptive: `prog` and `input` are fixed before the oracle, so it says
+  nothing directly about an attacker who chooses the public input after querying the oracle.
+* The extractor is information-theoretic, not efficient: a classical choice in the list of
+  codewords near the committed word.
+* A proof is the Python verifier's format: the scalar stream and one full Merkle path per query.
+  The Rust prover ships pruned paths (shared siblings per batch, `MerkleOpenings::Pruned`), which
+  the deployed `leanvm_core::cpu::verify` expands into these paths and checks more strictly; that
+  expansion is not formalized.
+* That `verifier` is the Python and Rust verifiers is test evidence: it is a transcription of the
+  Python, it accepts the Rust prover's proofs, and on mutated proofs it gives the Rust verifier's
+  verdict every time (`scripts/fuzz-verifier.py`).
+* Every theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
 -/
 
 namespace LeanVM
@@ -137,9 +146,9 @@ theorem haltingRun_valid {prog : Program} {input : PublicInput}
     Nat.find_spec h⟩
 
 /-- **Knowledge soundness in the random-oracle model.** For a program whose last instruction is
-not a `JUMP`, and an adversary making at most `Q` queries, the verifier accepts while the
-extracted execution is not a valid execution of `prog` on `input` with probability at most
-`soundnessError Q`. -/
+not a `JUMP`, a public input fixed in advance, and an adversary making at most `Q` queries, the
+verifier accepts while the extracted execution is not a valid execution of `prog` on `input` with
+probability at most `soundnessError Q`. -/
 theorem knowledgeSoundness {prog : Program} (input : PublicInput) (hsafe : SentinelSafe prog)
     {A : Adversary} {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
     Pr{let z ← experiment prog input A}[z.1.2 = true ∧

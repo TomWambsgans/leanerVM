@@ -3,7 +3,8 @@
 - `validate.sh`: complete local gate and the command to run before handoff.
 - `audit-lean.sh`: first-party lexical policy for trust-sensitive constructs and local
   option overrides.
-- `audit-axioms.lean`: recursive axiom-closure audit of the production and test namespaces;
+- `audit-axioms.lean`: recursive axiom-closure audit of every declaration a first-party module
+  defines, whatever its namespace;
   `validate.sh` and CI run it after `lake test` through `test-axiom-audit.py`. Permits only
   `propext`, `Classical.choice` and `Quot.sound`. CI's lean-action audit independently covers
   the production namespace.

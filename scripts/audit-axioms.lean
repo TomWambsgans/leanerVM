@@ -7,8 +7,9 @@ import Lean
 
 Run after building production and tests:
 `lake env lean -E warning scripts/audit-axioms.lean`.
-This tracks the driver used for the local leanISA acceptance audits. It checks recursive
-dependencies of declarations in both project namespaces, including imported dependencies.
+It checks the recursive axiom dependencies of every declaration defined in a first-party module
+(`LeanerVM*` or `LeanerVMTests*`), whatever its namespace: the front page's `LeanVM.*`, the
+`@[csimp]` lemmas on CompPoly's `BF64`/`Ext` and every other declaration a first-party module adds.
 It complements the lexical source policy and CI's production namespace audit.
 -/
 
@@ -18,8 +19,16 @@ elab "auditValidation" : command => do
   let env ← getEnv
   let mut count : Nat := 0
   let mut unexpected : Array (Name × Name) := #[]
+  let modules := env.header.moduleNames
+  let firstParty (name : Name) : Bool :=
+    match env.getModuleIdxFor? name with
+    | some idx =>
+      let m := modules[idx.toNat]!
+      (`LeanerVM).isPrefixOf m || (`LeanerVMTests).isPrefixOf m
+    -- Declarations of the file being elaborated (the audit itself, or an injected probe).
+    | none => true
   for (name, _) in env.constants.toList do
-    if (`LeanerVM).isPrefixOf name || (`LeanerVMTests).isPrefixOf name then
+    if firstParty name then
       count := count + 1
       for ax in ← collectAxioms name do
         unless #[`propext, `Classical.choice, `Quot.sound].contains ax do
