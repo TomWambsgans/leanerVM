@@ -7,19 +7,33 @@ locked in the tests).
 
 ## The front page
 
-[`LeanerVM/Protocol/LeanVM.lean`](../../LeanerVM/Protocol/LeanVM.lean) (namespace `LeanVM`) states
-everything on one page, over the semantic types `Program`, `PublicInput`, `ValidExecution`:
+The statements read over three files: the ISA,
+[`LeanerVM/Semantics.lean`](../../LeanerVM/Semantics.lean) (`Program`, `PublicInput`, `Trace`,
+`ValidExecution`, `SentinelSafe`); the verifier,
+[`LeanerVM/Protocol/Verifier.lean`](../../LeanerVM/Protocol/Verifier.lean); and the front page,
+[`LeanerVM/Protocol/LeanVM.lean`](../../LeanerVM/Protocol/LeanVM.lean) (namespace `LeanVM`):
 
 * `verifier H prog input proof : m Bool`: the verifier, for a hash function `H : Bytes → m Digest`
   in any monad; `verify` is the BLAKE2s instance (`m = Id`), the deployed verifier, and the
   knowledge-soundness experiment runs the same `verifier` with `H` a random-oracle query;
-* `completeness`: if `w` satisfies leanISA's constraint system (`SatisfiedBy`) at admissible
-  sizes and a valid rate, the honest proof (`honestProof`) is accepted by `verifier H`, for every
-  hash function `H`; `completeness_of_execution` starts from a valid execution;
-* `knowledgeSoundness`: for well-formed bytecode and an adversary of at most `Q` queries,
-  `Pr[accepted ∧ the extracted witness represents no valid execution] ≤ soundnessError Q`, with
-  `soundnessError Q = (Q + 13213)·(2^-128 + 6·(Q + 13213)/2^256)`;
-* `soundnessError_le`: at most `2^-63` for `Q ≤ 2^64`.
+* `knowledgeSoundness`: for a program whose last instruction is not a `JUMP` (`SentinelSafe`, the
+  one condition soundness needs) and an adversary of at most `Q` queries,
+  `Pr[accepted ∧ the extracted execution is not a valid execution] ≤ soundnessError Q`, with
+  `soundnessError Q = (Q + 13213)·(2^-128 + 6·(Q + 13213)/2^256)`; the extractor returns an
+  execution (`Trace`): the memory image the proof commits to, run until it halts;
+* `soundnessError_le`: at most `2^-63` for `Q ≤ 2^64`;
+* `completeness`: for a valid execution of at most `2^19` steps, a memory of at most `2^23` words
+  and a bytecode of at most `2^23` instructions, of a program carrying the fill blocks
+  (`HasFillBlocks`, the one trace of padding in a statement: the deployed prover pads its tables
+  with blocks the compiler appends to the bytecode), at a rate `1 ≤ ρ ≤ 4`, and for every hash
+  function whose 17-bit proof-of-work search succeeds within the prover's fuel, the honest
+  prover returns a proof and the verifier accepts it; `honestProof_accepted`: every proof the
+  honest prover returns is accepted.
+
+The size bounds trade against each other (`Complete.exists_admissible_witness_of_budget`:
+`8·2^κ + 2^logSize + 356·2^n ≤ 2^28` for `2^n` steps); `2^20` steps never fit the deployed
+`MAX_MU = 28`, whatever the program (the BLAKE2S table's Flock region alone would have `2^28`
+rows).
 
 ## The verifier the theorems are about
 

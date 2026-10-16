@@ -23,6 +23,19 @@ example {prog : Program} (input : PublicInput) (hsafe : SentinelSafe prog) {A : 
 
 example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ ^ 63 := soundnessError_le hQ
 
+example {prog : Program} {input : PublicInput} {t : Trace prog} (hfill : HasFillBlocks prog)
+    (hv : ValidExecution prog input t) (hsteps : t.steps ≤ 2 ^ 19) (hmem : t.κ ≤ 23)
+    (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4)
+    (H : LeanerVM.Protocol.Compile.Bytes → LeanerVM.Protocol.Digest) (fuel : ℕ)
+    (hpow : ∀ cv, LeanerVM.Protocol.Compile.findNonce H
+      LeanerVM.Parameters.Whir.queryGrindingBits cv fuel ≠ none) :
+    ∃ proof, honestProof H prog input t ρ fuel = some proof ∧
+      verifier (m := Id) H prog input proof = true :=
+  completeness hfill hv hsteps hmem hcode hρ H fuel hpow
+
+/-- The proof of work the completeness hypothesis is about has `17` bits. -/
+example : LeanerVM.Parameters.Whir.queryGrindingBits = 17 := rfl
+
 /-- info: 'LeanVM.knowledgeSoundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms knowledgeSoundness
 
@@ -30,6 +43,6 @@ example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ 
 #guard_msgs in #print axioms completeness
 
 /--
-info: 'LeanVM.completeness_of_execution' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'LeanVM.honestProof_accepted' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms completeness_of_execution
+#guard_msgs in #print axioms honestProof_accepted

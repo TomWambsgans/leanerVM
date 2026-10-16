@@ -2,25 +2,26 @@
   LeanerVM.Protocol.LeanVM
 
   The leanVM verifier and what is proved about it, in one page: the verifier for any hash
-  function, the deployed verifier (BLAKE2s), the honest prover, completeness, and knowledge
-  soundness in the random-oracle model at 128 bits per query.
+  function, the deployed verifier (BLAKE2s), knowledge soundness in the random-oracle model at
+  128 bits per query, and completeness.
 -/
 
 module
 
 public import LeanerVM.Protocol.EndToEnd.Sound.Theorem
-public import LeanerVM.Protocol.EndToEnd.Completeness
+public import LeanerVM.Protocol.EndToEnd.Complete.Small
 
 /-!
 # leanVM, end to end
 
-This page states what the repository proves about leanVM's verifier at leanVM
-`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Everything else in the repository is the proof.
+What the repository proves about leanVM's verifier at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, stated over three files: the ISA
+(`LeanerVM/Semantics.lean`: `Program`, `PublicInput`, `Trace`, `ValidExecution`), the verifier
+(`LeanerVM/Protocol/Verifier.lean`), and this page. Everything else in the repository is proof.
 
-**The verifier.** `verifier H prog input proof` is the verifier of `python-verifier/verifier.py`
-at that commit, transcribed into Lean (`LeanerVM.Protocol.Verifier`), for a program `prog`, a
-public input `input` and a proof, with the hash function `H : Bytes → m Digest` a parameter in
-any monad `m`. Two instances:
+**The verifier.** `verifier H prog input proof` is `python-verifier/verifier.py` at that commit,
+transcribed into Lean, for a program `prog`, a public input `input` and a proof, with the hash
+function `H : Bytes → m Digest` a parameter in any monad `m`. Two instances:
 
 * `verify`: `H` is BLAKE2s-256 (`m = Id`), the deployed verifier, executable:
   `lake exe leanvm-verify` checks a proof of the Rust prover in well under a second (the field
@@ -28,20 +29,20 @@ any monad `m`. Two instances:
 * the same `verifier` with `H` a query to a random oracle (`m = OracleComp`), which is what the
   knowledge-soundness theorem is about.
 
-**Completeness** (`completeness`): if `w` satisfies leanISA's constraint system for `prog` on
-`input` (`SatisfiedBy`, e.g. from a valid execution, `completeness_of_execution`), the honest
-prover's proof is accepted by `verifier H`, for every hash function `H`. The honest prover is a
-specification (`honestProof`); it fails only when a proof-of-work search finds no nonce below
-its fuel.
-
-**Knowledge soundness** (`knowledgeSoundness`): for well-formed bytecode and any adversary
-making at most `Q` queries to the random oracle, the probability that the verifier accepts the
-adversary's proof while the extractor (`extract`, reading the oracle's answers) does not return
-a witness representing a valid execution of `prog` on `input` is at most
-`soundnessError Q = (Q + 13213) · (2^-128 + 6·(Q + 13213)/2^256)`, which is at most `2^-63` for
-`Q ≤ 2^64` (`soundnessError_le`). The `2^-128` is per oracle query: every group of the
-protocol's challenges, discounted by the proof of work before it, escapes with probability at
+**Knowledge soundness** (`knowledgeSoundness`): for a program whose last instruction is not a
+`JUMP` and any adversary making at most `Q` queries to the random oracle, the probability that
+the verifier accepts the adversary's proof while the extracted execution (`extract`: the memory
+image the proof commits to, run until it halts) is not a valid execution of `prog` on `input` is
+at most `soundnessError Q = (Q + 13213) · (2^-128 + 6·(Q + 13213)/2^256)`, which is at most
+`2^-63` for `Q ≤ 2^64` (`soundnessError_le`). The `2^-128` is per oracle query: every group of
+the protocol's challenges, discounted by the proof of work before it, escapes with probability at
 most `2^-128`, certified for every admissible size and rate (`Whir.Params.Deployed`).
+
+**Completeness** (`completeness`): for a valid execution of at most `2^19` steps, with a memory
+of at most `2^23` words and a bytecode of at most `2^23` instructions, of a program carrying the
+fill blocks the prover pads with, the honest prover's proof is accepted by `verifier H`, for
+every hash function `H` whose 17-bit proof-of-work search succeeds within the prover's fuel. The
+honest prover (`honestProof`) is a specification, not an implementation.
 
 **Trust.** BLAKE2s is modelled as a random oracle. The statement is non-adaptive (`prog` and
 `input` are fixed before the oracle). That `verifier` is the deployed verifier is test evidence:
@@ -84,45 +85,6 @@ theorem verify_eq (prog : Program) (input : PublicInput) (proof : Proof) :
       LeanerVM.Protocol.Verifier.verify (Front.bytecodeWords prog) (Complete.publicDigest input)
         proof :=
   rfl
-
-/-! ## Completeness -/
-
-/-- **The honest prover**: the proof of a witness `w` at sizes `s` and rate `ρ`, with the hash `H`;
-`none` only when a proof-of-work search finds no nonce below `fuel`. A specification. -/
-noncomputable def honestProof (H : Bytes → Digest) (prog : Program) (input : PublicInput)
-    (w : EnsembleWitness (leanIsaEnsemble prog)) (s : Sizes) (ρ fuel : ℕ) : Option Proof :=
-  Compile.prove H (leanVmProgram (Front.bytecodeWords prog) (Complete.publicDigest input))
-    (Complete.leanVmProver prog s ρ (stackOf Blake2sFlock.blake2sFlockSpec prog s w))
-    (Id.run (seedWith H (Front.bytecodeWords prog) (Complete.publicDigest input))) fuel
-
-/-- **Completeness.** If `w` satisfies leanISA's constraint system for `prog` on `input`, at
-admissible sizes `s` and a valid rate `ρ`, the honest proof is accepted, for every hash
-function. -/
-theorem completeness {prog : Program} {input : PublicInput}
-    {w : EnsembleWitness (leanIsaEnsemble prog)} {s : Sizes} {ρ : ℕ}
-    (hw : SatisfiedBy prog input w) (hs : Sizes.ofWitness w = some s) (hadm : s.Admissible prog)
-    (hρ : validRate ρ) (H : Bytes → Digest) {fuel : ℕ} {proof : Proof}
-    (hproof : honestProof H prog input w s ρ fuel = some proof) :
-    verifier (m := Id) H prog input proof = true := by
-  have hq := m3Holds_stackOf (F := Blake2sFlock.blake2sFlockSpec) hw hs
-  have hrun := Complete.runI_leanVmProgram hadm hρ hq Front.walkFaithful_blake2sFlockSpec
-  have h := runProof_prove H _ _ _ fuel (fun chal ↦ (hrun chal).1) (fun chal ↦ (hrun chal).2)
-    hproof
-  exact h
-
-/-- **Completeness from an execution.** A valid execution of well-formed bytecode that fits has
-a padded valid execution and a witness representing it; at admissible sizes and a valid rate,
-the honest proof of that witness is accepted, for every hash function. -/
-theorem completeness_of_execution {prog : Program} {input : PublicInput} {t : Trace prog}
-    (hwf : WellFormedBytecode prog) (hv : ValidExecution prog input t) (hfit : t.Fits) :
-    ∃ t', t'.PaddedFrom t ∧ ValidExecution prog input t' ∧
-      ∃ w s, AssignmentRepresents w t' ∧ Sizes.ofWitness w = some s ∧
-        ∀ ρ, s.Admissible prog → validRate ρ → ∀ (H : Bytes → Digest) fuel proof,
-          honestProof H prog input w s ρ fuel = some proof →
-            verifier (m := Id) H prog input proof = true := by
-  obtain ⟨t', ht', hv', w, hw, hrep⟩ := constraintCompleteness hwf hv hfit
-  obtain ⟨s, hs⟩ := sizes_of_satisfiedBy hw
-  exact ⟨t', ht', hv', w, s, hrep, hs, fun _ hadm hρ H _ _ h ↦ completeness hw hs hadm hρ H h⟩
 
 /-! ## Knowledge soundness -/
 
@@ -171,7 +133,8 @@ theorem haltingRun_valid {prog : Program} {input : PublicInput}
   subst hκ
   obtain rfl : image' = image := funext fun i ↦ himage i i.isLt
   have h : ∃ n, run prog image' n Regs.initial = some (Regs.final prog) := ⟨steps, hv.2⟩
-  exact ⟨⟨_, image', Nat.find h⟩, by simp only [haltingRun, h, ↓reduceDIte], hv.1, Nat.find_spec h⟩
+  exact ⟨⟨_, image', Nat.find h⟩, by simp only [haltingRun, h, ↓reduceDIte], hv.1,
+    Nat.find_spec h⟩
 
 /-- **Knowledge soundness in the random-oracle model.** For a program whose last instruction is
 not a `JUMP`, and an adversary making at most `Q` queries, the verifier accepts while the
@@ -206,6 +169,39 @@ theorem soundnessError_le {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (
   have h := Sound.leanVm_bound_le [] default hQ
   rw [failBound] at h
   exact (le_of_eq (by rfl)).trans h
+
+/-! ## Completeness -/
+
+/-- **The honest prover**: the proof of the execution `t` with the hash `H`, at the commitment's
+inverse rate `2^ρ`, its proof-of-work searches bounded by `fuel`; `none` when the execution does
+not fit the deployed parameters or a search fails. A specification: it pads the execution, takes
+a witness of leanISA's constraint system representing it (a classical choice), and runs the
+honest strategy of every phase through the Fiat–Shamir transform. -/
+noncomputable def honestProof (H : Bytes → Digest) (prog : Program) (input : PublicInput)
+    (t : Trace prog) (ρ fuel : ℕ) : Option Proof :=
+  Complete.honestProofOf H prog input t ρ fuel
+
+/-- **Completeness.** For a valid execution of at most `2^19` steps, with a memory of at most
+`2^23` words and a bytecode of at most `2^23` instructions, of a program carrying the fill blocks,
+at an inverse rate `2^ρ` with `1 ≤ ρ ≤ 4`, and for every hash function whose 17-bit
+proof-of-work search finds a nonce below `fuel`, the honest prover returns a proof, and the
+verifier accepts it. -/
+theorem completeness {prog : Program} {input : PublicInput} {t : Trace prog}
+    (hfill : HasFillBlocks prog) (hv : ValidExecution prog input t) (hsteps : t.steps ≤ 2 ^ 19)
+    (hmem : t.κ ≤ 23) (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4)
+    (H : Bytes → Digest) (fuel : ℕ)
+    (hpow : ∀ cv, findNonce H Whir.queryGrindingBits cv fuel ≠ none) :
+    ∃ proof, honestProof H prog input t ρ fuel = some proof ∧
+      verifier (m := Id) H prog input proof = true :=
+  Complete.complete_of_small hfill hv ⟨hsteps, hmem, hcode⟩ hρ H fuel fun _ _ _ cv hg ↦
+    Sound.grind_bits_eq _ _ hg ▸ hpow cv
+
+/-- **Every proof the honest prover returns is accepted**, for every hash function. -/
+theorem honestProof_accepted {prog : Program} {input : PublicInput} {t : Trace prog}
+    {ρ fuel : ℕ} (H : Bytes → Digest) {proof : Proof}
+    (h : honestProof H prog input t ρ fuel = some proof) :
+    verifier (m := Id) H prog input proof = true :=
+  Complete.verify_honestProofOf H h
 
 end
 end LeanVM

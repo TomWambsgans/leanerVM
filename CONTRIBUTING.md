@@ -56,7 +56,7 @@ under `tests/`. New ordinary Lean files use Lean's module system by default and 
 
 module
 
-public import LeanerVM.Semantics.Basic
+public import LeanerVM.Semantics
 import Some.Private.Implementation
 
 /-!
