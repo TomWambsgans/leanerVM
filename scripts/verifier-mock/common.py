@@ -1,7 +1,7 @@
 """Drivers that regenerate the Python-derived vectors of tests/LeanerVMTests/Protocol/Verifier.
 
 Usage: extract the pinned verifier, then run a driver with `python3 -I`:
-  git -C <leanVM> show a386121f84292f6fa663aaa3e570c15bc0240ea2:python-verifier/verifier.py > DIR/verifier.py
+  git -C <leanVM> show 127510d14c98ade4e8a97646c44fa7f1ff5e752d:python-verifier/verifier.py > DIR/verifier.py
   LEANVM_VERIFIER_DIR=DIR python3 -I scripts/verifier-mock/run_mock.py
 """
 import os

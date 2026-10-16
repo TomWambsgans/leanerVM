@@ -587,7 +587,7 @@ no other; the hole is built when the names in bold of its row are declared and m
 | table sumcheck phase: definition and completeness | [Layer 7](#layer-7-the-table-sumcheck-phase) | `tableSummand`, **`tableSummand_target`**, **`tableSumcheck`**, **`tableSumcheckComplete`** | the spine; sumcheck: definitions and completeness |
 | table sumcheck phase: knowledge soundness | [Layer 7](#layer-7-the-table-sumcheck-phase) | **`tableSumcheckSecurity`** | the table sumcheck's definition; sumcheck: knowledge soundness |
 | public-input phase: the specification's check | [Layer 8](#layer-8-the-public-input-phase) | **`publicInputPhase`**, **`publicInputComplete`**, **`publicInputSecurity`**, **`PublicInput.pooledFrom`** | the spine; tables and stacking |
-| public-input phase: the deployed check | [Layer 8](#layer-8-the-public-input-phase) | **`PublicInput.checkWords`**, **`PublicInput.accepts_two_challenges`**, **`deployedPublicInputPhase`**, **`deployedPublicInputComplete`**, **`deployedPublicInputSecurity`** | the specification's public-input phase |
+| public-input phase: the deployed check (deleted at leanVM `127510d1`, where the deployed check is the specification's) | [Layer 8](#layer-8-the-public-input-phase) | ~~`PublicInput.checkWords`~~, ~~`PublicInput.accepts_two_challenges`~~, ~~`deployedPublicInputPhase`~~, ~~`deployedPublicInputComplete`~~, ~~`deployedPublicInputSecurity`~~ | the specification's public-input phase |
 | Flock phase: definition and completeness | [Layer 9](#layer-9-the-flock-phase) | `FlockSpec`, **`flockPhase`**, **`flockComplete`**, **`flockError_le`**, the constants in `Parameters/Flock.lean` | the spine |
 | Flock phase: knowledge soundness | [Layer 9](#layer-9-the-flock-phase) | **`flockSecurity`**, an inhabitant of `FlockSpec` (#3's) | the Flock phase's definition; #3 |
 | opening phase | [Layer 10](#layer-10-the-opening-phase-and-the-oracle-protocol) | **`openingPhase`**, **`openingComplete`**, **`openingSecurity`**, **`leanVmPhases`** | the spine; batching by powers; tables and stacking |
@@ -969,6 +969,12 @@ instance with a taller column group, the number of rounds is the sumcheck tables
 `evalMle_append_boolVec`. Two phases on one schedule: the specification's (a check per limb),
 kept as the reference of §8.2, and the deployed verifiers' (one equation on the words), which
 `Phases` and Layer 12 take (decision 22; the discrepancy *the public-input check*).
+
+*Superseded at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`.* The deployed verifiers now
+compute every limb's claim themselves and the prover sends nothing (`verifier.py:1390-1396`, §8.2
+rewritten): the specification's phase with no line sent. `leanIsaInstance` sends none of its
+lines, `Phases` takes `publicInputPhase`, and `checkWords`, `accepts_two_challenges` and the
+deployed phase with its halves are deleted. The text below records the design at `a386121f`.
 
 ```lean
 namespace PublicInput

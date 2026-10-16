@@ -24,36 +24,36 @@ declared error of `1` would let a phase that checks nothing be knowledge sound. 
 `piopError` are the six side by side, and `piopError_le` bounds the sum of the errors at the
 sizes the leanISA instance meets.
 
-The schedules, at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`:
+The schedules, at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`:
 
 * The commit: the stack, as one message.
-* The bus (§5.2–§5.4, `crates/lean_vm/src/leaf.rs:864-935`, `gkr.rs:247-430`): the fingerprint
+* The bus (§5.2–§5.4, `crates/verifier/src/bus.rs:12-209`): the fingerprint
   challenges `(α, β)`, one draw here and five scalars on the wire; the two roots `(R, R_c)`; the
   grand-product argument for the three trees, radix four from the roots down with one binary
   layer first when `μ_bus` is odd: each layer draws a combiner `λ`, runs one normalized sumcheck
   round per variable of the layer (the cofactor's coefficients, low degree first, then the
   challenge), sends each tree's values at the descendants, and draws the combination challenges
-  one by one; a last combiner, read by nothing, follows the last layer; then the boundary
-  columns' values.
-* The table sumcheck (§5.5, `cpu/mod.rs:726-743`, `constraints.rs:243-291`): the batching
+  one by one; then the boundary columns' values.
+* The table sumcheck (§5.5, `crates/verifier/src/lib.rs:231-249`, `bus.rs:211-260`): the batching
   challenge `ξ`; one round per variable, highest first, of a cubic's four coefficients and a
   challenge; then one value per column of each sumcheck table, table by table.
-* The public input (§8.2): the challenge `r`, then the values of the lines marked `sent`.
-* Flock (Annex C; `crates/flock/src/hash.rs:983-1010`, `zerocheck.rs:350-430`,
-  `lincheck.rs:1137-1216`; `python-verifier/verifier.py:1135-1310`), with `k = kBatch`: the
+* The public input (§8.2): the challenge `r`, then the values of the lines marked `sent` (none
+  on the leanISA instance).
+* Flock (Annex C; `crates/verifier/src/flock.rs:81-181, 339-342`;
+  `python-verifier/verifier.py:1134-1301`), with `k = kBatch`: the
   `k + 1` sampled coordinates of the point; the 64 values; the challenge `z_skip`; `8 + k`
   zerocheck rounds of three coefficients and a challenge; the two values `v_a, v_b` (the third,
   `v_c`, both verifiers derive from the running claim); the challenge `α_lc`; 8 lincheck rounds;
-  the 64 values; the six challenges of the ring switching, which the Python draws after the
-  lincheck (`verifier.py:1338-1347`) and the Rust inside the stacked opener (`pcs.rs:128`). An
-  instance with no Flock region has an empty slot.
+  the 64 values; the six challenges of the ring switching, which both verifiers draw after the
+  lincheck (`verifier.py:1331-1340`, `crates/verifier/src/flock.rs:376-377`). An instance with no
+  Flock region has an empty slot.
 * The opening (§8.5): the batching challenge `λ`, then one oracle query, which is no message.
 
 The oracle protocol sends every coefficient of a round polynomial and its verifier checks each
 round; the compiled verifier reads one coefficient less per round and derives it.
 
 The errors, per challenge, over `|E|`: the bus `4·2^{μ_bus}` on `(α, β)` (Theorem 5.1),
-`nside − 1 = 2` on each combiner but the last (`0`), `4` on each radix-four round and `2` on a
+`nside − 1 = 2` on each combiner, `4` on each radix-four round and `2` on a
 binary one, `1` on each combination challenge; the table `B + 2` on `ξ`, the degree of the batch
 in `ξ`, one less than the specification's count of its powers (§5.5 charges `nside + B`), and
 `3` per round; the public input `1`; Flock `1` on each coordinate of the point, `127` on

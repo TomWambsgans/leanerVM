@@ -5,7 +5,7 @@ import LeanerVM.Protocol.Verifier.Verify
 
 An end-to-end differential test of `leanVmProgram` in its interactive reading. A mock run of the
 Python's `verify_execution` (`python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, imported as a module) replaces the transcript by a
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, imported as a module) replaces the transcript by a
 scripted one: the `j`-th challenge is `fe(2^20 + j)`, the committed matrices are the words
 `rowWord i p j` (a function of the commitment, the position and the column, so every opening is
 consistent), and the prover's `k`-th scalar is `fe(k)`, except for the announced sizes and one
@@ -119,19 +119,18 @@ def rate4Overrides : List (ℕ × E) :=
    (233, (e 0x473bb5b5f8fbe367 0x3a93da820caeb481 0x9a725556b9243fa1)),
    (297, (e 0x59db02be27a3c6df 0x364b6388157eeb71 0x38466d1c976b2c26)),
    (369, (e 0x7d4fa5bc403e93f0 0x13e42ac66d7d74cb 0x79c9f051351b0691)),
-   (487, (e 0xb88ac681d183a602 0x3164335f883d21dc 0xb8ac11aa566cf085)),
-   (489, (e 0x4f5cab0468635569 0x8d160c88dcd222bd 0xc3f90fe12d3329f0)),
-   (657, (e 0xfd3129c93a4b479f 0xcffe85c832ad2328 0xc1eba51f868f6b11)),
-   (743, (e 0x87d90b25bf2dc62d 0x9b5901bdf4946cc 0x2302b9167bde3e85))]
+   (487, (e 0xce6fd443ffe4fa04 0x806c97f9849c887 0x61eeaa52f8095601)),
+   (655, (e 0xc1bc8b522f68e85e 0xe49dc9ca0ebfd323 0x8c23fef085d8c71b)),
+   (741, (e 0xf8f922e6b237e38 0xa6bf155cf50bc7a4 0xa36c6f955fa74391))]
 
 /-- The stream indices of the root halves, which are commitments here. -/
-def rate4Roots : List ℕ := [8, 9, 672, 673, 687, 688]
+def rate4Roots : List ℕ := [8, 9, 670, 671, 685, 686]
 
 /-- The number of scalars the Python read, root halves included. -/
-def rate4Reads : ℕ := 744
+def rate4Reads : ℕ := 742
 
 /-- The number of challenges the Python drew. -/
-def rate4Samples : ℕ := 188
+def rate4Samples : ℕ := 187
 
 /-- The Python's run, event by event. -/
 def rate4Trace : String :=
@@ -140,20 +139,20 @@ def rate4Trace : String :=
   "rrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrrrrrrrrrsssrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrr" ++
   "rsrrrrsrrrrsrrrrsrrrrsrrrrrrrrrrrrsssrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsr" ++
   "rrrsrrrrsrrrrsrrrrrrrrrrrrsssrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrrsrrrr" ++
-  "srrrrsrrrrsrrrrsrrrrrrrrrrrrsssrrrrrsrrrsrrrsrrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" ++
-  "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrssssrrrrrrrrrrrrrrrr" ++
-  "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrs" ++
-  "rrsrrsrrsrrsrrsrrsrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsss" ++
-  "ssssrrsrrsrrsrrsrrsrrsrrc16,48;sssssssssssssrrrg17;sssssssq0:67750,22340,59016,78269,114" ++
-  "522,39936,33681,88255,110306,82728,21899,99515,71401,50422,116100,26395,26619,90488,9932" ++
-  "3,63838,8168,123754,208,120463,41828,31051,69341,13301,16223,109880,17370,64680,94536,31" ++
-  "973,38452,33235,68882,112286,131055,73029,120436,101974,121191,65318,63738,87513,24641,1" ++
-  "06713,24159,117738,129836,432,55507,46631,36101,95503;rrsrrsrrsrrsrrc15,48;sssssssssrrrg" ++
-  "17;ssssq1:47690,41050,7326,59969,42829,29165,26321,48118,37968,17280,45316,36267,13919,8" ++
-  "101,38488,34936,9058,61752,57482,23085,4197,49867,10941,11235,45684,40687,4113,9904,4082" ++
-  "3,28802,23108,63589;rrsrrsrrsrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrg17;sssq2:6898,13661,1" ++
-  "0666,24551,32605,2096,10075,22810,30893,10473,16631,15350,5895,13298,4240,20899,16551,29" ++
-  "056,5562,29911,3403,15842,9972;rrsrrsrrsrrsrrs"
+  "srrrrsrrrrsrrrrsrrrrrrrrrrrrssrrrrrsrrrsrrrsrrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" ++
+  "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsssssrrrrrrrrrrrrrrrrrrr" ++
+  "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrsrrs" ++
+  "rrsrrsrrsrrsrrsrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssssss" ++
+  "srrsrrsrrsrrsrrsrrsrrc16,48;sssssssssssssrrrg17;sssssssq0:35985,104351,67609,40438,71577" ++
+  ",53254,107946,77698,25702,26217,51117,67750,22340,59016,78269,114522,39936,33681,88255,1" ++
+  "10306,82728,21899,99515,71401,50422,116100,26395,26619,90488,99323,63838,8168,123754,208" ++
+  ",120463,41828,31051,69341,13301,16223,109880,17370,64680,94536,31973,38452,33235,68882,1" ++
+  "12286,131055,73029,120436,101974,121191,65318,63738;rrsrrsrrsrrsrrc15,48;sssssssssrrrg17" ++
+  ";ssssq1:15925,8464,41701,19465,11064,62115,60695,7614,6203,50230,14154,61300,47690,41050" ++
+  ",7326,59969,42829,29165,26321,48118,37968,17280,45316,36267,13919,8101,38488,34936,9058," ++
+  "61752,57482,23085;rrsrrsrrsrrsrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrg17;sssq2:7901,14024,170" ++
+  "92,28203,15875,7905,14587,15709,25359,5105,23290,40,6898,13661,10666,24551,32605,2096,10" ++
+  "075,22810,30893,10473,16631;rrsrrsrrsrrsrrs"
 
 /-- The scalars of the Python's stream, the root halves removed, with `overrides` in place. -/
 def script (overrides : List (ℕ × E)) : List E :=
@@ -191,15 +190,16 @@ def acceptsAndRejectsWrongWord : Bool :=
 def nudge (n : ℕ) : List (ℕ × E) :=
   rate4Overrides.modify n fun (k, v) ↦ (k, v + 1)
 
-/- The scalar that closes the last GKR layer, and the one that closes the public input's check:
-each is the unique value passing its check. -/
+/- The scalar that closes the last GKR layer, and the one that closes the table sumcheck's
+terminal check: each is the unique value passing its check. -/
 #guard run sampleBytecode samplePublicInput (nudge 16) |>.isNone
-#guard run sampleBytecode samplePublicInput (nudge 18) |>.isNone
+#guard run sampleBytecode samplePublicInput (nudge 17) |>.isNone
 
 /- Another bytecode: its fingerprint moves the bus totals, and the table sumcheck rejects. -/
 #guard run (sampleBytecode.set 3 0) samplePublicInput rate4Overrides |>.isNone
 
-/- Another public input: the binding check rejects. -/
+/- Another public input: the memory claims the verifier computes from it are false of the
+committed words, and the opening rejects. -/
 #guard run sampleBytecode (samplePublicInput.set 0 0) rate4Overrides |>.isNone
 
 end LeanerVMTests.Protocol.Verifier.Replay

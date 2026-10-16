@@ -13,7 +13,7 @@ halves, then `n` scalars `fe(10 + k)`.
   five challenges, in the compiled reading, give the challenges and the chain state the Python's
   `Transcript` gives on the same stream after `next_scalars(8)`, `from_halves(next_scalars(2))`
   and `samples(5)` (`python-verifier/verifier.py` at leanVM
-  `a386121f84292f6fa663aaa3e570c15bc0240ea2`, run with CPython's `hashlib`). This binds the IV
+  `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, run with CPython's `hashlib`). This binds the IV
   preimage, `compress(IV, public_input)`, the absorb and squeeze blocks, the order of the reads,
   and the stack root's shape.
 * A non-canonical root half is rejected, as `Digest.from_halves` rejects it.

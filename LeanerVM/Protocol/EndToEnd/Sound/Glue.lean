@@ -19,7 +19,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.RingMultilinear
 # The seams of the end-to-end specification
 
 Facts that glue the phase specifications of the deployed verifier
-(`LeanerVM.Protocol.Verifier.verifyExecution`, leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`)
+(`LeanerVM.Protocol.Verifier.verifyExecution`, leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`)
 into one specification:
 
 * `thrOf μ R`: the Johnson threshold of level `0` of the deployed ladder; the stack's doom
@@ -252,19 +252,28 @@ theorem eBatch_le (J : ℕ) (P₀ : LevelCode) (hJ : J ≤ 231) (hL : P₀.listM
   refine ENNReal.div_le_div_right (Nat.cast_le.2 ?_) _
   exact Nat.mul_le_mul (by omega) hL
 
+/-- **The lead after the table sumcheck**: the public input's challenge, which makes no prover
+move, and the at most `46` coordinates of Flock's point after it are one group, of at most
+`L₀ · 47/|E|`. -/
+theorem pubLead_le (L : ℕ) {n : ℕ} (hn : n ≤ 46) :
+    (L : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞) +
+        ((∑ _i ∈ Finset.range n, (L : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞)) + 0) ≤
+      (L : ℝ≥0∞) * ((overE 47 : ℝ≥0) : ℝ≥0∞) := by
+  rw [add_zero, sum_mul_overE_one, mul_overE, mul_overE, div_E_add]
+  exact ENNReal.div_le_div_right (Nat.cast_le.2 (by nlinarith)) _
+
 /-- **Every error hypothesis of the front phases**, at `L₀ = 2^18` candidates, `|E| = 2^192`,
-a bus of depth at most `38`, `B ≤ 2^20`, at most `46` Flock rounds and at most `231` opening
-claims with a level-0 list of at most `2^18`: each is at most `2^-128`. -/
+a bus of depth at most `38`, `B ≤ 2^20`, at most `231` opening claims with a level-0 list of at
+most `2^18`, and the lead after the table sumcheck at most `L₀ · 47/|E|` (the public input's
+challenge and at most `46` Flock coordinates, `pubLead_le`): each is at most `2^-128`. -/
 theorem phase_errors (I : M3Instance) (hμ : I.μBus ≤ 38) (hB : I.B ≤ 2 ^ 20) :
     abError I L₀ + 0 ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧ abError I L₀ < 1 ∧
     roundError L₀ 4 ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
     interpLead L₀ 2 (lambdaError L₀) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
     lambdaError L₀ + 0 ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
-    roundError L₀ 3 + (L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
-    (L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
-    (∀ n, xiError I L₀ + sumcheckLead n ((L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞)) ≤
-      (2 : ℝ≥0∞)⁻¹ ^ 128) ∧
-    (∀ n ≤ 46, (∑ _i ∈ Finset.range n, (L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞)) + 0 ≤
+    roundError L₀ 3 + (L₀ : ℝ≥0∞) * ((overE 47 : ℝ≥0) : ℝ≥0∞) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
+    (L₀ : ℝ≥0∞) * ((overE 47 : ℝ≥0) : ℝ≥0∞) ≤ (2 : ℝ≥0∞)⁻¹ ^ 128 ∧
+    (∀ n, xiError I L₀ + sumcheckLead n ((L₀ : ℝ≥0∞) * ((overE 47 : ℝ≥0) : ℝ≥0∞)) ≤
       (2 : ℝ≥0∞)⁻¹ ^ 128) ∧
     (∀ (J : ℕ) (P₀ : LevelCode), J ≤ 231 → P₀.listMax ≤ L₀ →
       (∑ _i ∈ Finset.range 6, (L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞)) + eBatch J P₀ ≤
@@ -277,7 +286,7 @@ theorem phase_errors (I : M3Instance) (hμ : I.μBus ≤ 38) (hB : I.B ≤ 2 ^ 2
     rw [add_zero, abError_eq]
     exact le_eps_of_nat le_rfl (by simp only [L₀]; nlinarith)
   refine ⟨hab, ((add_zero (abError I L₀)).symm.le.trans hab).trans_lt eps_lt_one, ?_, ?_, ?_, ?_,
-    ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [roundError_eq]; exact le_eps_of_nat le_rfl (by norm_num)
   · rw [interpLead_eq, unitError_eq, lambdaError_eq, mul_div_E, div_E_add]
     exact le_eps_of_nat le_rfl (by norm_num)
@@ -285,13 +294,10 @@ theorem phase_errors (I : M3Instance) (hμ : I.μBus ≤ 38) (hB : I.B ≤ 2 ^ 2
   · rw [roundError_eq, mul_overE, div_E_add]; exact le_eps_of_nat le_rfl (by norm_num)
   · rw [mul_overE]; exact le_eps_of_nat le_rfl (by norm_num)
   · intro n
-    refine le_eps_of_nat (n := L₀ * (I.B + 3 - 1) + L₀ * 1)
+    refine le_eps_of_nat (n := L₀ * (I.B + 3 - 1) + L₀ * 47)
       ((add_le_add le_rfl (sumcheckLead_le _ _)).trans (le_of_eq ?_)) ?_
     · rw [xiError_eq, mul_overE, div_E_add]
     · simp only [L₀]; omega
-  · intro n hn
-    rw [add_zero, sum_mul_overE_one]
-    exact le_eps_of_nat le_rfl (by simp only [L₀]; omega)
   · intro J P₀ hJ hL
     refine le_eps_of_nat (n := 6 * L₀ + 230 * L₀)
       ((add_le_add le_rfl (eBatch_le J P₀ hJ hL)).trans (le_of_eq ?_)) ?_

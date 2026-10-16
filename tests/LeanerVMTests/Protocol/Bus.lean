@@ -123,9 +123,9 @@ abbrev busToy : M3Instance where
 #guard busToy.busClaims = 1
 #guard busToy.τmax = 1
 -- The schedule: `(α, β)`, the roots, the grand-product argument on two variables (a combiner, the
--- descendants, two combination challenges, the last combiner), the boundary values.
-#guard busRounds busToy = 1 + 1 + 5 + 1
-#guard Fintype.card (busSpec busToy).ChallengeIdx = 1 + 4
+-- descendants, two combination challenges), the boundary values.
+#guard busRounds busToy = 1 + 1 + 4 + 1
+#guard Fintype.card (busSpec busToy).ChallengeIdx = 1 + 3
 #guard leafCount busToy 0 = 4 ∧ leafCount busToy 1 = 4 ∧ leafCount busToy 2 = 2
 
 /-- Four push leaves: `μ_bus = 2`. -/

@@ -14,17 +14,17 @@ public import LeanerVM.Protocol.BusSecurity
 /-!
 # The bus phase on doom
 
-`verifyBusBalance layout` (`verifier.py:536-592`) is the oracle protocol's `busPhase`
+`verifyBusBalance layout` (`verifier.py:534-593`) is the oracle protocol's `busPhase`
 (`LeanerVM.Protocol.Bus`) on the wire. This module specifies its parts on the protocol's
 relations, in the calculus of verifier programs:
 
 * `alwaysSpec`: a sub-program from a fact that already decides its postcondition (the count root
   `0`, which the later `require` rejects);
-* `gkrSpec`: `verify_gkr_grand_products` (`verifier.py:433-457`), from doom on the relation after
+* `gkrSpec`: `verify_gkr_grand_products` (`verifier.py:432-455`), from doom on the relation after
   the fingerprint challenges (`Bus.afterChallenge`) to "the count root is `0`, or doom on the
   argument's output relation": the roots' message is the protocol's (`Bus.rootsSecurity`), the
-  first combiner starts the first step (`Gkr.relIn_iff_layerRel_zero`), and the walk is
-  `gkrLayersSpec`.
+  roots are the layer-`0` statement (`Gkr.relIn_iff_layerRel_zero`), and the walk, each step
+  drawing its own combiner, is `gkrLayersSpec`.
 -/
 
 namespace LeanerVM.Protocol.EndToEnd.Front
@@ -217,7 +217,7 @@ variable {εmax : ℝ≥0∞}
 
 open Classical in
 /-- **The fingerprint challenges** (`alphas = sample_n(BUS_BITS)`, `beta = sample()`,
-`verifier.py:541-543`): one group of five challenges, the protocol's one challenge `(α, β)`,
+`verifier.py:540-542`): one group of five challenges, the protocol's one challenge `(α, β)`,
 escaping the commitment's doom with probability at most `L₀ · 4 · 2^{μ_bus} / |E|`. -/
 noncomputable def abSpec (hI : Bus.Conditions I) {L₀ : ℕ} (hfin : ∀ W, (cands W).Finite)
     (hcard : ∀ W, (cands W).ncard ≤ L₀) (hlt : abError I L₀ < 1) {T : ℝ≥0∞} :
@@ -280,9 +280,9 @@ theorem roots_keep (hI : Bus.Conditions I) {C : Set (∀ i, TheOracle I i)}
     (shared, count) (by simpa using hc)
 
 /-- The protocol's roots statement is the wire's GKR state at layer `0`. -/
-theorem rootStmt_eq (shared count c : E) :
+theorem rootStmt_eq (shared count : E) :
     Gkr.rootStmt 3 (data, ![shared, shared, count]) =
-      layerStmtOf data 0 ⟨[shared, shared, count], c, []⟩ := by
+      layerStmtOf data 0 ⟨[shared, shared, count], []⟩ := by
   refine Prod.ext rfl (Prod.ext (Vector.ext fun i hi ↦ absurd hi (by omega)) ?_)
   funext t
   fin_cases t <;> rfl
@@ -292,7 +292,7 @@ argument's output relation at the point and values it returns. -/
 def GkrPost (r : E × List E × List E) (h : List Ev) : Prop :=
   r.1 = 0 ∨ (r.2.1.length = I.μBus ∧ r.2.2.length = 3 ∧
     HDoom cands (Gkr.relOut 3 I.μBus (Bus.leaves I) (Bus.riders I))
-      (layerStmtOf data I.μBus ⟨r.2.2, 0, r.2.1⟩) h)
+      (layerStmtOf data I.μBus ⟨r.2.2, r.2.1⟩) h)
 
 variable {εmax : ℝ≥0∞}
 
@@ -316,35 +316,26 @@ noncomputable def gkrSpec (hI : Bus.Conditions I) {L₀ : ℕ} (hfin : ∀ W, (c
         exact .inr ⟨W, firstWord_append hW _, roots_keep I data hI hR shared count hz⟩)
     hlam).bind' fun count ↦
   if hz : count = 0 then
-    ((alwaysSpec0 (Post := fun _ _ ↦ True) (fun _ _ ↦ trivial)).bind' fun (c : E) ↦
-      (alwaysSpec0 (Post := fun _ _ ↦ True) (fun _ _ ↦ trivial)).bind' fun (s : GkrState) ↦
-        (Spec.ret (Post := GkrPost I cands data) (count, s.point, s.values)).mono
-          (fun _ _ ↦ .inl hz) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl).mono
+    ((alwaysSpec0 (Post := fun _ _ ↦ True) (fun _ _ ↦ trivial)).bind' fun (s : GkrState) ↦
+      (Spec.ret (Post := GkrPost I cands data) (count, s.point, s.values)).mono
+        (fun _ _ ↦ .inl hz) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl).mono
       (fun _ _ ↦ trivial) (fun _ _ h ↦ h) le_rfl zero_le le_rfl
   else
-    (Spec.sampleE (lambdaError L₀) (Post := fun c h ↦ LayersPre (Bus.leaves I) (Bus.riders I)
-        cands data I.μBus 0 (by simp) ⟨[shared, shared, count], c, []⟩ h)
-      (fun h₀ hp ↦ by
-        obtain ⟨W, hW, hR⟩ := hp.resolve_left hz
-        have hR' : RelDoom (cands W) (Gkr.layerRel 3 I.μBus (Bus.leaves I) (Bus.riders I) 0)
-            (Gkr.rootStmt 3 (data, ![shared, shared, count])) := fun o ho hin ↦ hR o ho
-          ((Gkr.relIn_iff_layerRel_zero 3 I.μBus (Bus.leaves I) (Bus.riders I) _ o).mpr hin)
-        refine le_trans ?_ (lambda_escape (Bus.leaves I) (Bus.riders I) cands
-          (trackOf (Bus.riders I) I.μBus 0 (by simp)) (by simpa using ρOf_le hμ) hfin hcard W _ hR')
-        gcongr with c _
-        intro hD
-        unfold LayersPre
-        simp only [hμ, ↓reduceIte]
-        refine ⟨rfl, rfl, W, firstWord_append hW _, ?_⟩
-        rw [← rootStmt_eq I data shared count c]
-        exact hD)).bind' fun c ↦
-    (gkrLayersSpec (Bus.leaves I) (Bus.riders I) cands data hfin hcard he hT I.μBus 0 (by simp)
-      ⟨[shared, shared, count], c, []⟩).bind' fun s ↦
+    ((gkrLayersSpec (Bus.leaves I) (Bus.riders I) cands data hfin hcard he hT I.μBus 0 (by simp)
+      ⟨[shared, shared, count], []⟩).bind' fun s ↦
     (Spec.ret (Post := GkrPost I cands data) (count, s.point, s.values)).mono
       (fun _ hp ↦ by
         unfold LayersPre at hp
         simp only [↓reduceIte] at hp
-        exact .inr hp) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+        exact .inr hp) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl).mono
+      (fun h₀ hp ↦ by
+        obtain ⟨W, hW, hR⟩ := hp.resolve_left hz
+        unfold LayersPre
+        simp only [hμ, ↓reduceIte]
+        refine ⟨rfl, rfl, W, hW, fun o ho hin ↦ hR o ho
+          ((Gkr.relIn_iff_layerRel_zero 3 I.μBus (Bus.leaves I) (Bus.riders I) _ o).mpr ?_)⟩
+        rw [rootStmt_eq I data shared count]
+        exact hin) (fun _ _ h ↦ h) le_rfl (by simp [nextError, hμ]) le_rfl
 
 end Gkr
 
@@ -352,7 +343,7 @@ end Gkr
 
 section Phase
 
-/-- The pure part of `verify_bus_balance` after the reads (`verifier.py:547-592`): the claims, the
+/-- The pure part of `verify_bus_balance` after the reads (`verifier.py:548-593`): the claims, the
 fingerprints, and the leaf decomposition of the three sides. -/
 def pyBusResult (layout : Verifier.Layout) (alphas : List E) (beta : E)
     (point treeValues memory : List E) (memoryFinal bytecodeFinal : E) : BusResult :=
@@ -439,7 +430,7 @@ theorem values_keep {C : Set (∀ i, TheOracle I i)}
 
 /-- The grand product's last statement on what the bus phase read. -/
 def BusWit.layer (w : BusWit) : Gkr.LayerStmt (Bus.Data I) E 3 I.μBus :=
-  layerStmtOf (input, (toAlpha w.alphas, w.beta)) I.μBus ⟨w.values, 0, w.point⟩
+  layerStmtOf (input, (toAlpha w.alphas, w.beta)) I.μBus ⟨w.values, w.point⟩
 
 /-- The boundary values as the protocol's message. -/
 def BusWit.vals (w : BusWit) : Vector E I.busClaims := vecOf I.busClaims (w.memory ++ [w.mf, w.bf])
@@ -469,7 +460,7 @@ noncomputable def busTailSpec {β : Type} {k : BusWit → Prog β} {Q : β → L
   | (countRoot, point, values) =>
     let P : List Ev → Prop := fun h ↦ point.length = I.μBus ∧ values.length = 3 ∧
       HDoom cands (Gkr.relOut 3 I.μBus (Bus.leaves I) (Bus.riders I))
-        (layerStmtOf (input, (toAlpha alphas, beta)) I.μBus ⟨values, 0, point⟩) h
+        (layerStmtOf (input, (toAlpha alphas, beta)) I.μBus ⟨values, point⟩) h
     have hP : ∀ h x, P h → P (h ++ [Ev.read x]) := fun _ _ hp ↦ ⟨hp.1, hp.2.1, hp.2.2.append _⟩
     (Spec.require (Post := fun _ h ↦ P h) fun _ hp hc ↦ hp.resolve_left hc).bind' fun _ ↦
     (readNSuccSpec P hP zero_le 2).bind' fun memory ↦
@@ -482,7 +473,7 @@ noncomputable def busTailSpec {β : Type} {k : BusWit → Prog β} {Q : β → L
         exact ⟨hl, hv, hm, W, firstWord_append hW _, values_keep I hI hR _⟩) hLk).bind'
       fun bf ↦ K ⟨alphas, beta, point, values, memory, mf, bf⟩
 
-/-- **The bus phase, then a continuation** (`verify_bus_balance`, `verifier.py:536-592`): from
+/-- **The bus phase, then a continuation** (`verify_bus_balance`, `verifier.py:534-593`): from
 the commitment's doom (no candidate satisfies `M3Holds`, `Seam.commit`) to the bus seam at what
 was read, then `f` of the result, specified from there by `K`, at the depth `μ_bus` of the push
 side. The fingerprint challenges are charged `L₀ · 4 · 2^{μ_bus} / |E|`; every later group of

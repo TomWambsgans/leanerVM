@@ -514,18 +514,6 @@ def oddSecurity : (r : ℕ) → (hr : r ≤ 1) → (k : ℕ) → (hk : r + 2 * k
       (by omega) (relIn_iff_layerRel_zero nside μ leaves riders)
   | _ + 2, h, _, _ => absurd h (by omega)
 
-/-- The security half of the last combiner: it changes nothing, at error zero. -/
-def lastSecurity :
-    Component.Security (lastCombiner nside μ) (relOut nside μ leaves riders)
-      (relOut nside μ leaves riders) (drawError F 0) :=
-  (Component.sampleChallengeSecurity O F _ _ 0 fun s o _ ↦
-    Component.card_badChallenge_le_of_unit O F _ 0 s o fun hs ↦ by
-      have : IsEmpty {_c : F // ((s, o), ()) ∈ relOut nside μ leaves riders} :=
-        ⟨fun c ↦ hs c.2⟩
-      rw [Nat.card_of_isEmpty]).mono fun _ ↦ by
-        show ((0 : ℕ) : ℝ≥0) / (Nat.card F : ℝ≥0) ≤ 0
-        simp
-
 end Gkr
 
 variable {F : Type} [Field F] [Finite F] [BEq F] [LawfulBEq F] [DecidableEq F]
@@ -542,9 +530,8 @@ computes, extractor included. -/
 def gkrSecurity :
     Component.Security (gkr nside μ leaves) (Gkr.relIn nside μ leaves riders)
       (Gkr.relOut nside μ leaves riders) (gkrError F (1 / Nat.card F : ℝ≥0) nside μ) :=
-  ((Gkr.oddSecurity nside μ leaves riders (μ % 2) _ (μ / 2) (Nat.mod_add_div μ 2)).append
-    (Gkr.layerStepsSecurity nside μ leaves riders (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))).append
-    (Gkr.lastSecurity nside μ leaves riders)
+  (Gkr.oddSecurity nside μ leaves riders (μ % 2) _ (μ / 2) (Nat.mod_add_div μ 2)).append
+    (Gkr.layerStepsSecurity nside μ leaves riders (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))
 
 end
 end LeanerVM.Protocol

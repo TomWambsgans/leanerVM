@@ -124,9 +124,9 @@ example : toy.poolSize = 4 := by decide
 /-! ## The slots -/
 
 -- The bus phase on the toy: `(α, β)`, the roots, one binary layer (its combiner, no round, the
--- descendants, one combination challenge), the last combiner, the boundary values.
-example : busRounds toy = 7 := by decide
-example : Fintype.card (busSpec toy).ChallengeIdx = 4 := by decide
+-- descendants, one combination challenge), the boundary values.
+example : busRounds toy = 6 := by decide
+example : Fintype.card (busSpec toy).ChallengeIdx = 3 := by decide
 -- The table sumcheck on the toy: `ξ`, one cubic round, the final values.
 example : tableRounds toy = 4 := by decide
 example : Fintype.card (tableSpec toy).ChallengeIdx = 2 := by decide
@@ -137,13 +137,13 @@ example : pubSpec.dir 1 = .P_to_V := rfl
 example : flockRounds toy toy.flock = 0 := by decide
 example : Fintype.card openingSpec.ChallengeIdx = 1 := by decide
 -- The whole protocol on the toy.
-example : piopRounds toy = 15 := by decide
+example : piopRounds toy = 14 := by decide
 
--- The grand-product argument for trees of `2 ^ 4` leaves draws `(μ/2 + 1)² = 9` challenges:
--- two radix-four layers of `3` and `5`, and the last combiner. For `2 ^ 5` leaves a binary
--- layer of `2` comes first and deepens the others by one: `2 + 4 + 6 + 1 = 13`.
-example : Fintype.card (gkrSpec E 3 4).ChallengeIdx = 9 := by decide
-example : Fintype.card (gkrSpec E 3 5).ChallengeIdx = 13 := by decide +kernel
+-- The grand-product argument for trees of `2 ^ 4` leaves draws `(μ/2 + 1)² - 1 = 8` challenges:
+-- two radix-four layers of `3` and `5`, each opening with its combiner. For `2 ^ 5` leaves a
+-- binary layer of `2` comes first and deepens the others by one: `2 + 4 + 6 = 12`.
+example : Fintype.card (gkrSpec E 3 4).ChallengeIdx = 8 := by decide
+example : Fintype.card (gkrSpec E 3 5).ChallengeIdx = 12 := by decide +kernel
 -- The Flock phase for `2 ^ 3` compressions draws `2·3 + 25` challenges over `3·3 + 44` rounds.
 example : Fintype.card (flockSpecOf 3).ChallengeIdx = 31 := by decide +kernel
 example : flockRoundsOf 3 = 53 := by decide

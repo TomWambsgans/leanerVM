@@ -14,11 +14,12 @@ public import LeanerVM.Protocol.EndToEnd.Front.FlockTerminal
 /-!
 # The front bridge: public input, Flock, ring switching
 
-Steps 5-7 of `verify_execution` (`verifier.py:1397-1412` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`), as specifications of the calculus of verifier
+Steps 5-7 of `verify_execution` (`verifier.py:1390-1406` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`), as specifications of the calculus of verifier
 programs (`LeanerVM.Protocol.Compile.Spec`):
 
-* `pubPhaseSpec` (`PubPhase`): `publicInputPhase`, `PubPre → PubPost`, lead `L₀/|E|`;
+* `pubPhaseSpec` (`PubPhase`): `publicInputPhase`, `PubPre → PubPost`, lead `L₀/|E|` plus
+  Flock's, since the phase makes no prover move;
 * `flockBridgeSpec`: `verifyFlock (14 + τ_BLAKE2S)`, `FlockPre → LinPost`, lead
   `(τ_BLAKE2S + 1)·L₀/|E|`; `PubPost` is `FlockPre` at the claims with the public claims appended
   (`pubPost_iff_flockPre`);
@@ -34,8 +35,7 @@ most `L₀` candidates), which feed `εmax`:
 
 | group (starts after) | challenges | bound |
 | --- | --- | --- |
-| the table phase's last move | `r` (public input) | `L₀ · 1/|E|` |
-| the public limbs | the point's `k + 1` coordinates | `(k + 1) · L₀/|E|` |
+| the table phase's last move | `r`, then the point's `k + 1` coordinates | `(k + 2) · L₀/|E|` |
 | the skip message | `z_skip` | `L₀ · 127/|E|` |
 | a zerocheck round's message | its challenge | `L₀ · 2/|E|` |
 | `v_b` | `α` | `L₀ · 3/|E|` |

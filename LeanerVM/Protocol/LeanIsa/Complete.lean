@@ -329,8 +329,8 @@ private theorem publicLinesHold_stackOf {input : PublicInput} (h : SatisfiedBy p
       (memLimb_stackOf h hp k _).trans (congrArg (·.limb k) w1)⟩
   intro l hl'
   have hls : (publicLines prog (witnessSizes w hp) input).toList =
-      [⟨memCol 0, input.lanes 0, input.lanes 2, true, hp⟩,
-        ⟨memCol 1, input.lanes 1, input.lanes 3, true, hp⟩, ⟨memCol 2, 0, 0, false, hp⟩] := rfl
+      [⟨memCol 0, input.lanes 0, input.lanes 2, false, hp⟩,
+        ⟨memCol 1, input.lanes 1, input.lanes 3, false, hp⟩, ⟨memCol 2, 0, 0, false, hp⟩] := rfl
   change l ∈ (publicLines prog (witnessSizes w hp) input).toList at hl'
   rw [hls] at hl'
   simp only [List.mem_cons, List.not_mem_nil, or_false] at hl'

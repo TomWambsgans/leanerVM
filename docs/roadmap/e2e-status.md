@@ -8,7 +8,7 @@ and #67. Design: [e2e-rom-design.md](e2e-rom-design.md). Every theorem below dep
 
 `LeanerVM.Protocol.Verifier.verify` (`LeanerVM/Protocol/Verifier/Verify.lean`): the compiled
 reading, at BLAKE2s, of `leanVmProgram`, a transcription of `python-verifier/verifier.py` at
-leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2` in the verifier language
+leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d` in the verifier language
 `LeanerVM/Protocol/Compile/Prog.lean` (read, sample, grind, commit, query). Its compiled reading
 (`Compile/Run.lean`) is the Fiat–Shamir chain with proof of work and Merkle openings of the
 Python. Evidence that the transcription is the Python's: differential tests of every pure helper
@@ -18,11 +18,11 @@ drivers in `scripts/verifier-mock/`). No proof from the Rust prover is available
 ## Soundness (`LeanerVM/Protocol/EndToEnd/Sound/Theorem.lean`)
 
 In the random-oracle model for BLAKE2s-256 on byte strings (VCVio's `randomOracle`), against any
-adversary making at most `Q_A` queries, with the compiled verifier making at most `13300`
+adversary making at most `Q_A` queries, with the compiled verifier making at most `13213`
 (`Verifier/Cost.lean`):
 
 * `leanVm_romSound`: the verifier accepts while its run is doomed with probability at most
-  `(Q_A + 13300)·(2^-128 + 6·(Q_A + 13300)/2^256)` (`failBound`: `(4 + k)·N/2^256` with `k = 2` seeding steps);
+  `(Q_A + 13213)·(2^-128 + 6·(Q_A + 13213)/2^256)` (`failBound`: `(4 + k)·N/2^256` with `k = 2` seeding steps);
 * `leanVm_knowledge`: the same bound for "the verifier accepts and the extractor (reading the
   announced sizes and the stack's commitment off the oracle's log, then picking a stack of the
   Johnson list satisfying the relation; a classical choice) returns no stack satisfying
@@ -80,5 +80,5 @@ walk row for row (`Front/WalkFaithful.lean`), and WHIR (`Whir/Sound/`).
   from the model's); the deployed verifier always draws four, which the bus specification now
   carries. Found before it reached the final theorems as anything but a parameter.
 * No soundness or completeness bug of the deployed verifier was found: the WHIR gluing order, the
-  OOD and query ordering, the Flock walk (row for row), the public-input check and the bus and
+  OOD and query ordering, the Flock walk (row for row), the public-input claims and the bus and
   table computations all match the analysed protocol.

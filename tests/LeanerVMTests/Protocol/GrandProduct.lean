@@ -11,10 +11,10 @@ import LeanerVM.Protocol.Spine.Toy
 Over `E`, with no public data and no oracle, on trees of four, eight and sixteen leaves.
 
 * **The schedule.** `gkrSpec E 1 2`, `gkrSpec E 3 3` and `gkrSpec E 3 4`, the schedules `gkr`
-  is typed at: their rounds, their challenges (`μ²/4 + μ + 1` for even `μ`: a combiner after the
-  roots and after every layer, the last included), the directions, the message types (a round
-  message is the five coefficients of a quartic, the descendants four values per tree), and the
-  error `gkrError` charges to each kind of challenge, `0` on the last combiner. The bus slot takes
+  is typed at: their rounds, their challenges (`μ²/4 + μ` for even `μ`: a combiner opening every
+  layer and none after the last), the directions, the message types (a round message is the five
+  coefficients of a quartic, the descendants four values per tree), and the error `gkrError`
+  charges to each kind of challenge. The bus slot takes
   the component at its type: the bus phase's shape around `gkr 3 toy.μBus` is a front phase at
   `busSpec toy`.
 * **An honest run of `gkr 1 2`, by hand.** The roots satisfy the input relation; the combined
@@ -69,25 +69,26 @@ def noRiders {μ : ℕ} : Unit → (∀ i, NoOracle i) → List (Σ τ : Fin (μ
 /-! ## The schedule -/
 
 -- Rounds: per step a combiner, two per sumcheck round, the descendants, one per combination
--- challenge; then the last combiner.
-example : gkrRounds 2 = 5 := by decide
-example : gkrRounds 3 = 10 := by decide
-example : gkrRounds 4 = 13 := by decide
+-- challenge. No combiner follows the last step (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
+-- `verifier.py:438-452`).
+example : gkrRounds 2 = 4 := by decide
+example : gkrRounds 3 = 9 := by decide
+example : gkrRounds 4 = 12 := by decide
+example : gkrRounds 0 = 0 := by decide
 
--- Challenges: `μ²/4 + μ + 1` for even `μ`, seven for `μ = 3`.
-example : Fintype.card (gkrSpec E 1 2).ChallengeIdx = 4 := by decide
-example : Fintype.card (gkrSpec E 3 3).ChallengeIdx = 7 := by decide
-example : Fintype.card (gkrSpec E 3 4).ChallengeIdx = 9 := by decide
+-- Challenges: `μ²/4 + μ` for even `μ`, six for `μ = 3`.
+example : Fintype.card (gkrSpec E 1 2).ChallengeIdx = 3 := by decide
+example : Fintype.card (gkrSpec E 3 3).ChallengeIdx = 6 := by decide
+example : Fintype.card (gkrSpec E 3 4).ChallengeIdx = 8 := by decide
 
--- `gkr 1 2`: the combiner, the descendants, `u_0`, `u_1`, the last combiner.
-example : List.ofFn (gkrSpec E 1 2).dir = [.V_to_P, .P_to_V, .V_to_P, .V_to_P, .V_to_P] := by
+-- `gkr 1 2`: the combiner, the descendants, `u_0`, `u_1`.
+example : List.ofFn (gkrSpec E 1 2).dir = [.V_to_P, .P_to_V, .V_to_P, .V_to_P] := by
   decide
 -- `gkr 3 4`: the first step as above; the second a combiner, two sumcheck rounds, the
--- descendants, `u_0`, `u_1`; the last combiner.
+-- descendants, `u_0`, `u_1`.
 example : List.ofFn (gkrSpec E 3 4).dir =
     [.V_to_P, .P_to_V, .V_to_P, .V_to_P,
-      .V_to_P, .P_to_V, .V_to_P, .P_to_V, .V_to_P, .P_to_V, .V_to_P, .V_to_P,
-      .V_to_P] := by
+      .V_to_P, .P_to_V, .V_to_P, .P_to_V, .V_to_P, .P_to_V, .V_to_P, .V_to_P] := by
   decide
 
 -- A round message of radix four is the five coefficients of a polynomial of degree at most four;
@@ -96,11 +97,11 @@ example : (gkrSpec E 3 4).«Type» ⟨5, by decide⟩ = Vector E 5 := rfl
 example : (gkrSpec E 3 4).«Type» ⟨9, by decide⟩ = (Fin 3 → Vector E 4) := rfl
 
 -- The errors of `gkr 3 4` from a unit `u`: `(nside - 1)·u` on a combiner, `4·u` on a sumcheck
--- round of radix four, `u` on a combination challenge, `0` on the last combiner.
+-- round of radix four, `u` on a combination challenge.
 example (u : ℝ≥0) : gkrError E u 3 4 ⟨⟨4, by decide⟩, by decide⟩ = ((3 - 1 : ℕ) : ℝ≥0) * u := rfl
 example (u : ℝ≥0) : gkrError E u 3 4 ⟨⟨6, by decide⟩, by decide⟩ = ((2 ^ 2 : ℕ) : ℝ≥0) * u := rfl
 example (u : ℝ≥0) : gkrError E u 3 4 ⟨⟨10, by decide⟩, by decide⟩ = u := rfl
-example (u : ℝ≥0) : gkrError E u 3 4 ⟨⟨12, by decide⟩, by decide⟩ = 0 := rfl
+example (u : ℝ≥0) : gkrError E u 3 4 ⟨⟨11, by decide⟩, by decide⟩ = u := rfl
 
 -- The component is typed at the slot's schedule.
 example : Component.Def (Unit × (Fin 3 → E)) NoOracle Unit (LayerStmt Unit E 3 4) NoOracle Unit

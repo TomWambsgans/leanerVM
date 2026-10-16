@@ -209,7 +209,6 @@ import LeanerVM.Protocol.Whir.Sound.LevelFinal
 import LeanerVM.Protocol.Whir.Sound.Start
 import LeanerVM.Protocol.Whir.Sound.Spec
 import LeanerVM.Protocol.EndToEnd.Front.PubEscape
-import LeanerVM.Protocol.EndToEnd.Front.PubShape
 import LeanerVM.Protocol.EndToEnd.Front.PubPhase
 import LeanerVM.Protocol.EndToEnd.Front.FlockMech
 import LeanerVM.Protocol.EndToEnd.Front.FlockArk

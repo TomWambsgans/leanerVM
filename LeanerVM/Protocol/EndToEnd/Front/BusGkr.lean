@@ -2,8 +2,9 @@
   LeanerVM.Protocol.EndToEnd.Front.BusGkr
 
   The verifier program's grand-product walk (`verify_gkr_grand_products`) specified on the oracle
-  protocol's relations: each layer step from doom on the layer's first sumcheck stage to doom
-  after the next combiner, through the rounds, the descendants and the combination challenges.
+  protocol's relations: each layer step from doom on the layer relation to doom on the step's
+  output relation, through the combiner, the rounds, the descendants and the combination
+  challenges.
 -/
 
 module
@@ -16,20 +17,22 @@ public import LeanerVM.Protocol.Verifier.Bus
 /-!
 # The grand-product walk on doom
 
-The verifier program's `gkrStep step s` (`verifier.py:441-455`) is one layer step of the oracle
-protocol's `layerStep` (`LeanerVM.Protocol.ToArkLib.GrandProduct`) at radix `2 ^ step`, with the
-combiner drawn at the end of the previous step (the protocol draws it at the start of the step:
-the same challenge). Its state `s` (`GkrState`: three values, the combiner, the point) is the
-protocol's statement after the combiner (`lambdaNext (layerStmtOf s) s.combiner`), and its
-doom is stated on the protocol's relations:
+The verifier program's `gkrStep step s` (`verifier.py:441-452` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) is one layer step of the oracle protocol's
+`layerStep` (`LeanerVM.Protocol.ToArkLib.GrandProduct`) at radix `2 ^ step`: both draw the
+combiner first. Its state `s` (`GkrState`: three values, the point) is the protocol's layer
+statement (`layerStmtOf`), and its doom is stated on the protocol's relations:
 
-* before: doom on stage `0` of the layer's tracked family (`familyT`);
+* before: doom on the layer relation (`layerRel`);
+* after the combiner: doom on stage `0` of the layer's tracked family (`familyT`), the combiner
+  charged `L₀ · 2 / |E|` (`lambda_escape`);
 * through the rounds (`wireSumcheckSpec`, equality mode against the point);
 * after the descendants and their check: doom on `childRelT … 0` (the descendants' security);
 * through the combination challenges: doom on `childRelT … i`, each challenge charged
   `L₀ / |E|` (`card_interpNext_le'`);
-* after the next combiner: the caller's doom (`NextDoom`), given the escape bound of the
-  combiner from doom on the step's output relation `stepOutT` (`interpDone_mem_stepOutT_iff'`).
+* after the step: doom on the step's output relation `stepOutT`
+  (`interpDone_mem_stepOutT_iff'`), which is the next layer's relation inside the walk and the
+  argument's output relation after the last step (`layersPre_of_stepPost`).
 
 The wire's state and the protocol's statement agree because the program computes what the
 protocol's verdicts compute: `polyEval` of the values at the combiner is `powerBatch`
@@ -107,11 +110,11 @@ theorem vecOf_append {ρ m : ℕ} (y x : List E) (hy : y.length = ρ) :
 
 /-- **The wire's step output is the protocol's interpolated statement**: the point `y ++ x`, and
 each tree's `multilinear_eval` of its descendants at `y`. -/
-theorem interpDone_eq {ρ m : ℕ} (x y : List E) (children : List (List E)) (c : E)
+theorem interpDone_eq {ρ m : ℕ} (x y : List E) (children : List (List E))
     (hy : y.length = ρ) (hc : children.length = 3)
     (hch : ∀ t ∈ children, t.length = 2 ^ ρ) :
     Gkr.interpDone 3 ρ m (((data, (vecOf m x, childrenOf ρ children)), vecOf ρ y)) =
-      layerStmtOf data (m + ρ) ⟨children.map (multilinearEval · y), c, y ++ x⟩ := by
+      layerStmtOf data (m + ρ) ⟨children.map (multilinearEval · y), y ++ x⟩ := by
   refine Prod.ext rfl (Prod.ext (vecOf_append y x hy).symm (funext fun t ↦ ?_))
   show evalMle (childrenOf ρ children t) (vecOf ρ y) =
     (children.map (multilinearEval · y)).getD t 0
@@ -216,18 +219,15 @@ variable {I : M3Instance} {X : Type} {μ : ℕ}
   (cands : Word → Set (∀ i, TheOracle I i)) (data : X) {ρ m : ℕ}
   (T : Gkr.RiderTrack μ riders ρ m)
 
-/-- The doom before a step: doom on stage `0` of the layer's tracked family, at the protocol's
-statement after the combiner. -/
+/-- The doom before a step: doom on the layer relation at the wire's state. -/
 def StepPre (s : GkrState) (h : List Ev) : Prop :=
   s.point.length = m ∧ s.values.length = 3 ∧
-    HDoom cands (SumcheckRound.rel (Gkr.familyT 3 μ leaves riders ρ m T) 0)
-      (Gkr.lambdaNext 3 m (layerStmtOf data m s) s.combiner) h
+    HDoom cands (Gkr.layerRel 3 μ leaves riders m) (layerStmtOf data m s) h
 
-/-- The doom after a step: the caller's doom after the next combiner. -/
-def StepPost (NextDoom : Word → Gkr.LayerStmt X E 3 (m + ρ) → E → Prop) (s : GkrState)
-    (h : List Ev) : Prop :=
+/-- The doom after a step: doom on the step's output relation at the wire's new state. -/
+def StepPost (s : GkrState) (h : List Ev) : Prop :=
   s.point.length = m + ρ ∧ s.values.length = 3 ∧
-    ∃ W, firstWord h = some W ∧ NextDoom W (layerStmtOf data (m + ρ) s) s.combiner
+    HDoom cands (Gkr.stepOutT 3 μ leaves riders ρ m T) (layerStmtOf data (m + ρ) s) h
 
 /-- The layer's family has the wire's equality-mode domains. -/
 theorem weights_eq_wireDomain (s : GkrState) (hs : s.point.length = m) (l : E) (k : ℕ)
@@ -266,103 +266,6 @@ theorem combineCheck_eq (st : SumcheckRound.Stmt (Gkr.LayerX X E 3 m) E m)
   rw [List.getD_eq_getElem _ _ (by simpa using ht), List.getElem_map, prodE_eq_prod,
     List.getD_eq_getElem _ _ ht, prod_eq_prod_vecOf _ (hch _ (List.getElem_mem ht))]
 
-variable {εmax T' : ℝ≥0∞}
-
-/-- A specification from a precondition that cannot hold. -/
-def specOfFalse {α : Type} {p : Prog α} {Pre : List Ev → Prop} {Post : α → List Ev → Prop}
-    {L T : ℝ≥0∞} (h : ∀ h, Pre h → False) : Spec p Pre Post εmax L T :=
-  (Spec.dead (p := p) (Post := Post) (εmax := εmax) (L := L) (T := T)).mono (fun h' hp ↦ h h' hp)
-    (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
-
-open Classical in
-/-- **A layer step** of the wire's GKR walk at radix `2 ^ ρ` from layer `m`: from doom on the
-layer's first sumcheck stage to the caller's doom after the next combiner, given the combiner's
-escape from doom on the step's output relation (`hnext`). Each sumcheck round's challenge is
-charged `L₀ · 2^ρ / |E|`, each combination challenge `L₀ / |E|`. -/
-noncomputable def stepSpec {L₀ : ℕ} (hfin : ∀ W, (cands W).Finite)
-    (hcard : ∀ W, (cands W).ncard ≤ L₀) (NextDoom : Word → Gkr.LayerStmt X E 3 (m + ρ) → E → Prop)
-    {eNext : ℝ≥0∞}
-    (hnext : ∀ W ls, RelDoom (cands W) (Gkr.stepOutT 3 μ leaves riders ρ m T) ls →
-      (Fintype.card E : ℝ≥0∞)⁻¹ *
-        ((Finset.univ.filter fun c ↦ ¬ NextDoom W ls c).card : ℝ≥0∞) ≤ eNext)
-    (he : roundError L₀ (2 ^ ρ) + 0 ≤ εmax) (hT : interpLead L₀ ρ (eNext + T') ≤ εmax)
-    (s : GkrState) :
-    Spec (gkrStep ρ s) (StepPre leaves riders cands data T s) (StepPost data NextDoom) εmax 0 T' :=
-  if hs : s.point.length = m ∧ s.values.length = 3 then
-    ((wireSumcheckSpec (T := 0) (Gkr.familyT 3 μ leaves riders ρ m T) cands
-      (Gkr.familyT_consistent' 3 μ leaves riders ρ m T) (Gkr.familyT_sound' 3 μ leaves riders ρ m T)
-      hfin hcard Nat.one_le_two_pow he (layerStmtOf data m s, s.combiner) (s.point.map some) 0
-      #v[] (polyEval s.values s.combiner) (by simp [hs.1])
-      (weights_eq_wireDomain data s hs.1 _)).mono
-      (fun h hp ↦ by rw [polyEval_eq_powerBatch _ hp.2.1]; exact hp.2.2) (fun _ _ h ↦ h) le_rfl
-      (sumcheckLead_le _ _) le_rfl).bind' fun ⟨x, claim⟩ ↦
-    let P0 := SumcheckPost (Gkr.familyT 3 μ leaves riders ρ m T) cands
-      (layerStmtOf data m s, s.combiner) m #v[] (x, claim)
-    have hP0 : ∀ h z, P0 h → P0 (h ++ [Ev.read z]) := fun _ _ hp ↦ ⟨hp.1, hp.2.append _⟩
-    have hread : Prog.readN (2 ^ ρ - 1 + 1) = Prog.readN (2 ^ ρ) := by
-      rw [Nat.sub_add_cancel Nat.one_le_two_pow]
-    (Spec.congr hread (readNSuccSpec P0 hP0 zero_le (2 ^ ρ - 1))).bind' fun child0 ↦
-    let P1 := fun h ↦ child0.length = 2 ^ ρ - 1 + 1 ∧ P0 h
-    (Spec.congr hread (readNSuccSpec P1 (fun _ _ hp ↦ ⟨hp.1, hP0 _ _ hp.2⟩) zero_le
-      (2 ^ ρ - 1))).bind' fun child1 ↦
-    let P2 := fun h ↦ child1.length = 2 ^ ρ - 1 + 1 ∧ P1 h
-    (Spec.congr hread (readNSuccSpec P2 (fun _ _ hp ↦ ⟨hp.1, hp.2.1, hP0 _ _ hp.2.2⟩) hT
-      (2 ^ ρ - 1))).bind' fun child2 ↦
-    if hq : x.length = m ∧ child0.length = 2 ^ ρ ∧ child1.length = 2 ^ ρ ∧
-        child2.length = 2 ^ ρ then
-      let base : X × (Vector E m × (Fin 3 → CMlPolynomialEval E ρ)) :=
-        (data, (vecOf m x, childrenOf ρ [child0, child1, child2]))
-      (Spec.require (Post := fun _ h ↦
-          HDoom cands (Gkr.childRelT 3 μ leaves riders ρ m T 0) (base, #v[]) h)
-        (fun _ hp hc ↦ by
-          obtain ⟨-, -, -, -, W, hW, hR⟩ := hp
-          refine ⟨W, hW, children_keep leaves riders T hR _ (combineCheck_eq _ _ rfl ?_ hc)⟩
-          intro t ht
-          simp only [List.mem_cons, List.not_mem_nil, or_false] at ht
-          rcases ht with rfl | rfl | rfl
-          exacts [hq.2.1, hq.2.2.1, hq.2.2.2])).bind' fun _ ↦
-      (interpSpec leaves riders cands T (T' := eNext + T') hfin hcard base ρ 0 #v[]).bind'
-        fun y ↦
-      if hy : y.length = ρ then
-        (Spec.sampleE eNext (Post := fun c h ↦ ∃ W, firstWord h = some W ∧ NextDoom W
-            (layerStmtOf data (m + ρ)
-              ⟨[child0, child1, child2].map (multilinearEval · y), c, y ++ x⟩) c)
-          (fun h₀ hp ↦ by
-            obtain ⟨-, W, hW, hR⟩ := hp
-            have hR' : RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T ρ)
-                (base, vecOf ρ y) := by
-              have key : ∀ k, k = ρ → RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T k)
-                  (base, vecOf k y) →
-                  RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T ρ)
-                    (base, vecOf ρ y) := by
-                rintro k rfl h
-                exact h
-              exact key (0 + ρ) (Nat.zero_add ρ) hR
-            have hR'' : RelDoom (cands W) (Gkr.stepOutT 3 μ leaves riders ρ m T)
-                (Gkr.interpDone 3 ρ m (base, vecOf ρ y)) := fun o ho hin ↦
-              hR' o ho ((Gkr.interpDone_mem_stepOutT_iff' 3 μ leaves riders ρ m T _ o).mp hin)
-            rw [interpDone_eq data x y [child0, child1, child2] 0 hy rfl (by
-              intro t ht
-              simp only [List.mem_cons, List.not_mem_nil, or_false] at ht
-              rcases ht with rfl | rfl | rfl
-              exacts [hq.2.1, hq.2.2.1, hq.2.2.2])] at hR''
-            refine le_trans ?_ (hnext W _ hR'')
-            gcongr with c _
-            intro hN
-            exact ⟨W, firstWord_append hW _, hN⟩)).bind' fun c ↦
-        (Spec.ret (Post := StepPost data NextDoom)
-          ⟨[child0, child1, child2].map (multilinearEval · y), c, y ++ x⟩).mono
-          (fun _ hp ↦ ⟨by simp [hy, hq.1]; omega, by simp, hp⟩) (fun _ _ h ↦ h) le_rfl le_rfl
-          le_rfl
-      else specOfFalse fun _ hp ↦ hy hp.1
-    else specOfFalse fun _ hp ↦ hq ⟨by have := hp.2.2.2.1; simpa using this,
-      by have := Nat.one_le_two_pow (n := ρ); have := hp.2.2.1; omega,
-      by have := Nat.one_le_two_pow (n := ρ); have := hp.2.1; omega,
-      by have := Nat.one_le_two_pow (n := ρ); have := hp.1; omega⟩
-  else specOfFalse fun _ hp ↦ hs ⟨hp.1, hp.2.1⟩
-
-/-! ### Between steps -/
-
 /-- The error of a combiner over at most `L₀` candidates: `L₀ · 2 / |E|` (three trees). -/
 noncomputable def lambdaError (L₀ : ℕ) : ℝ≥0∞ :=
   L₀ * ((((3 - 1 : ℕ) : ℝ≥0) / (Nat.card E : ℝ≥0) : ℝ≥0) : ℝ≥0∞)
@@ -387,9 +290,96 @@ theorem lambda_escape {ρ' m' : ℕ} (T' : Gkr.RiderTrack μ riders ρ' m') (hm 
     (fun _ _ ↦ rfl) (fun s c ↦ congrArg (Gkr.lambdaNext 3 m' s) (drawTr_zero c)) (hfin W)
     (hcard W) hR rfl
 
-/-- The doom after the last combiner: the argument's output relation, at the final layer. -/
-def LastDoom {m' : ℕ} (h : m' = μ) (W : Word) (ls : Gkr.LayerStmt X E 3 m') (_c : E) : Prop :=
-  RelDoom (cands W) (Gkr.relOut 3 μ leaves riders) (ls.1, (Vector.cast h ls.2.1, ls.2.2))
+variable {εmax T' : ℝ≥0∞}
+
+/-- A specification from a precondition that cannot hold. -/
+def specOfFalse {α : Type} {p : Prog α} {Pre : List Ev → Prop} {Post : α → List Ev → Prop}
+    {L T : ℝ≥0∞} (h : ∀ h, Pre h → False) : Spec p Pre Post εmax L T :=
+  (Spec.dead (p := p) (Post := Post) (εmax := εmax) (L := L) (T := T)).mono (fun h' hp ↦ h h' hp)
+    (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+
+open Classical in
+/-- **A layer step** of the wire's GKR walk at radix `2 ^ ρ` from layer `m`: from doom on the
+layer relation to doom on the step's output relation. The combiner, drawn first, is charged
+`L₀ · 2 / |E|` (`lambda_escape`), each sumcheck round's challenge `L₀ · 2^ρ / |E|`, each
+combination challenge `L₀ / |E|`. -/
+noncomputable def stepSpec {L₀ : ℕ} (hfin : ∀ W, (cands W).Finite)
+    (hcard : ∀ W, (cands W).ncard ≤ L₀) (hm : m + ρ ≤ μ)
+    (he : roundError L₀ (2 ^ ρ) + 0 ≤ εmax) (hT : interpLead L₀ ρ T' ≤ εmax)
+    (s : GkrState) :
+    Spec (gkrStep ρ s) (StepPre (m := m) leaves riders cands data s)
+      (StepPost leaves riders cands data T) εmax (lambdaError L₀ + 0) T' :=
+  if hs : s.point.length = m ∧ s.values.length = 3 then
+    (Spec.sampleE (lambdaError L₀) (Post := fun c h ↦ HDoom cands
+        (SumcheckRound.rel (Gkr.familyT 3 μ leaves riders ρ m T) 0)
+        (Gkr.lambdaNext 3 m (layerStmtOf data m s) c) h)
+      (fun h₀ hp ↦ by
+        obtain ⟨-, -, W, hW, hR⟩ := hp
+        refine le_trans ?_ (lambda_escape leaves riders cands T hm hfin hcard W _ hR)
+        gcongr with c _
+        intro hD
+        exact ⟨W, firstWord_append hW _, hD⟩)).bind' fun combiner ↦
+    ((wireSumcheckSpec (T := 0) (Gkr.familyT 3 μ leaves riders ρ m T) cands
+      (Gkr.familyT_consistent' 3 μ leaves riders ρ m T) (Gkr.familyT_sound' 3 μ leaves riders ρ m T)
+      hfin hcard Nat.one_le_two_pow he (layerStmtOf data m s, combiner) (s.point.map some) 0
+      #v[] (polyEval s.values combiner) (by simp [hs.1])
+      (weights_eq_wireDomain data s hs.1 _)).mono
+      (fun h hp ↦ by rw [polyEval_eq_powerBatch _ hs.2]; exact hp) (fun _ _ h ↦ h) le_rfl
+      (sumcheckLead_le _ _) le_rfl).bind' fun ⟨x, claim⟩ ↦
+    let P0 := SumcheckPost (Gkr.familyT 3 μ leaves riders ρ m T) cands
+      (layerStmtOf data m s, combiner) m #v[] (x, claim)
+    have hP0 : ∀ h z, P0 h → P0 (h ++ [Ev.read z]) := fun _ _ hp ↦ ⟨hp.1, hp.2.append _⟩
+    have hread : Prog.readN (2 ^ ρ - 1 + 1) = Prog.readN (2 ^ ρ) := by
+      rw [Nat.sub_add_cancel Nat.one_le_two_pow]
+    (Spec.congr hread (readNSuccSpec P0 hP0 zero_le (2 ^ ρ - 1))).bind' fun child0 ↦
+    let P1 := fun h ↦ child0.length = 2 ^ ρ - 1 + 1 ∧ P0 h
+    (Spec.congr hread (readNSuccSpec P1 (fun _ _ hp ↦ ⟨hp.1, hP0 _ _ hp.2⟩) zero_le
+      (2 ^ ρ - 1))).bind' fun child1 ↦
+    let P2 := fun h ↦ child1.length = 2 ^ ρ - 1 + 1 ∧ P1 h
+    (Spec.congr hread (readNSuccSpec P2 (fun _ _ hp ↦ ⟨hp.1, hp.2.1, hP0 _ _ hp.2.2⟩) hT
+      (2 ^ ρ - 1))).bind' fun child2 ↦
+    if hq : x.length = m ∧ child0.length = 2 ^ ρ ∧ child1.length = 2 ^ ρ ∧
+        child2.length = 2 ^ ρ then
+      let base : X × (Vector E m × (Fin 3 → CMlPolynomialEval E ρ)) :=
+        (data, (vecOf m x, childrenOf ρ [child0, child1, child2]))
+      have hch : ∀ t ∈ [child0, child1, child2], t.length = 2 ^ ρ := by
+        intro t ht
+        simp only [List.mem_cons, List.not_mem_nil, or_false] at ht
+        rcases ht with rfl | rfl | rfl
+        exacts [hq.2.1, hq.2.2.1, hq.2.2.2]
+      (Spec.require (Post := fun _ h ↦
+          HDoom cands (Gkr.childRelT 3 μ leaves riders ρ m T 0) (base, #v[]) h)
+        (fun _ hp hc ↦ by
+          obtain ⟨-, -, -, -, W, hW, hR⟩ := hp
+          exact ⟨W, hW, children_keep leaves riders T hR _ (combineCheck_eq _ _ rfl hch hc)⟩)).bind'
+        fun _ ↦
+      (interpSpec leaves riders cands T (T' := T') hfin hcard base ρ 0 #v[]).bind' fun y ↦
+      if hy : y.length = ρ then
+        (Spec.ret (Post := StepPost leaves riders cands data T)
+          ⟨[child0, child1, child2].map (multilinearEval · y), y ++ x⟩).mono
+          (fun _ hp ↦ by
+            obtain ⟨-, W, hW, hR⟩ := hp
+            have hR' : RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T ρ)
+                (base, vecOf ρ y) := by
+              have key : ∀ k, k = ρ → RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T k)
+                  (base, vecOf k y) →
+                  RelDoom (cands W) (Gkr.childRelT 3 μ leaves riders ρ m T ρ)
+                    (base, vecOf ρ y) := by
+                rintro k rfl h
+                exact h
+              exact key (0 + ρ) (Nat.zero_add ρ) hR
+            have hR'' : RelDoom (cands W) (Gkr.stepOutT 3 μ leaves riders ρ m T)
+                (Gkr.interpDone 3 ρ m (base, vecOf ρ y)) := fun o ho hin ↦
+              hR' o ho ((Gkr.interpDone_mem_stepOutT_iff' 3 μ leaves riders ρ m T _ o).mp hin)
+            rw [interpDone_eq data x y [child0, child1, child2] hy rfl hch] at hR''
+            exact ⟨by simp [hy, hq.1]; omega, by simp, W, hW, hR''⟩)
+          (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+      else specOfFalse fun _ hp ↦ hy hp.1
+    else specOfFalse fun _ hp ↦ hq ⟨by have := hp.2.2.2.1; simpa using this,
+      by have := Nat.one_le_two_pow (n := ρ); have := hp.2.2.1; omega,
+      by have := Nat.one_le_two_pow (n := ρ); have := hp.2.1; omega,
+      by have := Nat.one_le_two_pow (n := ρ); have := hp.1; omega⟩
+  else specOfFalse fun _ hp ↦ hs ⟨hp.1, hp.2.1⟩
 
 end Step
 
@@ -403,7 +393,7 @@ variable {I : M3Instance} {X : Type} {μ : ℕ}
   (cands : Word → Set (∀ i, TheOracle I i)) (data : X)
 
 /-- The radix exponent of the next step with `n` layers left: `1` when `n` is odd, `2`
-otherwise (`verifier.py:448`, the protocol's odd first step and radix-four steps). -/
+otherwise (`verifier.py:440`, the protocol's odd first step and radix-four steps). -/
 def ρOf (n : ℕ) : ℕ := if n % 2 = 1 then 1 else 2
 
 theorem ρOf_le {n : ℕ} (hn : n ≠ 0) : ρOf n ≤ n := by
@@ -421,41 +411,45 @@ def trackOf (n m : ℕ) (h : m + n = μ) : Gkr.RiderTrack μ riders (ρOf n) m :
   else Gkr.constTrack μ riders (ρOf n) m
 
 /-- **The walk's doom** with `n` layers left at layer `m`: on the argument's output relation
-when none is left; on the next step's first sumcheck stage otherwise. -/
-def LayersPre (n m : ℕ) (h : m + n = μ) (s : GkrState) (hist : List Ev) : Prop :=
+when none is left; on the layer relation otherwise, where the next step starts. -/
+def LayersPre (n m : ℕ) (_h : m + n = μ) (s : GkrState) (hist : List Ev) : Prop :=
   if n = 0 then
     s.point.length = μ ∧ s.values.length = 3 ∧
       HDoom cands (Gkr.relOut 3 μ leaves riders) (layerStmtOf data μ s) hist
-  else StepPre leaves riders cands data (trackOf riders n m h) s hist
+  else StepPre (m := m) leaves riders cands data s hist
 
-/-- The doom after the combiner that ends a step, with `n'` layers left after it. -/
-def NextDoomOf (n' m' : ℕ) (h' : m' + n' = μ) : Word → Gkr.LayerStmt X E 3 m' → E → Prop :=
-  if hn : n' = 0 then LastDoom leaves riders cands (m' := m') (by omega)
-  else LambdaDoom leaves riders cands (trackOf riders n' m' h')
+/-- The lead of the walk with `n` layers left: the next step's combiner, if there is one. -/
+noncomputable def nextError (L₀ n : ℕ) : ℝ≥0∞ := if n = 0 then 0 else lambdaError L₀
 
-/-- The combiner's error with `n'` layers left after it: none after the last step. -/
-noncomputable def nextError (L₀ n' : ℕ) : ℝ≥0∞ := if n' = 0 then 0 else lambdaError L₀
-
-theorem layersPre_of_stepPost (n' m' : ℕ) (h' : m' + n' = μ) {ρ m : ℕ} (hρ : m + ρ = m')
-    (s : GkrState) (hist : List Ev)
-    (hp : StepPost (ρ := ρ) (m := m) data (fun W ls c ↦ NextDoomOf leaves riders cands n' m' h' W
-      (hρ ▸ ls) c) s hist) : LayersPre leaves riders cands data n' m' h' s hist := by
-  subst hρ
-  obtain ⟨hl, hv, W, hW, hD⟩ := hp
-  unfold LayersPre
-  split_ifs with hn
-  · subst hn
-    unfold NextDoomOf at hD
-    simp only [↓reduceDIte] at hD
-    have hm : m + ρ = μ := by omega
-    subst hm
-    exact ⟨hl, hv, W, hW, by simpa [LastDoom] using hD⟩
-  · unfold NextDoomOf at hD
-    simp only [hn, ↓reduceDIte] at hD
-    exact ⟨hl, hv, W, hW, hD⟩
-
-theorem nextError_le (L₀ n' : ℕ) : nextError L₀ n' ≤ lambdaError L₀ := by
+theorem nextError_le (L₀ n : ℕ) : nextError L₀ n ≤ lambdaError L₀ := by
   unfold nextError; split_ifs <;> simp
+
+/-- The doom after a step is the walk's doom with the layers it leaves: the argument's output
+relation after the last step, the next layer's relation before. -/
+theorem layersPre_of_stepPost (n m : ℕ) (h : m + n = μ) (hn : n ≠ 0) (s : GkrState)
+    (hist : List Ev)
+    (hp : StepPost leaves riders cands data (trackOf riders n m h) s hist) :
+    LayersPre leaves riders cands data (n - ρOf n) (m + ρOf n)
+      (by have := ρOf_le hn; omega) s hist := by
+  obtain ⟨hl, hv, W, hW, hR⟩ := hp
+  unfold LayersPre
+  split_ifs with h0
+  · have hlast : n = ρOf n := by have := ρOf_le hn; omega
+    have hm : m + ρOf n = μ := by omega
+    unfold trackOf at hR
+    rw [dite_eq_left hlast] at hR
+    refine ⟨by omega, hv, W, hW, fun o ho hin ↦ hR o ho ?_⟩
+    have hvec : Vector.cast hm (vecOf (m + ρOf n) s.point) = vecOf μ s.point := by
+      apply Vector.ext
+      intro k hk
+      simp [vecOf]
+    refine (Gkr.stepOutT_progTrack_iff 3 μ leaves riders (ρOf n) m hm _ o).mpr ?_
+    simpa only [layerStmtOf, hvec] using hin
+  · have hlast : ¬ n = ρOf n := by omega
+    unfold trackOf at hR
+    rw [dite_eq_right hlast] at hR
+    exact ⟨hl, hv, W, hW, fun o ho hin ↦ hR o ho
+      ((Gkr.stepOutT_constTrack_iff 3 μ leaves riders (ρOf n) m _ o).mpr hin)⟩
 
 theorem interpLead_mono (L₀ : ℕ) {ρ : ℕ} (hρ : ρ ≤ 2) {x y : ℝ≥0∞} (hxy : x ≤ y) :
     interpLead L₀ ρ x ≤ interpLead L₀ 2 y := by
@@ -477,43 +471,16 @@ noncomputable def walkStepSpec {L₀ : ℕ} (hfin : ∀ W, (cands W).Finite)
     (s : GkrState) :
     Spec (gkrStep (ρOf n) s) (LayersPre leaves riders cands data n m h s)
       (fun s' ↦ LayersPre leaves riders cands data (n - ρOf n) (m + ρOf n)
-        (by have := ρOf_le hn; omega) s') εmax 0 0 :=
-  have h' : m + ρOf n + (n - ρOf n) = μ := by have := ρOf_le hn; omega
-  (stepSpec leaves riders cands data (trackOf riders n m h) (T' := 0) hfin hcard
-    (NextDoomOf leaves riders cands (n - ρOf n) (m + ρOf n) h')
-    (eNext := nextError L₀ (n - ρOf n))
-    (fun W ls hR ↦ by
-      by_cases hl : n = ρOf n
-      · have h0 : n - ρOf n = 0 := by omega
-        have hR' : RelDoom (cands W) (Gkr.stepOutT 3 μ leaves riders (ρOf n) m
-            (Gkr.progTrack μ riders (ρOf n) m (by omega))) ls := by
-          unfold trackOf at hR
-          rw [dite_eq_left hl] at hR
-          exact hR
-        rw [show (Finset.univ.filter fun c ↦
-            ¬ NextDoomOf leaves riders cands (n - ρOf n) (m + ρOf n) h' W ls c) = ∅ from by
-          refine Finset.filter_eq_empty_iff.mpr fun c _ hc ↦ hc ?_
-          unfold NextDoomOf
-          simp only [h0, ↓reduceDIte]
-          intro o ho hin
-          exact hR' o ho ((Gkr.stepOutT_progTrack_iff 3 μ leaves riders (ρOf n) m _ ls o).mpr hin)]
-        simp
-      · have hn' : n - ρOf n ≠ 0 := by have := ρOf_le hn; omega
-        have hR' : RelDoom (cands W) (Gkr.layerRel 3 μ leaves riders (m + ρOf n)) ls := by
-          unfold trackOf at hR
-          rw [dite_eq_right hl] at hR
-          exact fun o ho hin ↦ hR o ho
-            ((Gkr.stepOutT_constTrack_iff 3 μ leaves riders (ρOf n) m ls o).mpr hin)
-        unfold nextError NextDoomOf
-        simp only [hn', ↓reduceDIte, ↓reduceIte]
-        exact lambda_escape leaves riders cands _ (by have := ρOf_le hn'; omega) hfin hcard W
-          ls hR')
+        (by have := ρOf_le hn; omega) s') εmax (lambdaError L₀ + 0)
+      (nextError L₀ (n - ρOf n)) :=
+  (stepSpec leaves riders cands data (trackOf riders n m h) (T' := nextError L₀ (n - ρOf n)) hfin
+    hcard (by have := ρOf_le hn; omega)
     (le_trans (by simpa using roundError_mono L₀ (Nat.pow_le_pow_right (by norm_num)
       (ρOf_le_two n))) he)
-    (le_trans (interpLead_mono L₀ (ρOf_le_two n) (by simpa using nextError_le L₀ _)) hT)
+    (le_trans (interpLead_mono L₀ (ρOf_le_two n) (nextError_le L₀ _)) hT)
     s).mono
     (fun hist hp ↦ by unfold LayersPre at hp; simpa [hn] using hp)
-    (fun s' hist hp ↦ layersPre_of_stepPost leaves riders cands data _ _ h' rfl s' hist hp)
+    (fun s' hist hp ↦ layersPre_of_stepPost leaves riders cands data n m h hn s' hist hp)
     le_rfl le_rfl le_rfl
 
 /-- The walk's doom depends on the layer counts, not on how they are written. -/
@@ -525,42 +492,46 @@ theorem layersPre_congr {n n' m m' : ℕ} (hn : n = n') (hm : m = m') {h : m + n
   exact hp
 
 /-- **The wire's GKR walk** (`gkrLayers`, the `while layer > 0` loop of
-`verify_gkr_grand_products`, `verifier.py:441-455`) with `n` layers left at layer `m`: from the
-walk's doom to doom on the argument's output relation. -/
+`verify_gkr_grand_products`, `verifier.py:438-452`) with `n` layers left at layer `m`: from the
+walk's doom to doom on the argument's output relation. Its lead is the first step's combiner. -/
 noncomputable def gkrLayersSpec {L₀ : ℕ} (hfin : ∀ W, (cands W).Finite)
     (hcard : ∀ W, (cands W).ncard ≤ L₀) (he : roundError L₀ 4 ≤ εmax)
     (hT : interpLead L₀ 2 (lambdaError L₀) ≤ εmax) :
     (n m : ℕ) → (h : m + n = μ) → (s : GkrState) →
       Spec (gkrLayers n s) (LayersPre leaves riders cands data n m h s)
-        (fun s' ↦ LayersPre leaves riders cands data 0 μ (by simp) s') εmax 0 0
+        (fun s' ↦ LayersPre leaves riders cands data 0 μ (by simp) s') εmax (nextError L₀ n) 0
   | 0, m, h, s =>
     (Spec.ret (Post := fun s' ↦ LayersPre leaves riders cands data 0 μ (by simp) s') s).mono
-      (fun _ hp ↦ by unfold LayersPre at hp ⊢; simpa using hp) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+      (fun _ hp ↦ by unfold LayersPre at hp ⊢; simpa using hp) (fun _ _ h ↦ h) le_rfl
+      (by simp [nextError]) le_rfl
   | 1, m, h, s =>
-    (walkStepSpec leaves riders cands data hfin hcard he hT 1 m h one_ne_zero s).bind' fun s' ↦
+    ((walkStepSpec leaves riders cands data hfin hcard he hT 1 m h one_ne_zero s).bind' fun s' ↦
       (gkrLayersSpec hfin hcard he hT 0 (m + 1) (by omega) s').mono
         (fun _ hp ↦ layersPre_congr leaves riders cands data (by simp [ρOf]) (by simp [ρOf]) hp)
-        (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+        (fun _ _ h ↦ h) le_rfl (by simp [nextError, ρOf]) le_rfl).mono
+      (fun _ h ↦ h) (fun _ _ h ↦ h) le_rfl (by simp [nextError]) le_rfl
   | n + 2, m, h, s =>
     Spec.ite
       (fun hodd ↦
         have hρ : ρOf (n + 2) = 1 := by simp [ρOf, hodd]
         Spec.congr (by rw [hρ])
-          ((walkStepSpec leaves riders cands data hfin hcard he hT (n + 2) m h (by omega) s).bind'
-            fun s' ↦ (gkrLayersSpec hfin hcard he hT (n + 1) (m + 1) (by omega) s').mono
+          (((walkStepSpec leaves riders cands data hfin hcard he hT (n + 2) m h (by omega)
+            s).bind' fun s' ↦ (gkrLayersSpec hfin hcard he hT (n + 1) (m + 1) (by omega) s').mono
               (fun _ hp ↦ layersPre_congr leaves riders cands data (by rw [hρ]; omega) (by rw [hρ])
                 hp)
-              (fun _ _ h ↦ h) le_rfl le_rfl le_rfl))
+              (fun _ _ h ↦ h) le_rfl (le_of_eq (by rw [hρ]; rfl)) le_rfl).mono
+            (fun _ h ↦ h) (fun _ _ h ↦ h) le_rfl (by simp [nextError]) le_rfl))
       (fun heven ↦
         have hρ : ρOf (n + 2) = 2 := by
           have : n % 2 = 0 := by omega
           simp [ρOf, this]
         Spec.congr (by rw [hρ])
-          ((walkStepSpec leaves riders cands data hfin hcard he hT (n + 2) m h (by omega) s).bind'
-            fun s' ↦ (gkrLayersSpec hfin hcard he hT n (m + 2) (by omega) s').mono
+          (((walkStepSpec leaves riders cands data hfin hcard he hT (n + 2) m h (by omega)
+            s).bind' fun s' ↦ (gkrLayersSpec hfin hcard he hT n (m + 2) (by omega) s').mono
               (fun _ hp ↦ layersPre_congr leaves riders cands data (by rw [hρ]; omega) (by rw [hρ])
                 hp)
-              (fun _ _ h ↦ h) le_rfl le_rfl le_rfl))
+              (fun _ _ h ↦ h) le_rfl (le_of_eq (by rw [hρ]; rfl)) le_rfl).mono
+            (fun _ h ↦ h) (fun _ _ h ↦ h) le_rfl (by simp [nextError]) le_rfl))
 
 end Walk
 

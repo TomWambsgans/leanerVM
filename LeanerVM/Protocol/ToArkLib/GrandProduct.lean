@@ -42,11 +42,11 @@ the schedule `stepSpec F nside ρ m`:
   values at `u`.
 
 `gkr` reads the roots as the statement at layer `0`, takes one binary step first when `μ` is odd
-(`Gkr.odd`) and steps of radix four after (`Gkr.layerSteps`), and ends with one more combiner,
-which nothing reads (`Gkr.lastCombiner`); its schedule is `gkrSpec F nside μ`, so that a protocol's
-slot at that schedule takes it, and its errors are `gkrError`'s, which its knowledge soundness is
-stated at. `gkrComplete` is its perfect completeness, composed from its parts' through
-`Component.Complete.append` on the layer identities of `LeanerVM.Protocol.ToCompPoly.ProductTree`.
+(`Gkr.odd`) and steps of radix four after (`Gkr.layerSteps`), each step opening with its
+combiner; its schedule is `gkrSpec F nside μ`, so that a protocol's slot at that schedule takes
+it, and its errors are `gkrError`'s, which its knowledge soundness is stated at. `gkrComplete` is
+its perfect completeness, composed from its parts' through `Component.Complete.append` on the
+layer identities of `LeanerVM.Protocol.ToCompPoly.ProductTree`.
 
 *Riders* are further tables computed from the public data and the oracles, each on at most `μ`
 variables. The input relation asks each to be zero; the output relation asks each extension to
@@ -56,8 +56,9 @@ condition on the public data and the oracles, carried unchanged from the input r
 output relation, which no challenge can make true. The oracles pass through untouched, and there
 is no witness.
 
-Written from the mathematics of the product-tree argument. The last combiner, which nothing
-reads, keeps the transcript of a verifier that draws a combiner after every layer.
+Written from the mathematics of the product-tree argument. The deployed verifier draws each
+layer's combiner at the start of the layer, as here (leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, `python-verifier/verifier.py:438-453`).
 
 ## Relation to ArkLib pull request 818
 
@@ -522,6 +523,16 @@ variable [DecidableEq F] [SampleableType F]
 
 /-! ## The whole argument -/
 
+omit [BEq F] [LawfulBEq F] [DecidableEq F] [SampleableType F] [∀ i, OracleInterface (O i)] in
+/-- The relation at the leaves gives the output relation: the level on `μ` variables is the
+leaves, and a zero table has a zero extension everywhere. -/
+private theorem layerRel_subset_relOut :
+    layerRel nside μ leaves riders μ ⊆ relOut nside μ leaves riders := by
+  intro p ⟨hz, hval⟩
+  refine ⟨fun t ↦ by rw [← hval t, layerTable_self], fun r hr ↦ ?_⟩
+  rw [evalMle_eq_sum]
+  exact Finset.sum_eq_zero fun i _ ↦ by rw [hz r hr i, zero_mul]
+
 /-- `k` steps of radix four from layer `m` to the leaves, `m + 2k = μ`. With no step left, the
 statement is carried across the equality of layers. -/
 def layerSteps : (k m : ℕ) → m + 2 * k = μ →
@@ -540,11 +551,11 @@ def layerStepsFront : (k m : ℕ) → (h : m + 2 * k = μ) →
 /-- Completeness of the radix-four steps, from each step's. -/
 def layerStepsComplete : (k m : ℕ) → (h : m + 2 * k = μ) →
     Component.Complete (layerSteps nside μ leaves k m h) (layerRel nside μ leaves riders m)
-      (layerRel nside μ leaves riders μ)
+      (relOut nside μ leaves riders)
   | 0, m, h => Component.passThroughComplete O _ fun s o w hin ↦ by
     have hm : m = μ := by omega
     subst hm
-    simpa only [Vector.cast_rfl] using hin
+    exact layerRel_subset_relOut nside m leaves riders (by simpa only [Vector.cast_rfl] using hin)
   | k + 1, m, h =>
     (layerStepComplete nside μ leaves riders 2 m id (by omega) fun _ _ _ h ↦ h).append
       (layerStepsComplete k (m + 2) (by omega))
@@ -597,27 +608,6 @@ def oddComplete : (r : ℕ) → (hr : r ≤ 1) → r ≤ μ →
       exact (relIn_iff_layerRel_zero nside μ leaves riders s o).mp h
   | _ + 2, h, _ => absurd h (by omega)
 
-/-- The combiner drawn after the last layer: it changes nothing, and nothing reads it. -/
-def lastCombiner :
-    Component.Def (LayerStmt X F nside μ) O Unit (LayerStmt X F nside μ) O Unit (draw F) :=
-  Component.sampleChallenge O F (fun _ ↦ true) fun s _ ↦ s
-
-omit [BEq F] [LawfulBEq F] [DecidableEq F] [SampleableType F] [∀ i, OracleInterface (O i)] in
-/-- The relation at the leaves gives the output relation: the level on `μ` variables is the
-leaves, and a zero table has a zero extension everywhere. -/
-private theorem layerRel_subset_relOut :
-    layerRel nside μ leaves riders μ ⊆ relOut nside μ leaves riders := by
-  intro p ⟨hz, hval⟩
-  refine ⟨fun t ↦ by rw [← hval t, layerTable_self], fun r hr ↦ ?_⟩
-  rw [evalMle_eq_sum]
-  exact Finset.sum_eq_zero fun i _ ↦ by rw [hz r hr i, zero_mul]
-
-/-- The completeness half of the last combiner. -/
-def lastComplete : Component.Complete (lastCombiner nside μ)
-    (layerRel nside μ leaves riders μ) (relOut nside μ leaves riders) :=
-  Component.sampleChallengeComplete O F _ _ fun _ _ _ h ↦ by
-    exact ⟨rfl, fun _ ↦ layerRel_subset_relOut nside μ leaves riders h⟩
-
 end Gkr
 
 variable {F : Type} [Field F] [BEq F] [LawfulBEq F] [DecidableEq F] [SampleableType F]
@@ -627,20 +617,18 @@ variable {F : Type} [Field F] [BEq F] [LawfulBEq F] [DecidableEq F] [SampleableT
 
 /-- The grand-product argument for `nside` trees of `2 ^ μ` leaves, at the schedule
 `gkrSpec F nside μ`: the roots read as the statement at layer `0`, one binary step first when
-`μ` is odd, steps of radix four, and a last combiner that nothing reads. -/
+`μ` is odd, then steps of radix four, each opening with its combiner. -/
 def gkr : Component.Def (X × (Fin nside → F)) O Unit (Gkr.LayerStmt X F nside μ) O Unit
     (gkrSpec F nside μ) :=
-  ((Gkr.odd nside μ leaves (μ % 2) (Nat.le_of_lt_succ (Nat.mod_lt μ two_pos))).append
-    (Gkr.layerSteps nside μ leaves (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))).append
-    (Gkr.lastCombiner nside μ)
+  (Gkr.odd nside μ leaves (μ % 2) (Nat.le_of_lt_succ (Nat.mod_lt μ two_pos))).append
+    (Gkr.layerSteps nside μ leaves (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))
 
 /-- The grand-product argument is front: its verifier reads the roots, the messages and the
 challenges, never the oracles, and hands the oracles on. What a slot for front components
 takes, by `Component.Front.append`. -/
 def gkrFront : Component.Front (gkr nside μ leaves) :=
-  ((Gkr.oddFront nside μ leaves (μ % 2) _).append
-    (Gkr.layerStepsFront nside μ leaves (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))).append
-    (Component.sampleFront O F _ _)
+  (Gkr.oddFront nside μ leaves (μ % 2) _).append
+    (Gkr.layerStepsFront nside μ leaves (μ / 2) (μ % 2) (Nat.mod_add_div μ 2))
 
 /-- **Perfect completeness** of the grand-product argument: from roots that are the products of
 their leaves, and rider tables that are zero, the honest prover leaves the verifier with each
@@ -648,9 +636,8 @@ tree's leaves' extension at the final point, where every rider's extension vanis
 def gkrComplete :
     Component.Complete (gkr nside μ leaves) (Gkr.relIn nside μ leaves riders)
       (Gkr.relOut nside μ leaves riders) :=
-  ((Gkr.oddComplete nside μ leaves riders (μ % 2) _ (Nat.mod_le μ 2)).append
-    (Gkr.layerStepsComplete nside μ leaves riders (μ / 2) (μ % 2) _)).append
-    (Gkr.lastComplete nside μ leaves riders)
+  (Gkr.oddComplete nside μ leaves riders (μ % 2) _ (Nat.mod_le μ 2)).append
+    (Gkr.layerStepsComplete nside μ leaves riders (μ / 2) (μ % 2) _)
 
 end
 end LeanerVM.Protocol

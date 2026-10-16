@@ -34,8 +34,8 @@ example (prog : Program) (input : PublicInput)
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
       Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input))
         z.1.1 z.2] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
   leanVm_romSound prog input A QA hA
 
 example (prog : Program) (input : PublicInput)
@@ -46,8 +46,8 @@ example (prog : Program) (input : PublicInput)
         extractStack prog input z.2 z.1.1 = some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧
         s.Admissible prog ∧
           M3Holds (leanIsaInstance Blake2sFlock.blake2sFlockSpec prog s) input q] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
   leanVm_knowledge prog input A QA hA
 
 example (prog : Program) (input : PublicInput)
@@ -59,13 +59,13 @@ example (prog : Program) (input : PublicInput)
         extractStack prog input z.2 z.1.1 = some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧
         ∃ t, AssignmentRepresents (witnessOf Blake2sFlock.blake2sFlockSpec prog s q) t ∧
           ValidExecution prog input t] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) :=
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
   leanVm_execution prog input hwf A QA hA
 
 example (bytecode : List K) (publicInput : Digest) (QA : ℕ) (hQ : QA ≤ 2 ^ 64) :
-    ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-      failBound (leanVmSeed bytecode publicInput) (QA + 13300)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 :=
+    ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+      failBound (leanVmSeed bytecode publicInput) (QA + 13213)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 :=
   leanVm_bound_le bytecode publicInput hQ
 
 /-! ## The axiom audit -/

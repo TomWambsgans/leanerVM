@@ -18,7 +18,7 @@ public import LeanerVM.Protocol.Verifier.Whir
 # The leanVM verifier
 
 Category B: transcribed from `python-verifier/verifier.py` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, lines 629 (`R1CS_DIGEST`), 1365-1414
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, lines 631 (`R1CS_DIGEST`), 1358-1408
 (`verify_execution`) and 346-349 (`Transcript.__init__`).
 
 `leanVmProgram bytecode publicInput` is `verify_execution` in the verifier language, one
@@ -53,7 +53,7 @@ open LeanerVM.Protocol.Blake2sHash
 /-! ## The program -/
 
 /-- The announced sizes, read and checked, and the layout they give
-(`verifier.py:1371-1379`): the layout and the WHIR rate exponent. -/
+(`verifier.py:1364-1372`): the layout and the WHIR rate exponent. -/
 def readSizes (bytecode : List K) : Prog (Layout × ℕ) := do
   let announced ← Prog.readN (2 + tables.length)
   Prog.require (announced.all fun value ↦ value.limb 1 = 0 ∧ value.limb 2 = 0)
@@ -65,7 +65,7 @@ def readSizes (bytecode : List K) : Prog (Layout × ℕ) := do
   Prog.require (minStackedLog ≤ layout.stackLog ∧ layout.stackLog ≤ maxStackedLog)
   return (layout, logInverseRate)
 
-/-- Step 4, the table sumcheck at the bus point (`verifier.py:1387-1395`): the claims of the bus
+/-- Step 4, the table sumcheck at the bus point (`verifier.py:1380-1388`): the claims of the bus
 and of the tables. -/
 def tablePhase (layout : Layout) (bus : BusResult) : Prog (List ColumnClaim) := do
   let xi ← Prog.sampleE
@@ -78,29 +78,28 @@ def tablePhase (layout : Layout) (bus : BusResult) : Prog (List ColumnClaim) := 
     bus.point target
   return bus.claims ++ tableClaims
 
-/-- Step 5, binding the public input (`verifier.py:1397-1402`): two limbs read, checked against
-the public input's halves at a challenge, and claimed on the memory columns at
-`(challenge, 0, …, 0)`. -/
+/-- Step 5, binding the public input (`verifier.py:1390-1396`): a challenge, and claims on the
+three memory columns at `(challenge, 0, …, 0)`, each limb's claim the line through that limb of
+the public input's two halves, evaluated at the challenge by the verifier itself. The prover sends
+nothing. -/
 def publicInputPhase (layout : Layout) (publicInput : Digest) : Prog (List ColumnClaim) := do
   let publicChallenge ← Prog.sampleE
-  let limbs ← Prog.readN 2
-  let publicLimbs := limbs ++ [0]
   let halves := digestScalars publicInput
-  Prog.require
-    (polyEval publicLimbs yE = multilinearEval [halves.1, halves.2] [publicChallenge])
+  let publicLimbs := ([0, 1, 2] : List (Fin 3)).map fun limb ↦
+    multilinearEval [ofK (halves.1.limb limb), ofK (halves.2.limb limb)] [publicChallenge]
   let publicPoint := publicChallenge ::
     List.replicate ((layout.placements.getD memory0 default).vars - 1) 0
   return List.zipWith (fun column value ↦ ⟨column, publicPoint, value⟩)
     [memory0, memory1, memory2] publicLimbs
 
 /-- Step 7's ring-switching claim on the stack: supported on `q_flock`'s region, its weight
-carries the placement's selector (`verifier.py:1411-1412`). -/
+carries the placement's selector (`verifier.py:1405-1406`). -/
 def ringSwitchClaim (layout : Layout) (target : E) (weight : List E → E) : StackClaim :=
   let qflockPlacement := layout.placements.getD qflock default
   (fun x ↦ qflockPlacement.eqAbove x * weight (x.take qflockPlacement.vars), target)
 
 /-- `verify_execution(bytecode, public_input, proof)` without its `finish`
-(`verifier.py:1365-1413`). -/
+(`verifier.py:1358-1407`). -/
 def verifyExecution (bytecode : List K) (publicInput : Digest) : Prog Unit := do
   -- 1] memory log-size, table log-sizes, and the WHIR rate
   let (layout, logInverseRate) ← readSizes bytecode
@@ -129,13 +128,13 @@ def leanVmProgram (bytecode : List K) (publicInput : Digest) : Prog Bool := do
 
 /-! ## The seed and the compiled verifier -/
 
-/-- `R1CS_DIGEST` (`verifier.py:629`). -/
+/-- `R1CS_DIGEST` (`verifier.py:631`). -/
 def r1csDigest : List UInt8 :=
   [0x53, 0x7a, 0xd2, 0x07, 0x90, 0x30, 0x8f, 0x8e, 0xb8, 0xc0, 0xe8, 0xbd, 0x3e, 0x6c, 0x58, 0xee,
     0x64, 0x57, 0x33, 0x71, 0xe3, 0xd5, 0x3c, 0x30, 0x61, 0x3d, 0xd0, 0x4d, 0x87, 0xc0, 0xb7, 0xea]
 
 /-- The IV's preimage, `"leanvm" ‖ u64le(len R1CS_DIGEST) ‖ R1CS_DIGEST ‖ H(bytecode)`
-(`verifier.py:1367`). -/
+(`verifier.py:1360`). -/
 def ivPreimage (bytecodeHash : Digest) : Bytes :=
   [0x6c, 0x65, 0x61, 0x6e, 0x76, 0x6d] ++ [32, 0, 0, 0, 0, 0, 0, 0] ++ r1csDigest ++
     digestBytes bytecodeHash
@@ -145,7 +144,7 @@ section Hash
 variable {m : Type → Type} [Monad m] (H : Bytes → m Digest)
 
 /-- The chain's initial state with the hash `H`: `compress(IV, public_input)`, the IV being the
-hash of `ivPreimage` (`verifier.py:1366-1369`, `Transcript.__init__`). -/
+hash of `ivPreimage` (`verifier.py:1359-1362`, `Transcript.__init__`). -/
 def seedWith (bytecode : List K) (publicInput : Digest) : m Digest := do
   let bytecodeHash ← H (bytecode.flatMap kBytes)
   let fiatShamirIv ← H (ivPreimage bytecodeHash)

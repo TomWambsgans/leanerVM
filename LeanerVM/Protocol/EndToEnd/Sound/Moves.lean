@@ -36,7 +36,7 @@ work of at most `64` bits, the cap at which the random-oracle theorem discounts 
 ## Deployed behaviour
 
 The statements are on the program `leanVmProgram` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, as transcribed in `LeanerVM.Protocol.Verifier`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, as transcribed in `LeanerVM.Protocol.Verifier`.
 -/
 
 namespace LeanerVM.Protocol.EndToEnd.Sound
@@ -266,11 +266,11 @@ theorem movesOK_sumcheck (count : ℕ) : ∀ (claim : E) (eqs : List (Option E))
 /-- One GKR step is reads and samples. -/
 theorem movesOK_gkrStep (step : ℕ) (s : GkrState) :
     MovesOK (fun _ ↦ False) False (gkrStep step s) := by
-  refine MovesOK.seq (movesOK_sumcheck _ _ _) fun r ↦ ?_
+  refine MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.seq (movesOK_sumcheck _ _ _) fun r ↦ ?_
   obtain ⟨x, claim⟩ := r
   exact MovesOK.seq (MovesOK.readN _) fun _ ↦ MovesOK.seq (MovesOK.readN _) fun _ ↦
     MovesOK.seq (MovesOK.readN _) fun _ ↦ MovesOK.seq (MovesOK.require _) fun _ ↦
-      MovesOK.seq (MovesOK.sampleN _) fun _ ↦ MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.pure _
+      MovesOK.seq (MovesOK.sampleN _) fun _ ↦ MovesOK.pure _
 
 /-- The GKR walk is reads and samples. -/
 theorem movesOK_gkrLayers : ∀ (n : ℕ) (s : GkrState),
@@ -287,8 +287,7 @@ theorem movesOK_gkrLayers : ∀ (n : ℕ) (s : GkrState),
 theorem movesOK_verifyGkrGrandProducts (depth : ℕ) :
     MovesOK (fun _ ↦ False) False (verifyGkrGrandProducts depth) :=
   MovesOK.seq MovesOK.readE fun _ ↦ MovesOK.seq MovesOK.readE fun _ ↦
-    MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.seq (movesOK_gkrLayers depth _) fun _ ↦
-      MovesOK.pure _
+    MovesOK.seq (movesOK_gkrLayers depth _) fun _ ↦ MovesOK.pure _
 
 /-- The bus makes no prover move other than reads. -/
 theorem movesOK_verifyBusBalance (layout : Layout) :
@@ -336,11 +335,10 @@ theorem movesOK_tablePhase (layout : Layout) (bus : BusResult) :
   MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.seq (movesOK_tableSumcheck _ _ _ _ _ _) fun _ ↦
     MovesOK.pure _
 
-/-- The public-input phase makes no prover move other than reads. -/
+/-- The public-input phase makes no prover move: one challenge. -/
 theorem movesOK_publicInputPhase (layout : Layout) (publicInput : Digest) :
     MovesOK (fun _ ↦ False) False (publicInputPhase layout publicInput) :=
-  MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.seq (MovesOK.readN 2) fun _ ↦
-    MovesOK.seq (MovesOK.require _) fun _ ↦ MovesOK.pure _
+  MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.pure _
 
 /-! ## Flock and ring switching -/
 

@@ -21,7 +21,7 @@ weights, combined by the powers of the challenge, is the pool's values combined 
 * **The order of the powers.** On an instance with a Flock region, the weighted claim takes
   `λ^0` and the column claim `λ^1`, and the swapped order gives another value.
 * **The phase fills its slot**: its two halves typecheck against the spine's seams at the slot's
-  error, compute at `E`, and with the deployed public-input phase make a bundle the master
+  error, compute at `E`, and with the public-input phase make a bundle the master
   theorems apply to, given the three other phases.
 * **The check is load-bearing.** On a statement outside the Flock seam, four weakened verifiers
   each accept at every challenge, so none has a round-by-round knowledge error below one,
@@ -217,7 +217,7 @@ example : ∑ i, openingError toy i = overE 3 := by
   rw [openingError, sum_drawError]
   rfl
 
-/-- With the deployed public-input phase and the opening phase in their slots, the master
+/-- With the public-input phase and the opening phase in their slots, the master
 theorems hold of the bundle, given the three other phases' proofs. -/
 example (bus : Phase.FrontDef toy K (K × BusOut toy) (busSpec toy))
     (table : Phase.FrontDef toy (K × BusOut toy) (K × TableOut toy) (tableSpec toy))
@@ -226,9 +226,9 @@ example (bus : Phase.FrontDef toy K (K × BusOut toy) (busSpec toy))
     (ct : Phase.Complete toy table.toDef (Seam.bus toy) (Seam.table toy))
     (cf : Phase.Complete toy flock.toDef (Seam.pub toy) (Seam.flock toy))
     {σ : Type} (init : ProbComp σ) (impl : QueryImpl []ₒ (StateT σ ProbComp)) :
-    (leanVmPiop ⟨bus, table, deployedPublicInputPhase toy, flock, openingPhase toy⟩)
+    (leanVmPiop ⟨bus, table, publicInputPhase toy, flock, openingPhase toy⟩)
       |>.perfectCompleteness init impl (M3Rel toy) (Seam.done toy) :=
-  piop_perfectCompleteness _ ⟨cb, ct, deployedPublicInputComplete toy, cf, openingComplete toy⟩
+  piop_perfectCompleteness _ ⟨cb, ct, publicInputComplete toy, cf, openingComplete toy⟩
     init impl
 
 example (bus : Phase.FrontDef toy K (K × BusOut toy) (busSpec toy))
@@ -238,8 +238,8 @@ example (bus : Phase.FrontDef toy K (K × BusOut toy) (busSpec toy))
     (st : Phase.Security toy table.toDef (Seam.bus toy) (Seam.table toy) (tableError toy))
     (sf : Phase.Security toy flock.toDef (Seam.pub toy) (Seam.flock toy) (flockError toy))
     {σ : Type} (init : ProbComp σ) (impl : QueryImpl []ₒ (StateT σ ProbComp)) :
-    let S : Phases.Security ⟨bus, table, deployedPublicInputPhase toy, flock, openingPhase toy⟩ :=
-      ⟨sb, st, deployedPublicInputSecurity toy, sf, openingSecurity toy⟩
+    let S : Phases.Security ⟨bus, table, publicInputPhase toy, flock, openingPhase toy⟩ :=
+      ⟨sb, st, publicInputSecurity toy, sf, openingSecurity toy⟩
     (leanVmVerifier _).toVerifier.rbrKnowledgeSoundnessWorstCaseWith init impl (M3Rel toy)
       (Seam.done toy) S.extraction.witMid (piopExtractor _ S) (S.extraction.kSF init impl)
       (piopError toy) :=

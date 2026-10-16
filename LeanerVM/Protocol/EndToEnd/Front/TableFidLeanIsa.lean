@@ -16,8 +16,8 @@ public import LeanerVM.Protocol.EndToEnd.Complete.TableMath
 # The table phase's identities at leanISA
 
 The bus/table bridge (`busTableSpec`, `LeanerVM.Protocol.EndToEnd.Front.BusTable`) specifies the
-verifier program's bus phase and table sumcheck (`python-verifier/verifier.py:536-626` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) on the oracle protocol's relations, given three facts
+verifier program's bus phase and table sumcheck (`python-verifier/verifier.py:534-628` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) on the oracle protocol's relations, given three facts
 about the instance and the layout. This module proves them at the leanISA instance
 `leanIsaInstance F prog s` and the verifier's layout `verifierLayout prog s`, for every Flock
 specification `F`, program `prog` and size vector `s`:
@@ -685,7 +685,7 @@ noncomputable def busTailSpec4 {β : Type} {k : BusWit → Prog β} {Q : β → 
   | (countRoot, point, values) =>
     let P : List Ev → Prop := fun h ↦ point.length = I.μBus ∧ values.length = 3 ∧
       HDoom cands (Gkr.relOut 3 I.μBus (Bus.leaves I) (Bus.riders I))
-        (layerStmtOf (input, (toAlpha alphas, beta)) I.μBus ⟨values, 0, point⟩) h
+        (layerStmtOf (input, (toAlpha alphas, beta)) I.μBus ⟨values, point⟩) h
     have hP : ∀ h x, P h → P (h ++ [Ev.read x]) := fun _ _ hp ↦ ⟨hp.1, hp.2.1, hp.2.2.append _⟩
     (Spec.require (Post := fun _ h ↦ P h) fun _ hp hc ↦ hp.resolve_left hc).bind' fun _ ↦
     (readNSuccSpec P hP zero_le 2).bind' fun memory ↦

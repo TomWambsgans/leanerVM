@@ -33,7 +33,7 @@ The instances bound the column claims the front phases of `leanVmProgram`
 ## Deployed behaviour
 
 The statements are on the program `leanVmProgram` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, as transcribed in `LeanerVM.Protocol.Verifier`.
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, as transcribed in `LeanerVM.Protocol.Verifier`.
 -/
 
 namespace LeanerVM.Protocol.EndToEnd.Sound
@@ -173,7 +173,7 @@ theorem retOK_publicInputPhase (layout : Layout) (publicInput : Digest) :
     RetOK (fun claims : List ColumnClaim ↦ claims.length ≤ 3)
       (publicInputPhase layout publicInput) := by
   unfold publicInputPhase
-  refine RetOK.bind_true fun _ ↦ RetOK.bind_true fun _ ↦ RetOK.bind_true fun _ ↦ RetOK.ret ?_
+  refine RetOK.bind_true fun _ ↦ RetOK.ret ?_
   simp only [List.length_zipWith, List.length_cons, List.length_nil]
   omega
 

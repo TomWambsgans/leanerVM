@@ -9,7 +9,7 @@ Regression and negative tests for `LeanerVM.Protocol.Compile.Cost` and
 * The calculus: a small program with a commitment and an opening has the cost the accounting
   gives, and the conditions doing the work are load-bearing: a commitment taller than the
   height bound, an opening charged per position and level, and a budget one short are refuted.
-* The leanVM constants: the bound is `13300`; the WHIR bound and the height bound are attained
+* The leanVM constants: the bound is `13213`; the WHIR bound and the height bound are attained
   by an admissible ladder (`μ = 28` at rates `1` and `4`), so they are not slack in the ladder
   table.
 * The seed: the leanVM seeding chain has two steps after the bytecode's hash.
@@ -59,7 +59,7 @@ example : ¬ (Prog.queryP 0 [0, 1]).CostLE 3 7 := fun h ↦ absurd h.1 (by decid
 
 /-! ## The leanVM constants -/
 
-example : leanVmQueryBound = 13300 := leanVmQueryBound_eq
+example : leanVmQueryBound = 13213 := leanVmQueryBound_eq
 
 /-- The WHIR bound is attained by the ladder at `μ = 28`, rate `1`. -/
 example : whirCost costHeight 28 ((Whir.ladder 28 1).getD []) = whirBound := by decide +kernel
@@ -108,8 +108,8 @@ def countedRun (n : ℕ) : Bool × ℕ :=
   (verifyWith countingHash sampleBytecode samplePublicInput ⟨stream n, []⟩).run 0
 
 -- Rejected at the first GKR layer (the depth is odd, so one level), after `3` seeding hashes,
--- `8` sizes, `2` for the root, `4 + 1` bus challenges, `2 + 1` for the GKR roots and combiner,
--- and the `3 · 2` children; the failed check itself hashes nothing.
+-- `8` sizes, `2` for the root, `4 + 1` bus challenges, `2` for the GKR roots, `1` for the first
+-- layer's combiner, and the `3 · 2` children; the failed check itself hashes nothing.
 #guard countedRun 100 = (false, 3 + 8 + 2 + 5 + 3 + 6)
 #guard (countedRun 100).2 ≤ leanVmQueryBound
 

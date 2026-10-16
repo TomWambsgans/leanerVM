@@ -26,15 +26,14 @@ over any challenge type `C` that can be sampled:
   tree's `2 ^ ρ` values at the descendants, and the `ρ` combination challenges;
   `stepsSpec C nside k m`: `k` layers of radix four from depth `m`; `oddSpec C nside r`: a binary
   layer at the roots when `r` is odd; `gkrSpec C nside μ`: the argument for trees of `2 ^ μ`
-  leaves, the binary layer first when `μ` is odd, then layers of radix four, then a last combiner
-  that nothing reads.
+  leaves, the binary layer first when `μ` is odd, then layers of radix four.
 
 Each schedule comes with its instances (every message can be queried, every challenge can be
 sampled) and with an error, one non-negative real per challenge, from the error `u` of one
 degree: `drawError C e` charges `e`; `roundsError C d e m` charges `e` per round;
 `stepError C nside ρ m combiner u` charges the combiner's error, `2 ^ ρ · u` per round and `u`
 per combination challenge; `stepsError`, `oddError` and `gkrError C u nside μ` charge
-`(nside − 1) · u` per combiner but the last, which is free. The sums are closed forms
+`(nside − 1) · u` per combiner. The sums are closed forms
 (`sum_roundsError`, `sum_stepError`) or bounds (`sum_stepsError_le`, `sum_gkrError_le`).
 
 Instance search finds ArkLib's instances for the messages and challenges of two schedules side
@@ -333,42 +332,33 @@ theorem sum_oddError_le (nside : ℕ) (u : ℝ≥0) (r : ℕ) :
     ring
 
 /-- The number of rounds of the grand-product argument for trees of `2 ^ μ` leaves. -/
-abbrev gkrRounds (μ : ℕ) : ℕ := oddRounds (μ % 2) + stepsRounds (μ / 2) (μ % 2) + 1
+abbrev gkrRounds (μ : ℕ) : ℕ := oddRounds (μ % 2) + stepsRounds (μ / 2) (μ % 2)
 
 /-- The grand-product argument for `nside` trees of `2 ^ μ` leaves, from the roots (already
 in the statement) down to the leaves: one binary layer first when `μ` is odd, then layers of
-radix four, and a last combiner that nothing reads. -/
+radix four, each layer opening with its combiner. -/
 abbrev gkrSpec (nside μ : ℕ) : ProtocolSpec (gkrRounds μ) :=
-  oddSpec C nside (μ % 2) ++ₚ stepsSpec C nside (μ / 2) (μ % 2) ++ₚ draw C
-
-instance instOracleInterfaceGkrBody (nside r k m : ℕ) :
-    ∀ i, OracleInterface ((oddSpec C nside r ++ₚ stepsSpec C nside k m).Message i) :=
-  msgAppend (instOracleInterfaceOdd C nside r) (instOracleInterfaceSteps C nside k m)
-
-instance instSampleableTypeGkrBody [SampleableType C] (nside r k m : ℕ) :
-    ∀ i, SampleableType ((oddSpec C nside r ++ₚ stepsSpec C nside k m).Challenge i) :=
-  chalAppend (instSampleableTypeOdd C nside r) (instSampleableTypeSteps C nside k m)
+  oddSpec C nside (μ % 2) ++ₚ stepsSpec C nside (μ / 2) (μ % 2)
 
 instance instOracleInterfaceGkr (nside μ : ℕ) :
     ∀ i, OracleInterface ((gkrSpec C nside μ).Message i) :=
-  msgAppend (instOracleInterfaceGkrBody C nside _ _ _) (instOracleInterfaceDraw C)
+  msgAppend (instOracleInterfaceOdd C nside _) (instOracleInterfaceSteps C nside _ _)
 
 instance instSampleableTypeGkr [SampleableType C] (nside μ : ℕ) :
     ∀ i, SampleableType ((gkrSpec C nside μ).Challenge i) :=
-  chalAppend (instSampleableTypeGkrBody C nside _ _ _) (instSampleableTypeDraw C)
+  chalAppend (instSampleableTypeOdd C nside _) (instSampleableTypeSteps C nside _ _)
 
-/-- The error of the grand-product argument: `(nside − 1) · u` on each combiner but the last,
-which is free; `2 ^ ρ · u` on each round of radix `2 ^ ρ`; `u` on each combination challenge. -/
+/-- The error of the grand-product argument: `(nside − 1) · u` on each combiner, `2 ^ ρ · u` on
+each round of radix `2 ^ ρ`, `u` on each combination challenge. -/
 noncomputable def gkrError (u : ℝ≥0) (nside μ : ℕ) : (gkrSpec C nside μ).ChallengeIdx → ℝ≥0 :=
-  errAppend (errAppend (oddError C nside u (μ % 2)) (stepsError C nside u (μ / 2) (μ % 2)))
-    (drawError C 0)
+  errAppend (oddError C nside u (μ % 2)) (stepsError C nside u (μ / 2) (μ % 2))
 
 /-- The grand-product argument's errors sum to at most
 `((μ + 1)·(nside − 1) + 2μ² + 3μ + 3) · u`. -/
 theorem sum_gkrError_le (u : ℝ≥0) (nside μ : ℕ) :
     ∑ i, gkrError C u nside μ i ≤
       (((μ + 1) * (nside - 1) + 2 * μ * μ + 3 * μ + 3 : ℕ) : ℝ≥0) * u := by
-  rw [gkrError, sum_errAppend, sum_errAppend, sum_drawError, add_zero]
+  rw [gkrError, sum_errAppend]
   have h1 := sum_oddError_le C nside u (μ % 2)
   have h2 := sum_stepsError_le C nside u (μ / 2) (μ % 2)
   have hnat : (nside - 1) + 1 + μ / 2 * ((nside - 1) + (μ % 2 + 2 * (μ / 2)) * 4 + 2) ≤

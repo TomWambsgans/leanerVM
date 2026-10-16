@@ -15,11 +15,11 @@ public import LeanerVM.Protocol.Verifier.Bus
 # Completeness of the batched GKR
 
 The verifier is `verifyGkrGrandProducts` (`LeanerVM.Protocol.Verifier.Bus`,
-`python-verifier/verifier.py:433-457` at leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`). It
+`python-verifier/verifier.py:432-455` at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`). It
 reads one root shared by the first two trees and the third tree's root, then walks the three trees
 from the root to the leaves, one level first when the remaining depth is odd and two at a time
-after. Nothing here is specific to the bus: the trees are any three lists of `2^D` leaves whose
-first two have the same product.
+after, each step drawing its combiner `λ` first. Nothing here is specific to the bus: the trees
+are any three lists of `2^D` leaves whose first two have the same product.
 
 ## The trees
 
@@ -363,19 +363,19 @@ structure GkrInv (L₀ L₁ L₂ : List E) (D n : ℕ) (s : GkrState) : Prop whe
     multilinearEval (up n L₂) s.point]
 
 /-- **The honest prover of one step** of `step` levels, down to the layers `k` levels above the
-leaves: the sumcheck's round polynomials, the three trees' children, then the fresh coordinates
-and the next combiner. Returns the verifier's next state. -/
+leaves: after the combiner, the sumcheck's round polynomials, the three trees' children, then
+the fresh coordinates. Returns the verifier's next state. -/
 noncomputable def hStep (L₀ L₁ L₂ : List E) (k step : ℕ) (s : GkrState) : Script GkrState :=
-  (hSumcheck (2 ^ step + 1) (stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point s.combiner)
+  Script.sampleE.bind fun c ↦
+  (hSumcheck (2 ^ step + 1) (stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point c)
       (s.point.map some) []).bind fun r ↦
     (Script.sendList (child (up k L₀) step r.1)).bind fun _ ↦
     (Script.sendList (child (up k L₁) step r.1)).bind fun _ ↦
     (Script.sendList (child (up k L₂) step r.1)).bind fun _ ↦
     (Script.sampleN step).bind fun y ↦
-    Script.sampleE.bind fun c ↦
     .ret ⟨[multilinearEval (child (up k L₀) step r.1) y,
       multilinearEval (child (up k L₁) step r.1) y,
-      multilinearEval (child (up k L₂) step r.1) y], c, y ++ r.1⟩
+      multilinearEval (child (up k L₂) step r.1) y], y ++ r.1⟩
 
 /-- Sending a list meets reading as many scalars. -/
 theorem follows_sendList_readN' (xs : List E) {n : ℕ} (h : xs.length = n) (cs : Commits) :
@@ -398,21 +398,23 @@ theorem follows_gkrStep {L₀ L₁ L₂ : List E} {D : ℕ} (h₀ : L₀.length 
   have hC : ∀ L : List E, L.length = 2 ^ D →
       (up k L).length = 2 ^ (step + s.point.length) := fun L hL ↦
     length_up k (step + s.point.length) L (by rw [hL]; congr 1; omega)
-  have hclaim : polyEval s.values s.combiner =
-      stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point s.combiner [] := by
+  have hclaim : ∀ c, polyEval s.values c =
+      stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point c [] := fun c ↦ by
     rw [hv, Nat.add_comm, up_add, up_add, up_add]
     exact stepClaim_nil (hC L₀ h₀) (hC L₁ h₁) (hC L₂ h₂) _
   unfold gkrStep hStep
   simp only [Prog.bind_eq]
+  refine Follows.bind (fun cs₀ c c' h ↦ ?_) _ _ _ (Follows.sampleE_sampleE cs)
+  obtain ⟨rfl, rfl⟩ := h
   rw [hclaim]
   refine Follows.bind (fun cs₁ r r' h ↦ ?_) _ _ _
     (follows_sumcheck (2 ^ step + 1) (by have := Nat.one_le_two_pow (n := step); omega) _
-      (s.point.map some) [] cs
+      (s.point.map some) [] cs₀
       (fun ext hext ↦ by
-        simpa using stepClaim_polyLE (hC L₀ h₀) (hC L₁ h₁) (hC L₂ h₂) s.combiner ext
+        simpa using stepClaim_polyLE (hC L₀ h₀) (hC L₁ h₁) (hC L₂ h₂) c ext
           (by simpa using hext))
       (fun ext hext ↦ by
-        simpa using stepClaim_split (up k L₀) (up k L₁) (up k L₂) step s.point s.combiner ext
+        simpa using stepClaim_split (up k L₀) (up k L₁) (up k L₂) step s.point c ext
           (by simpa using hext)))
   obtain ⟨rfl, rfl, hl, hf⟩ := h
   obtain ⟨x, fin⟩ := r
@@ -428,16 +430,14 @@ theorem follows_gkrStep {L₀ L₁ L₂ : List E} {D : ℕ} (h₀ : L₀.length 
   refine Follows.bind (fun cs₄ _ c₂ h ↦ ?_) _ _ _
     (follows_sendList_readN' _ (hlen L₂) cs₃)
   obtain ⟨rfl, rfl⟩ := h
-  have hreq : stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point s.combiner x =
+  have hreq : stepClaim (up k L₀) (up k L₁) (up k L₂) step s.point c x =
       polyEval ([child (up k L₀) step x, child (up k L₁) step x, child (up k L₂) step x].map
-        prodE) s.combiner := by
+        prodE) c := by
     rw [stepClaim_self _ _ _ _ _ _ _ hl]
     simp only [stepF, List.map_cons, List.map_nil, prodE_eq]
   simp only [Prog.require, hreq, ↓reduceIte, Prog.ret_bind]
   refine Follows.bind (fun cs₅ y y' h ↦ ?_) _ _ _ (Follows.sampleN_sampleN cs₄ step)
   obtain ⟨rfl, rfl, hy⟩ := h
-  refine Follows.bind (fun cs₆ c c' h ↦ ?_) _ _ _ (Follows.sampleE_sampleE cs₅)
-  obtain ⟨rfl, rfl⟩ := h
   refine ⟨rfl, by simp, by omega, by simp; omega, ?_⟩
   simp only [List.map_cons, List.map_nil]
   rw [multilinearEval_child (hC L₀ h₀) hl hy, multilinearEval_child (hC L₁ h₁) hl hy,
@@ -485,9 +485,8 @@ theorem follows_gkrLayers {L₀ L₁ L₂ : List E} {D : ℕ} (h₀ : L₀.lengt
 first two trees' product), the third tree's root, then the walk from the roots. -/
 noncomputable def hGkr (D : ℕ) (L₀ L₁ L₂ : List E) : Script (E × List E × List E) :=
   (Script.sendE L₀.prod).bind fun _ ↦ (Script.sendE L₂.prod).bind fun _ ↦
-    Script.sampleE.bind fun c ↦
-      (hLayers L₀ L₁ L₂ D ⟨[L₀.prod, L₀.prod, L₂.prod], c, []⟩).bind fun s ↦
-        .ret (L₂.prod, s.point, s.values)
+    (hLayers L₀ L₁ L₂ D ⟨[L₀.prod, L₀.prod, L₂.prod], []⟩).bind fun s ↦
+      .ret (L₂.prod, s.point, s.values)
 
 /-- **Perfect completeness of the batched GKR.** For three lists of `2^D` leaves whose first two
 have the same product, the honest prover follows `verifyGkrGrandProducts D`: every `require`
@@ -505,13 +504,11 @@ theorem follows_verifyGkrGrandProducts (D : ℕ) (L₀ L₁ L₂ : List E)
   obtain ⟨rfl, rfl⟩ := h
   refine Follows.bind (fun cs₂ _ b h ↦ ?_) _ _ _ (Follows.sendE_readE L₂.prod cs₁)
   obtain ⟨rfl, rfl⟩ := h
-  refine Follows.bind (fun cs₃ c c' h ↦ ?_) _ _ _ (Follows.sampleE_sampleE cs₂)
-  obtain ⟨rfl, rfl⟩ := h
-  have hI : GkrInv L₀ L₁ L₂ D D ⟨[L₀.prod, L₀.prod, L₂.prod], c, []⟩ :=
+  have hI : GkrInv L₀ L₁ L₂ D D ⟨[L₀.prod, L₀.prod, L₂.prod], []⟩ :=
     ⟨le_rfl, by simp, by
       simp only [multilinearEval_up_root h₀, multilinearEval_up_root h₁,
         multilinearEval_up_root h₂, hshared]⟩
-  refine Follows.bind (fun cs₄ s s' h ↦ ?_) _ _ _ (follows_gkrLayers h₀ h₁ h₂ D _ cs₃ hI)
+  refine Follows.bind (fun cs₄ s s' h ↦ ?_) _ _ _ (follows_gkrLayers h₀ h₁ h₂ D _ cs₂ hI)
   obtain ⟨rfl, rfl, ⟨_, hpl, hv⟩⟩ := h
   exact ⟨rfl, rfl, rfl, by simpa using hpl, hv⟩
 

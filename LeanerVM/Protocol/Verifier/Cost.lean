@@ -23,19 +23,20 @@ of `15 ≤ μ ≤ 28` variables, a rate exponent `1 ≤ R ≤ 4`, and the WHIR l
 
 * the sizes (`readSizes`): `8` reads;
 * the stack's root (`commitStack`): one commitment, `2`;
-* the bus (`verifyBusBalance`): `13` plus the GKR walk over the push side's depth, which is at
+* the bus (`verifyBusBalance`): `12` plus the GKR walk over the push side's depth, which is at
   most `38` (`3 + 34` blocks of at most `2^32` rows), `gkrCost 38 0 = 1995`;
 * the table sumcheck (`tablePhase`): `1 + 4 · 32 + 6 · 37` (every table at most `37` wide);
-* the public input: `3`;
+* the public input: `1`, its challenge (the prover sends nothing);
 * Flock at `14 + h` variables, `h ≤ 32` the `BLAKE2S` table's log-height: `4 · 33 + 177`;
 * ring switching: `6` samples;
-* the stacked opening: `3` plus the WHIR levels (`whirCost`), at most `whirBound = 10607` over
-  the 56 admissible ladders (`ladder_cost`, decided), every commitment of height at most
+* the stacked opening: `3` plus the WHIR levels (`whirCost`), at most `whirBound = 10523` over
+  the 56 admissible ladders (`ladder_cost`, decided; the query counts of `verifier.py:912` at
+  leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`), every commitment of height at most
   `costHeight = 26`. Both are attained, at `μ = 28` and rates `1` and `4`.
 
-In total `leanVmCost = 13297` (`costLE_leanVmProgram`). The seed of `seedWith` is three hashes
+In total `leanVmCost = 13210` (`costLE_leanVmProgram`). The seed of `seedWith` is three hashes
 (`leanVmSeed`, `seedRun_leanVmSeed`), so the compiled verifier makes at most
-`leanVmQueryBound = 13300` queries on every proof (`isTotalQueryBound_leanVm`). The bound is
+`leanVmQueryBound = 13213` queries on every proof (`isTotalQueryBound_leanVm`). The bound is
 crude where a tight one would cost proof without changing the soundness bound, in which it
 enters linearly: the table widths, the depth of the bus, the Flock size, and the WHIR query
 positions, charged at the largest height rather than at their level's.
@@ -43,7 +44,7 @@ positions, charged at the largest height rather than at their level's.
 ## Deployed behaviour
 
 The bound is a statement on the program `leanVmProgram` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`, as transcribed in `LeanerVM.Protocol.Verifier`;
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`, as transcribed in `LeanerVM.Protocol.Verifier`;
 it covers every proof, accepted or not.
 -/
 
@@ -57,8 +58,8 @@ open OracleComp OracleSpec
 
 /-! ## Cost functions -/
 
-/-- The cost of one GKR step of `step` levels at a point of `L` coordinates: the sumcheck's `L`
-rounds, the three trees' children, the new coordinates and the combiner. -/
+/-- The cost of one GKR step of `step` levels at a point of `L` coordinates: the combiner, the
+sumcheck's `L` rounds, the three trees' children and the new coordinates. -/
 def gkrStepCost (step L : ℕ) : ℕ := L * max (2 ^ step + 1) 2 + 3 * 2 ^ step + step + 1
 
 /-- The cost of the GKR walk over `n` remaining levels from a point of `L` coordinates, following
@@ -100,8 +101,9 @@ def stackHeightLE (height μ : ℕ) : List Whir.Level → Bool
 /-- The bound on every commitment's height. -/
 def costHeight : ℕ := 26
 
-/-- The bound on the WHIR levels' cost over every admissible ladder. -/
-def whirBound : ℕ := 10607
+/-- The bound on the WHIR levels' cost over every admissible ladder, attained at `μ = 28`,
+rate `1` (queries `(225, 56, 32, 23, 18, 14)`). -/
+def whirBound : ℕ := 10523
 
 /-- The bound on the GKR walk: the push side's depth is at most `38`. -/
 def gkrBound : ℕ := 1995
@@ -111,7 +113,7 @@ def flockBound : ℕ := 4 * 33 + 177
 
 /-- **The cost of the leanVM verifier program**, phase by phase. -/
 def leanVmCost : ℕ :=
-  8 + 2 + (busBits + 1 + (3 + gkrBound) + 5) + (1 + 32 * 4 + 6 * 37) + 3 + flockBound + 6 +
+  8 + 2 + (busBits + 1 + (2 + gkrBound) + 5) + (1 + 32 * 4 + 6 * 37) + 1 + flockBound + 6 +
     (1 + 2 + whirBound)
 
 /-! ## Sumcheck rounds -/
@@ -156,18 +158,18 @@ theorem costs_sumcheck (count : ℕ) : ∀ (claim : E) (eqs : List (Option E)),
 theorem costs_gkrStep (step : ℕ) (s : GkrState) :
     Prog.Costs height (gkrStep step s) (gkrStepCost step s.point.length)
       fun t ↦ t.point.length = step + s.point.length := by
-  refine Prog.Costs.seq (costs_sumcheck _ _ (s.point.map some)) (fun r hr ↦ ?_) ?_
+  refine Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦
+    Prog.Costs.seq (costs_sumcheck _ _ (s.point.map some)) (fun r hr ↦ ?_) ?_) ?_
   · obtain ⟨x, claim⟩ := r
     refine Prog.Costs.seq (Prog.Costs.readN _) (fun c0 _ ↦ Prog.Costs.seq (Prog.Costs.readN _)
       (fun c1 _ ↦ Prog.Costs.seq (Prog.Costs.readN _) (fun c2 _ ↦
         Prog.Costs.seq (Prog.Costs.require (n := 0) _) (fun _ _ ↦
-          Prog.Costs.seq (Prog.Costs.sampleN step) (fun y hy ↦
-            Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ ?_) ?_) ?_) ?_) ?_) ?_) ?_
+          Prog.Costs.seq (Prog.Costs.sampleN step) (fun y hy ↦ ?_) ?_) ?_) ?_) ?_) ?_
     · show (y ++ x).length = step + s.point.length
       simp only [List.length_map] at hr
       simp [hy, hr]
     all_goals simp only [gkrStepCost, List.length_map]; omega
-  · simp only [gkrStepCost, List.length_map]; omega
+  all_goals simp only [gkrStepCost, List.length_map]; omega
 
 /-- The GKR walk costs `gkrCost`. -/
 theorem costs_gkrLayers : ∀ (n : ℕ) (s : GkrState),
@@ -185,18 +187,17 @@ theorem costs_gkrLayers : ∀ (n : ℕ) (s : GkrState),
     · refine Prog.Costs.seq (costs_gkrStep 2 s) (fun t ht ↦
         (costs_gkrLayers n t).mono (by rw [ht]; omega) fun _ h ↦ h) (by omega)
 
-/-- The GKR grand products: the two roots, the combiner, and the walk. -/
+/-- The GKR grand products: the two roots and the walk. -/
 theorem costs_verifyGkrGrandProducts (depth : ℕ) :
-    Prog.Costs height (verifyGkrGrandProducts depth) (3 + gkrCost depth 0) fun _ ↦ True := by
+    Prog.Costs height (verifyGkrGrandProducts depth) (2 + gkrCost depth 0) fun _ ↦ True := by
   refine Prog.Costs.seq Prog.Costs.readE (fun _ _ ↦ Prog.Costs.seq Prog.Costs.readE
-    (fun _ _ ↦ Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ Prog.Costs.seq
-      (costs_gkrLayers depth _) (fun _ _ ↦ trivial) ?_) ?_) ?_) ?_ <;>
+    (fun _ _ ↦ Prog.Costs.seq (costs_gkrLayers depth _) (fun _ _ ↦ trivial) ?_) ?_) ?_ <;>
     (try simp only [List.length_nil]) <;> omega
 
 /-- The bus phase, at the push side's depth. -/
 theorem costs_verifyBusBalance (layout : Layout) :
     Prog.Costs height (verifyBusBalance layout)
-      (busBits + 1 + (3 + gkrCost (busLayout [0, layout.logMemory, layout.logBytecode]
+      (busBits + 1 + (2 + gkrCost (busLayout [0, layout.logMemory, layout.logBytecode]
         layout.push).depth 0) + 5) fun _ ↦ True := by
   refine Prog.Costs.seq (Prog.Costs.sampleN _) (fun _ _ ↦ Prog.Costs.seq Prog.Costs.sampleE
     (fun _ _ ↦ Prog.Costs.seq (costs_verifyGkrGrandProducts _) (fun r _ ↦ ?_) ?_) ?_) ?_
@@ -329,9 +330,9 @@ theorem pushDepth_le {layout : Layout} (h : LayoutBounds layout) :
 /-- The GKR walk over at most `38` levels costs at most `gkrBound`. -/
 theorem gkrCost_le : ∀ D ≤ 38, gkrCost D 0 ≤ gkrBound := by decide
 
-/-- **The bus phase** costs at most `13 + gkrBound` on a built layout. -/
+/-- **The bus phase** costs at most `12 + gkrBound` on a built layout. -/
 theorem costs_verifyBusBalance_le {height : ℕ} {layout : Layout} (h : LayoutBounds layout) :
-    Prog.Costs height (verifyBusBalance layout) (busBits + 1 + (3 + gkrBound) + 5)
+    Prog.Costs height (verifyBusBalance layout) (busBits + 1 + (2 + gkrBound) + 5)
       fun _ ↦ True :=
   (costs_verifyBusBalance layout).mono
     (by have := gkrCost_le _ (pushDepth_le h); omega) fun _ h ↦ h
@@ -399,12 +400,10 @@ theorem costs_tablePhase {layout : Layout} (hl : LayoutBounds layout) (bus : Bus
   Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ Prog.Costs.seq
     (costs_tableSumcheck _ _ _ _ _ _ hl.heights_le) (fun _ _ ↦ trivial) (by omega)) (by omega)
 
-/-- **The public-input phase**: one challenge, two limbs. -/
+/-- **The public-input phase**: one challenge. -/
 theorem costs_publicInputPhase (layout : Layout) (publicInput : Digest) :
-    Prog.Costs height (publicInputPhase layout publicInput) 3 fun _ ↦ True :=
-  Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ Prog.Costs.seq (Prog.Costs.readN 2)
-    (fun _ _ ↦ Prog.Costs.seq (Prog.Costs.require (n := 0) _) (fun _ _ ↦ trivial)
-      (by omega)) (by omega)) (by omega)
+    Prog.Costs height (publicInputPhase layout publicInput) 1 fun _ ↦ True :=
+  Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ trivial) (by omega)
 
 /-! ## Flock and ring switching -/
 
@@ -715,9 +714,9 @@ theorem verifierComp_leanVm (bytecode : List K) (publicInput : Digest) (π : Pro
 def leanVmQueryBound : ℕ := 1 + 2 + leanVmCost
 
 /-- The bound, evaluated. -/
-theorem leanVmQueryBound_eq : leanVmQueryBound = 13300 := by decide
+theorem leanVmQueryBound_eq : leanVmQueryBound = 13213 := by decide
 
-/-- **The compiled leanVM verifier makes at most `leanVmQueryBound = 13300` queries** to the
+/-- **The compiled leanVM verifier makes at most `leanVmQueryBound = 13213` queries** to the
 random oracle on every proof, for every bytecode and public input: the hypothesis `hV` of
 `romSound` at the leanVM program and seed. -/
 theorem isTotalQueryBound_leanVm (bytecode : List K) (publicInput : Digest) (π : Proof) :

@@ -17,9 +17,9 @@ public import LeanerVM.Protocol.Verifier.Cost
 # Knowledge soundness of the leanVM verifier in the random-oracle model
 
 Let `P = leanVmProgram (bytecodeWords prog) (publicDigest input)` be the deployed verifier
-program (leanVM `a386121f84292f6fa663aaa3e570c15bc0240ea2`) and `σ = leanVmSeed …` its
+program (leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`) and `σ = leanVmSeed …` its
 Fiat–Shamir seed, with BLAKE2s a random oracle (`romExperiment`), an adversary of `QA` queries,
-and the verifier's `13300` (`isTotalQueryBound_leanVm`). With `N = QA + 13300`:
+and the verifier's `13213` (`isTotalQueryBound_leanVm`). With `N = QA + 13213`:
 
 * `leanVm_romSound`: the verifier accepts while some boundary prefix of the extracted history is
   doomed for `leanVmCert` with probability at most `N · (2^-128 + failBound σ N)`.
@@ -84,15 +84,15 @@ theorem leanVmCert_bound (h : List Ev) :
 /-- **The random-oracle theorem of the leanVM verifier.** An adversary of `QA` queries makes the
 deployed verifier, with BLAKE2s a random oracle, accept a proof whose extracted history passes
 through a doomed boundary with probability at most
-`(QA + 13300) · (2^-128 + failBound σ (QA + 13300))`. -/
+`(QA + 13213) · (2^-128 + failBound σ (QA + 13213))`. -/
 theorem leanVm_romSound (A : OracleComp HashSpec Proof) (QA : ℕ)
     (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
         (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
       Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input))
         z.1.1 z.2] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) := by
   have h := romSound _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input) A QA
     hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
   rwa [leanVmQueryBound_eq] at h
@@ -285,7 +285,7 @@ theorem doomed_of_not_extracted {c : HashSpec.QueryCache} {π : Proof}
 `QA` queries makes the deployed verifier, with BLAKE2s a random oracle, accept a proof from
 which `extractStack` does not extract admissible sizes `s` and a stack satisfying
 `M3Holds (leanIsaInstance blake2sFlockSpec prog s) input` with probability at most
-`(QA + 13300) · (2^-128 + failBound σ (QA + 13300))`. -/
+`(QA + 13213) · (2^-128 + failBound σ (QA + 13213))`. -/
 theorem leanVm_knowledge (A : OracleComp HashSpec Proof) (QA : ℕ)
     (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
@@ -294,8 +294,8 @@ theorem leanVm_knowledge (A : OracleComp HashSpec Proof) (QA : ℕ)
         extractStack prog input z.2 z.1.1 =
           some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧ s.Admissible prog ∧
         M3Holds (leanIsaInstance F₀ prog s) input q] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) := by
   have h := romSound_of_imp _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input)
     A QA hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
     (fun π c ↦ ¬ Extracted prog input c π)
@@ -306,7 +306,7 @@ theorem leanVm_knowledge (A : OracleComp HashSpec Proof) (QA : ℕ)
 adversary of `QA` queries makes the deployed verifier accept a proof from which `extractStack`
 does not extract sizes `s` and a stack `q` whose witness `witnessOf blake2sFlockSpec prog s q`
 represents a valid execution of `prog` on `input` with probability at most
-`(QA + 13300) · (2^-128 + failBound σ (QA + 13300))`. -/
+`(QA + 13213) · (2^-128 + failBound σ (QA + 13213))`. -/
 theorem leanVm_execution (hwf : WellFormedBytecode prog) (A : OracleComp HashSpec Proof)
     (QA : ℕ) (hA : IsTotalQueryBound A QA) :
     Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
@@ -314,8 +314,8 @@ theorem leanVm_execution (hwf : WellFormedBytecode prog) (A : OracleComp HashSpe
       ¬ ∃ (s : Sizes) (q : Column (leanIsaμ prog s)),
         extractStack prog input z.2 z.1.1 = some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧
         ∃ t, AssignmentRepresents (witnessOf F₀ prog s q) t ∧ ValidExecution prog input t] ≤
-      ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13300)) := by
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) := by
   have h := romSound_of_imp _ (leanVmCert prog input) _ εLean (leanVmCert_bound prog input)
     A QA hA leanVmQueryBound (isTotalQueryBound_leanVm _ _)
     (fun π c ↦ ¬ ∃ (s : Sizes) (q : Column (leanIsaμ prog s)),
@@ -338,9 +338,9 @@ theorem inv_pow_eq_div (k n : ℕ) (h : k ≤ n) :
 /-- **The numeric bound**: for an adversary of at most `2^64` queries, the bound of the
 knowledge statement is at most `2^-63`. -/
 theorem leanVm_bound_le (bytecode : List K) (publicInput : Digest) {QA : ℕ} (hQ : QA ≤ 2 ^ 64) :
-    ((QA + 13300 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-      failBound (leanVmSeed bytecode publicInput) (QA + 13300)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 := by
-  set N := QA + 13300 with hN
+    ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
+      failBound (leanVmSeed bytecode publicInput) (QA + 13213)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 := by
+  set N := QA + 13213 with hN
   have hfail : failBound (leanVmSeed bytecode publicInput) N =
       ((6 * N : ℕ) : ℝ≥0∞) / ((2 ^ 256 : ℕ) : ℝ≥0∞) := by
     rw [failBound, Nat.cast_pow, Nat.cast_ofNat]
@@ -348,9 +348,9 @@ theorem leanVm_bound_le (bytecode : List K) (publicInput : Digest) {QA : ℕ} (h
   rw [hfail, inv_pow_eq_div 128 256 (by norm_num), ENNReal.div_add_div_same, ← mul_div_assoc,
     ← Nat.cast_add, ← Nat.cast_mul, inv_pow_eq_div 63 256 (by norm_num)]
   refine ENNReal.div_le_div_right (Nat.cast_le.2 ?_) _
-  have hN' : N ≤ 2 ^ 64 + 13300 := by omega
+  have hN' : N ≤ 2 ^ 64 + 13213 := by omega
   rw [show 256 - 128 = 128 from rfl, show 256 - 63 = 193 from rfl]
-  calc N * (2 ^ 128 + 6 * N) ≤ (2 ^ 64 + 13300) * (2 ^ 128 + 6 * (2 ^ 64 + 13300)) :=
+  calc N * (2 ^ 128 + 6 * N) ≤ (2 ^ 64 + 13213) * (2 ^ 128 + 6 * (2 ^ 64 + 13213)) :=
         Nat.mul_le_mul hN' (Nat.add_le_add_left (Nat.mul_le_mul_left 6 hN') _)
     _ ≤ 2 ^ 193 := by norm_num
 

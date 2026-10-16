@@ -24,42 +24,45 @@ proof system meets leanISA, and it is data: what the adaptor's theorems say of i
 `LeanIsa/Sound.lean` and `LeanIsa/Complete.lean`.
 
 **Sizes.** `Sizes` is what the prover announces: the memory log-size and the six opcode tables'
-log-heights (`cpu/mod.rs:144-149`, `read_public`); the bytecode's log-size is the program's.
-`Sizes.Admissible prog s` is the part of `read_public`'s checks on sizes (`:157-176`): the
-memory window `[16, 32]`, the height cap `32`, the `BLAKE2S` floor `3`, and the stacked size
-`leanIsaμ prog s ≤ 28` (`pcs.rs:49-51`; its floor `15` holds by construction). `validRate` is the
-WHIR rate check (`pcs/src/whir_config.rs:43-55`), read off the same announcement and used by
-the commitment, not by the instance.
+log-heights (`crates/verifier/src/lib.rs:208-216`); the bytecode's log-size is the program's.
+`Sizes.Admissible prog s` is the part of the verifier's checks on sizes (`build_layout`,
+`crates/verifier/src/layout.rs:381-395`, and `lib.rs:219-222`): the memory window `[16, 32]`,
+the height cap `32`, the `BLAKE2S` floor `3`, and the stacked size `leanIsaμ prog s ≤ 28`
+(`pcs.rs:49-51`; its floor `15` holds by construction). `validRate` is the WHIR rate check
+(`pcs/src/whir_config.rs:43-55`), read off the same announcement and used by the commitment, not
+by the instance.
 
 **The tables.** Nine, in the order of the Rust's global columns (`cpu/layout.rs:13-49`): the
 memory columns `MEM_LO, MEM_HI, MEM_TOP, MFCNT` at height `2^logMem`; the bytecode finalize
 count `BFCNT` at `2^prog.logSize`; the Flock region `QFLOCK` at `2^(8 + τ_BLAKE2S)`
-(`layout.rs:151-157`, `qflock_kappa`); then the six opcode tables at their announced heights,
+(`layout.rs:150-156`, `qflock_kappa`); then the six opcode tables at their announced heights,
 each `Component.toM3` of its Clean component with leanISA's separators, directions and counted
 channels (`channelSep`, `channelDir`, the memory and bytecode pulls). The first three are column
 groups: no constraint, flush or count, so the table sumcheck never visits them.
 
 **The bus.** The opcode tables' flushes, and six boundary blocks written from the Rust's
-(`layout.rs:349-395`) and equal to the interactions of leanISA's three remaining components:
+(`layout.rs:348-394`) and equal to the interactions of leanISA's three remaining components:
 the verifier's state push `(1, 1)` and pull `(g^(N - 1), 1)` (`leanIsaVerifier`), the memory
 block's seed push `(g^i, 1, m_i)` and finalize pull `(g^i, MFCNT_i, m_i)` (`memTable`), and the
 bytecode block's seed push and finalize pull of the program's entries (`bytecodeTable`, with the
 program's eight entry columns known to both parties, `Coord.known`). The index column is the
 verifier's (`idxColumn`), as the Rust's `Coord::Index` is.
 
-**The stack** (`witness.rs:67-101`). Every committed column has a log-size, its table's; the
-eighteen `BLAKE2S` limb columns have none (`Placement::VIRTUAL`, `witness.rs:21-29`;
-`layout.rs:160-168`). The committed columns, in global order, are sorted by log-size, largest first,
+**The stack** (`witness.rs:56-95`). Every committed column has a log-size, its table's; the
+eighteen `BLAKE2S` limb columns have none (`Placement::VIRTUAL`, `witness.rs:17-25`;
+`layout.rs:159-167`). The committed columns, in global order, are sorted by log-size, largest first,
 ties in global order (`stack_offsets`), and laid end to end at aligned offsets (`Blocks.layout`);
 the stack has `μ = max(⌈log₂ total⌉, 15)` variables (`placements_of`). Limb `k` of the `BLAKE2S`
 table is read at the strided slot `F.slot k` of the Flock region (`Blocks.stridedLayout`;
-`hash_flock.rs:79-115`): row `t`'s limb is cell `F.slot k` of block `t`. The layout is
+`hash_flock.rs:72-108`): row `t`'s limb is cell `F.slot k` of block `t`. The layout is
 `Layout.piecewise` of the two, renamed to the instance's columns; no two columns share a cell except
 the limbs and the region they are read from, as the Rust routes them.
 
-**The public lines** (§8.2). Three: cells `0, 1` of `MEM_LO` are `input₀, input₂` and of
-`MEM_HI` are `input₁, input₃`, both sent; cells `0, 1` of `MEM_TOP` are `0, 0`, not sent. The
-third line pins the top limbs, which the statement's words have zero by type.
+**The public lines** (§8.2). Three: cells `0, 1` of `MEM_LO` are `input₀, input₂`, of `MEM_HI`
+are `input₁, input₃`, and of `MEM_TOP` are `0, 0`. None is sent: the verifier computes every
+limb's value on its line itself (`python-verifier/verifier.py:1390-1396` at leanVM
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`). The third line pins the top limbs, which the
+statement's words have zero by type.
 
 **The Flock region** is `QFLOCK`, with `kBatch = τ_BLAKE2S` and `F`'s R1CS.
 
@@ -77,7 +80,7 @@ side has no more (each count is a pull's), and `JUMP`, the one table with constr
 With `d = 2` it meets the table sumcheck's degree bound by definition.
 
 Category B for the layout, the boundary blocks and the sizes, transcribed from
-`crates/lean_vm/src` at `a386121f84292f6fa663aaa3e570c15bc0240ea2`; the instance's
+`crates/leanvm_core/src` at `127510d14c98ade4e8a97646c44fa7f1ff5e752d`; the instance's
 polynomials are Clean's, through `Component.toM3`.
 
 ## Wrong readings excluded
@@ -253,7 +256,7 @@ variable (prog : Program) (s : Sizes)
 abbrev kappa (c : Col) : ℕ := height prog s c.1
 
 /-- The committed columns in stacking order: largest first, ties in global order
-(`witness.rs:67-81`; `List.mergeSort` is stable). -/
+(`witness.rs:56-75`; `List.mergeSort` is stable). -/
 def stackOrder : List Col :=
   committedColumns.mergeSort fun a b ↦ decide (kappa prog s b ≤ kappa prog s a)
 
@@ -281,7 +284,7 @@ def minMu : ℕ := 15
 def maxMu : ℕ := 28
 
 /-- The stack's number of variables: the blocks' total, rounded up to a power of two, at least
-`2 ^ MIN_MU` (`placements_of`, `witness.rs:97`). -/
+`2 ^ MIN_MU` (`placements_of`, `witness.rs:91`). -/
 def leanIsaμ : ℕ := max (Nat.clog 2 (blocks prog s).total) minMu
 
 /-- The blocks fit on the stack. -/
@@ -343,12 +346,12 @@ def layout (slot : Fin 18 → Fin 256) :
 def coords {S : Shape} {κ : ℕ} (cs : List (Coord S κ)) : Vector (Coord S κ) 16 :=
   Vector.ofFn fun k ↦ cs.getD k (.const 0)
 
-/-- Column `k` of the program's entries, `bytecode_columns` (`layout.rs:229-290`): the entry's
+/-- Column `k` of the program's entries, `bytecode_columns` (`layout.rs:228-289`): the entry's
 coordinate `k + 1` of the bytecode tuple at every slot. -/
 def entryColumn (k : Fin 8) : Column prog.logSize :=
   ⟨Vector.ofFn fun i ↦ (entry (prog.code i))[k]⟩
 
-/-- The six boundary blocks (`layout.rs:349-395`): the state boundary, the memory seed and
+/-- The six boundary blocks (`layout.rs:348-394`): the state boundary, the memory seed and
 finalize, the bytecode seed and finalize. -/
 def boundary : List (BoundaryBlock (shape prog s)) :=
   let entries : List (Coord (shape prog s) prog.logSize) :=
@@ -366,10 +369,10 @@ def boundary : List (BoundaryBlock (shape prog s)) :=
       .known (idxColumn prog.logSize), .committed bfcntCol rfl] ++ entries)⟩]
 
 /-- The three public lines (§8.2): `MEM_LO` holds `input₀, input₂` at cells `0, 1`, `MEM_HI`
-holds `input₁, input₃`, both sent; `MEM_TOP` holds `0, 0`, not sent. -/
+holds `input₁, input₃`, `MEM_TOP` holds `0, 0`; none is sent. -/
 def publicLines (input : PublicInput) : Vector (PublicLine (shape prog s)) 3 :=
-  #v[⟨memCol 0, input.lanes 0, input.lanes 2, true, s.logMem_pos⟩,
-    ⟨memCol 1, input.lanes 1, input.lanes 3, true, s.logMem_pos⟩,
+  #v[⟨memCol 0, input.lanes 0, input.lanes 2, false, s.logMem_pos⟩,
+    ⟨memCol 1, input.lanes 1, input.lanes 3, false, s.logMem_pos⟩,
     ⟨memCol 2, 0, 0, false, s.logMem_pos⟩]
 
 /-- The Flock region: `QFLOCK`, `2 ^ τ_BLAKE2S` blocks, with the specification's R1CS. -/
@@ -401,9 +404,10 @@ namespace LeanIsa
 
 /-! ## Admissible sizes -/
 
-/-- The checks `read_public` makes of the announced sizes (`cpu/mod.rs:157-176`): the memory
-window, the height cap, the `BLAKE2S` floor, and the stacked size's cap. The bytecode cap is
-`Program`'s by type, and the stacked size's floor holds by construction (`leanIsaμ`). -/
+/-- The checks the verifier makes of the announced sizes (`crates/verifier/src/layout.rs:381-395`,
+`lib.rs:219-222`): the memory window, the height cap, the `BLAKE2S` floor, and the stacked size's
+cap. The bytecode cap is `Program`'s by type, and the stacked size's floor holds by construction
+(`leanIsaμ`). -/
 def Sizes.Admissible (prog : Program) (s : Sizes) : Prop :=
   minLogMem ≤ s.logMem ∧ s.logMem ≤ maxLogMem ∧ (∀ j, s.τ j ≤ maxLogRows) ∧
     minLogRowsBlake2s ≤ s.τ 5 ∧ leanIsaμ prog s ≤ maxMu

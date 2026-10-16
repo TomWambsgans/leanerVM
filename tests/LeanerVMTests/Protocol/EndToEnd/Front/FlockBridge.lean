@@ -7,7 +7,8 @@ import LeanerVM.Protocol.EndToEnd.Front.FlockBridge
   hypotheses, and of the fidelity theorems.
 * **The axiom audit**: the specifications and the fidelity theorems use the standard axioms only.
 * **What is load-bearing.**
-  - The public input's check is the program's: a mutated limb is rejected (`pubAccepts`).
+  - The public claims are computed from both public cells of every limb (`pubLimb`), and the
+    leanISA instance sends no public line.
   - The wire's derived coefficient is the one passing ArkLib's round check: another value fails
     it, in both modes.
   - The skip interpolation needs the window denominator: the window is every node's denominator
@@ -34,11 +35,21 @@ noncomputable example (F : FlockSpec) (prog : LeanerVM.Semantics.Program) (s : L
     {publicInput : Digest}
     (hinput : Blake2sHash.digestScalars publicInput = (input.word0, input.word1))
     (hstable : CandsStable layout C) {L₀ : ℕ} (hcard : ∀ h, (C h).ncard ≤ L₀)
-    {εmax T : ℝ≥0∞} (hT : T ≤ εmax) :
+    {εmax T : ℝ≥0∞} :
     Spec (LeanerVM.Protocol.Verifier.publicInputPhase layout publicInput)
       (PubPre F prog s layout C toI claims input) (PubPost F prog s layout C toI claims) εmax
-      (L₀ * ((overE 1 : ℝ≥0) : ℝ≥0∞)) T :=
-  pubPhaseSpec F prog s layout C toI claims input hlayout hinput hstable hcard hT
+      (L₀ * ((overE 1 : ℝ≥0) : ℝ≥0∞) + T) T :=
+  pubPhaseSpec F prog s layout C toI claims input hlayout hinput hstable hcard
+
+/-- The fidelity of the public claims: on the leanISA instance, whose statement is the digest's,
+the ArkLib phase's value for line `j` is the program's limb `j`. -/
+example (F : FlockSpec) (prog : LeanerVM.Semantics.Program) (s : LeanIsa.Sizes)
+    {publicInput : Digest} {input : LeanerVM.Semantics.PublicInput}
+    (hinput : Blake2sHash.digestScalars publicInput = (input.word0, input.word1)) (r : E)
+    (j : Fin 3) :
+    PublicInput.lineValue (leanIsaInstance F prog s) r
+      ((leanIsaInstance F prog s).publicLines input)[j] = pubLimb publicInput r j :=
+  lineValue_eq_pubLimb F prog s hinput r j
 
 noncomputable example (F : FlockSpec) (prog : LeanerVM.Semantics.Program) (s : LeanIsa.Sizes)
     (layout : LeanerVM.Protocol.Verifier.Layout) (C : List Ev → Set (Column layout.stackLog))
@@ -103,13 +114,26 @@ info: 'LeanerVM.Protocol.EndToEnd.Front.ringFaithful' depends on axioms:
 
 /-! ## What is load-bearing -/
 
-/-- The public input's check rejects a mutated limb. -/
-example (publicInput : Digest) (r c₀ c₁ : E) (h : pubAccepts publicInput r c₀ c₁) :
-    ¬ pubAccepts publicInput r (c₀ + 1) c₁ := by
-  intro h'
-  rw [pubAccepts_iff] at h h'
-  have : (1 : E) = 0 := by linear_combination h' - h
-  exact one_ne_zero this
+/-- The public claims read both public cells: at the challenge `0` a limb's claim is its cell in
+the digest's first half, at `1` its cell in the second, so a claim computed from one half only
+would differ. -/
+example (publicInput : Digest) (ℓ : Fin 3) :
+    pubLimb publicInput 0 ℓ = ofK ((Blake2sHash.digestScalars publicInput).1.limb ℓ) := by
+  rw [pubLimb_eq]
+  ring
+
+example (publicInput : Digest) (ℓ : Fin 3) :
+    pubLimb publicInput 1 ℓ = ofK ((Blake2sHash.digestScalars publicInput).2.limb ℓ) := by
+  rw [pubLimb_eq, CharTwo.add_self_eq_zero]
+  ring
+
+/-- The leanISA instance sends no public line: the prover's message is empty. -/
+example (F : FlockSpec) (prog : LeanerVM.Semantics.Program) (s : LeanIsa.Sizes)
+    (input : LeanerVM.Semantics.PublicInput) :
+    PublicInput.sentCount (leanIsaInstance F prog s)
+      ((leanIsaInstance F prog s).publicLines input) = 0 := by
+  rw [PublicInput.sentCount, unsentLines]
+  rfl
 
 /-- The plain wire's derived coefficient is the only one passing ArkLib's check. -/
 example (claim c₀ c₂ : E) :

@@ -1,8 +1,8 @@
 /-
   LeanerVM.Protocol.Piop
 
-  leanVM's oracle protocol: the commitment, then the bus phase, the table sumcheck, the deployed
-  public-input check, the Flock phase and the opening, with their completeness and their
+  leanVM's oracle protocol: the commitment, then the bus phase, the table sumcheck, the
+  public-input phase, the Flock phase and the opening, with their completeness and their
   round-by-round knowledge soundness, and the two master theorems at every instance.
 -/
 
@@ -19,12 +19,12 @@ public import LeanerVM.Protocol.TableSumcheck
 # The oracle protocol
 
 The specification's unrolled protocol (§8, `doc/leanvm/body/08-end-to-end-protocol.tex` at leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) after the commitment is five phases, each a reduction
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) after the commitment is five phases, each a reduction
 from one seam to the next: the bus phase (`busPhase`), the table sumcheck (`tableSumcheck`), the
-public-input check of the deployed verifiers (`deployedPublicInputPhase`), the Flock phase
-(`flockPhase`) and the opening (`openingPhase`). `leanVmPhases` fills the spine's five slots with
-them, `leanVmComplete` and `leanVmSecurity` fill the two bundles with their halves, and the
-spine's master theorems give the protocol's:
+public-input phase (`publicInputPhase`, the deployed verifiers' since they compute every limb's
+claim themselves), the Flock phase (`flockPhase`) and the opening (`openingPhase`).
+`leanVmPhases` fills the spine's five slots with them, `leanVmComplete` and `leanVmSecurity` fill
+the two bundles with their halves, and the spine's master theorems give the protocol's:
 
 * `leanVm_perfectCompleteness`: on every statement and stack with `M3Holds`, the honest prover
   convinces the verifier with probability one;
@@ -53,7 +53,7 @@ variable (I : M3Instance) (h : Bus.Conditions I) (hd : I.d ≤ 2)
 def leanVmPhases : Phases I where
   bus := busPhase I h
   table := TableSumcheck.tableSumcheck I
-  pub := deployedPublicInputPhase I
+  pub := publicInputPhase I
   flock := flockPhase I
   opening := openingPhase I
 
@@ -61,7 +61,7 @@ def leanVmPhases : Phases I where
 def leanVmComplete : (leanVmPhases I h).Complete where
   bus := busComplete I h
   table := TableSumcheck.tableSumcheckComplete I hd
-  pub := deployedPublicInputComplete I
+  pub := publicInputComplete I
   flock := flockComplete I
   opening := openingComplete I
 
@@ -69,7 +69,7 @@ def leanVmComplete : (leanVmPhases I h).Complete where
 def leanVmSecurity : (leanVmPhases I h).Security where
   bus := busSecurity I h
   table := TableSumcheck.tableSumcheckSecurity I hd
-  pub := deployedPublicInputSecurity I
+  pub := publicInputSecurity I
   flock := flockSecurity I
   opening := openingSecurity I
 

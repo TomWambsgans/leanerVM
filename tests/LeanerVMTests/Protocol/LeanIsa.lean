@@ -92,7 +92,7 @@ def offsets (prog : Program) (s : Sizes) : List (Option ℕ) :=
 
 #guard ((publicLines prog4 s₁ ⟨![1, 2, 3, 4]⟩).toList.map fun l ↦
     (l.col == memCol 0, l.col == memCol 1, l.col == memCol 2, l.cell0, l.cell1, l.sent)) =
-  [(true, false, false, 1, 3, true), (false, true, false, 2, 4, true),
+  [(true, false, false, 1, 3, false), (false, true, false, 2, 4, false),
     (false, false, true, 0, 0, false)]
 
 #guard (boundary prog4 s₁).map (fun b ↦ (b.κ, b.side)) =

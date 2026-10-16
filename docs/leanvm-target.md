@@ -120,10 +120,13 @@ former code in parentheses is for reading older pull requests.
   `c_0 + y·c_1 = (1 + r)·w_0 + r·w_1`, and pool the scalars sent. Both are sound at `1/|E|`; the
   verifiers accept strictly more transcripts (`08-end-to-end-protocol.tex:29-33`;
   `lean_vm/src/cpu/mod.rs:750-755`, `py:1398-1400`, `rec_aggregation/guests/aggregate.py:1680-1683`).
-  (F18)
+  (F18) *Resolved at `127510d1`* (9084d317): the verifiers compute every limb's claim and the
+  prover sends nothing, as the rewritten §8.2 does (`py:1390-1396`).
 - *One combiner more than GKR layers.* Both verifiers draw a combiner after the roots and after
   every layer, the last included and unused; §5.3 has one per layer (`05-arithmetization.tex:91`;
   `lean_vm/src/gkr.rs:369, 391, 423`, `py:435, 453`).
+  *Resolved at `127510d1`* (40bdeac6): each layer draws its combiner first and nothing follows
+  the last layer (`py:438-452`).
 - *The normalized GKR round.* §5.3 does not state the layer sumcheck's round message. The
   verifiers run the normalized (Gruen) round: a cofactor of degree 4 with four coefficients on
   the wire, the constant one derived through the equality factor, and a layer check without the

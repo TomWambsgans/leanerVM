@@ -24,7 +24,7 @@ public import LeanerVM.Protocol.Compile.SpecRules.Cert
 
 `leanVmSpec prog input` is a specification of `leanVmProgram (bytecodeWords prog)
 (publicDigest input)` (`LeanerVM.Protocol.Verifier.Verify`, leanVM
-`a386121f84292f6fa663aaa3e570c15bc0240ea2`) from no doom, with postcondition rejection, at
+`127510d14c98ade4e8a97646c44fa7f1ff5e752d`) from no doom, with postcondition rejection, at
 `εmax = 2^-128` and lead `0`; `leanVmCert` is its doom certificate (`Spec.toCert`). It composes,
 with `Spec.bind'`:
 
@@ -272,14 +272,15 @@ noncomputable def flockPart (hw : Whir.Admissible (verifierLayout prog s).stackL
   (Spec.frame (flockBridgeSpec F₀ prog s (verifierLayout prog s) (Cs prog s ρ) (toI prog s) cl
       input walkFaithful_blake2sFlockSpec (tableLogHeights_blake2s prog s) (cs_stable prog s ρ)
       (cs_ncard prog s ρ hw)
-      (he.2.2.2.2.2.2.2.2.2.1 (cl.length + 1) _ (by omega)
+      (he.2.2.2.2.2.2.2.2.1 (cl.length + 1) _ (by omega)
         (listMax_le hw))
-      he.2.2.2.2.2.2.2.2.2.2.1 he.2.2.2.2.2.2.2.2.2.2.2.1 he.2.2.2.2.2.2.2.2.2.2.2.2)
+      he.2.2.2.2.2.2.2.2.2.1 he.2.2.2.2.2.2.2.2.2.2.1 he.2.2.2.2.2.2.2.2.2.2.2)
     _ (stackShape_keep (movesOK_verifyFlock _) _ _)).bind' fun x ↦ ringPart input hw cl x.1 x.2
 
 open Classical in
 /-- **The public input, then Flock, ring switching and the opening**, after at most `227` claims
-of the table phase. -/
+of the table phase. The public input's challenge and Flock's point are one group of challenges,
+whose lead is at most `L₀ · 47/|E|` (`pubLead_le`). -/
 noncomputable def pubPart (hw : Whir.Admissible (verifierLayout prog s).stackLog ρ)
     (hlb : LayoutBounds (verifierLayout prog s)) (cl : List Verifier.ColumnClaim)
     (hcl : cl.length ≤ 227) :
@@ -291,19 +292,18 @@ noncomputable def pubPart (hw : Whir.Admissible (verifierLayout prog s).stackLog
             (cl ++ pc).map (·.onStack (verifierLayout prog s))))
       (fun h ↦ PubPre F₀ prog s (verifierLayout prog s) (Cs prog s ρ) (toI prog s) cl input h ∧
         StackShape (verifierLayout prog s).stackLog ρ h)
-      (fun _ _ ↦ False) εLean ((L₀ : ℝ≥0∞) * ((overE 1 : ℝ≥0) : ℝ≥0∞)) 0 :=
-  have he := phase_errors (leanIsaInstance F₀ prog s) (μBus_le prog s hlb)
-    (B_leanIsa_le F₀ prog s)
-  (Spec.frame (Spec.retInv (pubPhaseSpec F₀ prog s (verifierLayout prog s) (Cs prog s ρ)
+      (fun _ _ ↦ False) εLean ((L₀ : ℝ≥0∞) * ((overE 47 : ℝ≥0) : ℝ≥0∞)) 0 :=
+  ((Spec.frame (Spec.retInv (pubPhaseSpec F₀ prog s (verifierLayout prog s) (Cs prog s ρ)
       (toI prog s) cl input (pubLayoutHyp_verifierLayout prog s F₀)
       (EndToEnd.Complete.digestScalars_publicDigest input) (cs_stable prog s ρ)
-      (cs_ncard prog s ρ hw) (he.2.2.2.2.2.2.2.2.1 _ (flockRounds_le hlb)))
+      (cs_ncard prog s ρ hw))
       (fun pc ↦ pc.length ≤ 3) (retOK_publicInputPhase _ _))
     _ (stackShape_keep (movesOK_publicInputPhase _ _) _ _)).bind' fun pc ↦
     if hpc : pc.length ≤ 3 then
       (flockPart input hw hlb (cl ++ pc) (by rw [List.length_append]; omega)).mono
         (fun _ hp ↦ ⟨hp.1.1, hp.2⟩) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
-    else Spec.dead.mono (fun _ hp ↦ hpc hp.1.2) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl
+    else Spec.dead.mono (fun _ hp ↦ hpc hp.1.2) (fun _ _ h ↦ h) le_rfl le_rfl le_rfl).mono
+    (fun _ h ↦ h) (fun _ _ h ↦ h) le_rfl (pubLead_le L₀ (flockRounds_le hlb)) le_rfl
 
 /-- The candidates of the stack's word, as oracles of the instance, are finite and at most
 `2^18`. -/
