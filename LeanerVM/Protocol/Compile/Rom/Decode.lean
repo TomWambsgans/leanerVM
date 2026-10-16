@@ -223,21 +223,6 @@ structure Dec where
 /-- The decoder before any entry. -/
 def Dec.init : Dec := ⟨fun _ ↦ none, []⟩
 
-/-- The first input of the remaining seeding steps from `d` that the answers `H` do not answer,
-and whether it is the last step; `none` if all are answered. -/
-def goPend (H : Bytes → Option Digest) : List (Bytes × Bytes) → Digest → Option (Bytes × Bool)
-  | [], _ => none
-  | a :: as, d => match H (Seed.input a d) with
-    | none => some (Seed.input a d, as.isEmpty)
-    | some d' => goPend H as d'
-
-/-- The first input of the seeding that the answers `H` do not answer, and whether it is the
-last; `none` once the seed is answered. -/
-def pend (H : Bytes → Option Digest) (σ : Seed) : Option (Bytes × Bool) :=
-  match H σ.first with
-  | none => some (σ.first, σ.steps.isEmpty)
-  | some d => goPend H σ.steps d
-
 /-- The chain state recorded at a history and node, after its openings. -/
 def stInfo (h : List Ev) (p : Prog Bool) : Option Info :=
   (settle h p).map fun q ↦ Info.st q.1 q.2
@@ -246,9 +231,35 @@ def stInfo (h : List Ev) (p : Prog Bool) : Option Info :=
 def powIn (ℓ : Log) (cv : Digest) (n : E) : Option Digest :=
   (look ℓ (digestBytes cv ++ blockOf 0 3)).bind fun base ↦ look ℓ (digestBytes base ++ blockOf n 4)
 
+/-- A history at which a seed can put the program: reachable, a boundary without proof of work
+and without commitment, at a node of the program. -/
+def RootOk (P : Prog Bool) (h : List Ev) : Prop :=
+  P.Reachable h ∧ Boundary h ∧ grindBits h = 0 ∧ commits h = [] ∧ (P.after h).isSome
+
+/-- The node of the program at a history (`fail` off the program). -/
+def nodeAt (P : Prog Bool) (h : List Ev) : Prog Bool := (P.after h).getD .fail
+
+theorem after_nodeAt {P : Prog Bool} {h : List Ev} (hr : RootOk P h) :
+    P.after h = some (nodeAt P h) := by
+  obtain ⟨-, -, -, -, hs⟩ := hr
+  rcases ha : P.after h with _ | p
+  · rw [ha] at hs; cases hs
+  · simp [nodeAt, ha]
+
 section Step
 
-variable (σ : Seed) (P : Prog Bool)
+variable {X : Type} (σ : Seeds X) (P : Prog Bool)
+
+open Classical in
+/-- The statement whose seeding the input `t` completes after the entries `ℓ`, if any. -/
+noncomputable def rootAt (ℓ : Log) (t : Bytes) : Option X :=
+  if h : ∃ x, pend (look ℓ) (σ.seed x) = some (t, true) then some h.choose else none
+
+open Classical in
+/-- The seed of a statement: a chain state at its root history, if that history is a root. -/
+noncomputable def rootStep (h : List Ev) : Shape × (Digest → Option Info) :=
+  if RootOk P h then (.bnd h (nodeAt P h), fun _ ↦ stInfo h (nodeAt P h))
+  else (.none, fun _ ↦ none)
 
 /-- A chain step at a chain state `cv` at history `h` and node `p`, with block `(x, tag)`: the
 record, and the decoding of the output as a function of the output. -/
@@ -292,8 +303,9 @@ noncomputable def stepAt (ℓ : Log) (cv : Digest) (x : E) (tag : ℕ) :
 /-- Reading an entry with input `t` after the entries `ℓ`, decoded as `δ`: the record, and the
 decoding of the output as a function of the output. -/
 noncomputable def step (ℓ : Log) (δ : Dec) (t : Bytes) : Shape × (Digest → Option Info) :=
-  if pend (look ℓ) σ = some (t, true) then (.bnd [] P, fun _ ↦ stInfo [] P)
-  else match parse t with
+  match rootAt σ ℓ t with
+  | some x => rootStep P (σ.root x)
+  | none => match parse t with
     | some (cv, x, tag) => stepAt ℓ cv x tag (δ.info cv)
     | none => (.none, fun _ ↦ none)
 
@@ -350,7 +362,7 @@ end Step
 
 section Invariants
 
-variable {σ : Seed} {P : Prog Bool}
+variable {X : Type} {σ : Seeds X} {P : Prog Bool}
 
 /-- A decoded digest is at a reachable history where the program is at the recorded node. -/
 def InfoOk (P : Prog Bool) : Info → Prop
@@ -460,8 +472,12 @@ theorem step_ok_of (ℓ : Log) (δ : Dec) (t : Bytes) (hδ : ∀ c i, δ.info c 
     ShapeOk P (step σ P ℓ δ t).1 ∧ ∀ u i, (step σ P ℓ δ t).2 u = some i → InfoOk P i := by
   unfold step
   split
-  · exact ⟨⟨Prog.Reachable.nil, trivial, by simp [Prog.after], grindBits_nil⟩,
-      fun _ ↦ stInfo_ok Prog.Reachable.nil (by simp [Prog.after])⟩
+  · rename_i x _
+    unfold rootStep
+    split
+    · rename_i hr
+      exact ⟨⟨hr.1, hr.2.1, after_nodeAt hr, hr.2.2.1⟩, fun _ ↦ stInfo_ok hr.1 (after_nodeAt hr)⟩
+    · exact ⟨trivial, fun _ _ hi ↦ by simp at hi⟩
   · split
     · exact stepAt_ok ℓ _ _ _ _ fun i hi ↦ hδ _ i hi
     · exact ⟨trivial, fun _ _ hi ↦ by simp at hi⟩
@@ -497,7 +513,7 @@ end Invariants
 
 section Records
 
-variable {σ : Seed} {P : Prog Bool}
+variable {X : Type} {σ : Seeds X} {P : Prog Bool}
 
 /-- A record after a nonce is read at the input `cv ‖ (n, 4)`, when the proof of work is not in
 the log. -/
@@ -506,7 +522,8 @@ theorem step_grd {ℓ : Log} {δ : Dec} {t : Bytes} {h : List Ev} {p : Prog Bool
     t = digestBytes cv ++ blockOf n 4 ∧ powIn ℓ cv n = none := by
   unfold step at hs
   split at hs
-  · cases hs
+  · unfold rootStep at hs
+    split at hs <;> cases hs
   · split at hs
     · rename_i cv' x tag hp
       obtain ⟨-, rfl⟩ := parse_eq_some hp
@@ -541,7 +558,8 @@ theorem step_pow {ℓ : Log} {δ : Dec} {t : Bytes} {h : List Ev} {p : Prog Bool
     look ℓ (digestBytes cv ++ blockOf n 4) = none := by
   unfold step at hs
   split at hs
-  · cases hs
+  · unfold rootStep at hs
+    split at hs <;> cases hs
   · split at hs
     · unfold stepAt at hs
       split at hs

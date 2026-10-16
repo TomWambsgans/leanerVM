@@ -216,5 +216,29 @@ theorem verify_of_mem_support_logExperiment {σ : Seed} {P : Prog Bool}
   rw [← hacc]
   exact hb
 
+/-- **The verifier of a family of statements**: on a statement and a proof, the statement's
+seeded verifier, run from its root node. -/
+def verifierFam {X : Type} (σ : Seeds X) (P : Prog Bool) (z : X × Proof) :
+    OracleComp HashSpec Bool :=
+  verifierComp (σ.seed z.1) (nodeAt P (σ.root z.1)) z.2
+
+/-- **The bridge, for a family.** On every reachable outcome of the logged experiment in which
+the verifier accepts, the statement's seeded verifier accepts the adversary's proof with every
+hash answered by the final log. -/
+theorem verifyFam_of_mem_support_logExperiment {X : Type} {σ : Seeds X} {P : Prog Bool}
+    (A : OracleComp HashSpec (X × Proof)) {z : ((X × Proof) × Bool) × Log}
+    (hz : z ∈ support (logExperiment A (verifierFam σ P))) (hacc : z.1.2 = true) :
+    verify (look z.2) (σ.seed z.1.1.1) (nodeAt P (σ.root z.1.1.1)) z.1.1.2 = some true := by
+  have h := (simulateQ_look_of_mem_support _ [] z hz).2 z.2 (List.prefix_refl _)
+  rw [simulateQ_bind] at h
+  obtain ⟨π, -, h⟩ := Option.bind_eq_some_iff.mp h
+  rw [simulateQ_map] at h
+  obtain ⟨b, hb, hπb⟩ := Option.map_eq_some_iff.mp h
+  rw [← hπb] at hacc ⊢
+  rw [verifierFam, simulateQ_verify] at hb
+  simp only at hacc
+  rw [← hacc]
+  exact hb
+
 end
 end LeanerVM.Protocol.Compile.Rom

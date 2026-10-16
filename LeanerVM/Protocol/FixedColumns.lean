@@ -80,6 +80,30 @@ private theorem bytecodeColumn_slot (prog : Program) (i : Fin (2 ^ prog.logSize)
     (bytecodeColumn prog).values[cubeIndex (m := 4) i s] = (encodeSlots (prog.code i))[s] := by
   simp [bytecodeColumn, ← cubeSplit_apply]
 
+/-- **The bytecode column names the program**: two programs of one size with the same column
+are the same program. -/
+theorem bytecodeColumn_injective {prog prog' : Program} (h : prog.logSize = prog'.logSize)
+    (hv : (bytecodeColumn prog).values.toList = (bytecodeColumn prog').values.toList) :
+    prog = prog' := by
+  obtain ⟨n, hn, code⟩ := prog
+  obtain ⟨n', hn', code'⟩ := prog'
+  simp only at h
+  subst h
+  have hv' := Vector.toList_inj.mp hv
+  have hcode : code = code' := by
+    funext i
+    apply entry_injective
+    refine Vector.ext fun j hj ↦ ?_
+    have h1 := congrArg (fun v ↦ v[cubeIndex (m := 4) i ⟨j + 3, by omega⟩]) hv'
+    simp only at h1
+    rw [bytecodeColumn_slot, bytecodeColumn_slot] at h1
+    simp only [Fin.getElem_fin] at h1
+    rw [encodeSlots_getElem _ _ (show j + 3 < 16 by omega),
+      encodeSlots_getElem _ _ (show j + 3 < 16 by omega)] at h1
+    simpa [show 3 ≤ j + 3 ∧ j + 3 < 11 by omega] using h1
+  subst hcode
+  rfl
+
 /-- The bit order, stated at the extension: at the cube point whose low coordinates are the
 bits of the instruction index and whose high four are the bits of the slot, the column holds
 that slot of that instruction (§8.1: the opcode of instruction `z` is `P(z, 1, 1, 0, 0)`). -/

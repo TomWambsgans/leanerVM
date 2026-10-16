@@ -51,6 +51,21 @@ def publicDigest (input : PublicInput) : Digest :=
     highWord (input.lanes 1), lowWord (input.lanes 2), highWord (input.lanes 2),
     lowWord (input.lanes 3), highWord (input.lanes 3)]
 
+/-- **The digest names the public input.** -/
+theorem publicDigest_injective : Function.Injective publicDigest := by
+  intro a b h
+  have hw : ∀ i : Fin 8, (publicDigest a)[i] = (publicDigest b)[i] := fun i ↦ by rw [h]
+  have hl : ∀ i : Fin 4, a.lanes i = b.lanes i := by
+    intro i
+    have h0 := hw ⟨2 * i, by omega⟩
+    have h1 := hw ⟨2 * i + 1, by omega⟩
+    rw [← Compile.Rom.ofWords_lowWord_highWord (a.lanes i),
+      ← Compile.Rom.ofWords_lowWord_highWord (b.lanes i)]
+    fin_cases i <;> simp_all [publicDigest]
+  cases a; cases b
+  simp only [PublicInput.mk.injEq]
+  exact funext hl
+
 /-- The digest's two halves are the public input's two memory words. -/
 theorem digestScalars_publicDigest (input : PublicInput) :
     digestScalars (publicDigest input) = (input.word0, input.word1) := by

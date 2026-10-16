@@ -465,6 +465,18 @@ theorem romExperiment_eq {α : Type} (A : OracleComp spec α) (V : α → Oracle
   refine bind_congr fun p ↦ ?_
   rw [simulateQ_map, StateT.run_map]
 
+omit [∀ t, Fintype (spec.Range t)] in
+/-- An adversary whose output is mapped by `f` is the experiment of the adversary against the
+verifier composed with `f`, mapped. -/
+theorem romExperiment_map {α β : Type} (f : α → β) (A : OracleComp spec α)
+    (V : β → OracleComp spec Bool) :
+    romExperiment (f <$> A) V =
+      (fun z ↦ ((f z.1.1, z.1.2), z.2)) <$> romExperiment A (fun a ↦ V (f a)) := by
+  have h : (f <$> A >>= fun b ↦ (b, ·) <$> V b) =
+      (fun z : α × Bool ↦ (f z.1, z.2)) <$> (A >>= fun a ↦ (a, ·) <$> V (f a)) := by
+    simp [map_bind, bind_map_left, Functor.map_map]
+  rw [romExperiment, romExperiment, h, simulateQ_map, StateT.run_map]
+
 /-- **The experiment bound.** If `Φ` vanishes on the empty cache and rises by at most `δ` per
 fresh query, an adversary with at most `Q_A` queries and a verifier with at most `Q_V` queries
 make the verifier accept while `bad` holds of the adversary's output and the final cache with

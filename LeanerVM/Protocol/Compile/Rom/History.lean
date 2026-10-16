@@ -299,5 +299,32 @@ theorem xrun_of_verify {H : Bytes → Option Digest} {σ : Seed} {P : Prog Bool}
     refine ⟨seed, s, hseed, ?_⟩
     simp only [extractedHistory, hseed, hh]
 
+/-- The extracted history of the seeded verifier's run of the node `p` on `π` from the history
+`h₀`, under the answers `H`; `[]` if the run stops before a verdict. -/
+noncomputable def extractedFrom (H : Bytes → Option Digest) (σ : Seed) (p : Prog Bool)
+    (h₀ : List Ev) (π : Proof) : List Ev :=
+  match σ.run H with
+  | some seed => match xrun H p ⟨seed, π.stream, π.openings, []⟩ h₀ with
+    | some (_, _, hist) => hist
+    | none => []
+  | none => []
+
+/-- An accepting seeded run has an extracted history from any history, at the seed. -/
+theorem xrun_of_verify_from {H : Bytes → Option Digest} {σ : Seed} {p : Prog Bool} {π : Proof}
+    (h₀ : List Ev) (hv : verify H σ p π = some true) :
+    ∃ seed s, σ.run H = some seed ∧
+      xrun H p ⟨seed, π.stream, π.openings, []⟩ h₀ =
+        some (true, s, extractedFrom H σ p h₀ π) := by
+  simp only [verify, bind, Option.bind_eq_some_iff] at hv
+  obtain ⟨seed, hseed, hv⟩ := hv
+  simp only [runProof, bind, Option.bind_eq_some_iff] at hv
+  obtain ⟨r, hr, hv⟩ := hv
+  rcases r with _ | ⟨_ | _, s⟩
+  · simp [pure] at hv
+  · simp [pure] at hv
+  · obtain ⟨hist, hh⟩ := xrun_of_run H p _ h₀ hr
+    refine ⟨seed, s, hseed, ?_⟩
+    simp only [extractedFrom, hseed, hh]
+
 end
 end LeanerVM.Protocol.Compile.Rom

@@ -195,7 +195,8 @@ theorem openOne_mono {H H' : Bytes → Option Digest} (hH : ∀ x v, H x = some 
   exact ⟨hw, hl, ld, hH _ _ hld, climb_mono hH _ _ _ _ hc⟩
 
 /-- The answers of a log without collisions are injective. -/
-theorem answersInj_look {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) : AnswersInj (look ℓ) := by
+theorem answersInj_look {X : Type} {σ : Seeds X} {ℓ : Log} (hf : ¬ Fail σ ℓ) :
+    AnswersInj (look ℓ) := by
   intro x y v hx hy
   obtain ⟨i, hi, hei, -⟩ := (look_eq_some_iff ℓ x v).mp hx
   obtain ⟨j, hj, hej, -⟩ := (look_eq_some_iff ℓ y v).mp hy
@@ -206,7 +207,7 @@ theorem answersInj_look {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) : AnswersI
 
 /-- Without failure, a climb in the log whose root's entries all come before the `j`-th is a
 climb in the first `j` entries, and so are the entries of its start. -/
-theorem climb_take {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
+theorem climb_take {X : Type} {σ : Seeds X} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
     (hr : ∀ (i : ℕ) (hi : i < ℓ.length), ℓ[i].2 = r → i < j) :
     ∀ (path : List Digest) (n : Digest) (q : ℕ),
       climb (m := Option) (look ℓ) n q path = some r →
@@ -234,7 +235,7 @@ theorem climb_take {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : 
 
 /-- Without failure, an accepted opening in the log is accepted in the first `j` entries, if
 every entry answering the root comes before the `j`-th. -/
-theorem openOne_take {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
+theorem openOne_take {X : Type} {σ : Seeds X} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
     (hr : ∀ (i : ℕ) (hi : i < ℓ.length), ℓ[i].2 = r → i < j) {ht w q : ℕ} {o : Opening}
     (h : openOne (m := Option) (look ℓ) r ht w q o = some true) :
     openOne (m := Option) (look (ℓ.take j)) r ht w q o = some true := by
@@ -247,7 +248,7 @@ theorem openOne_take {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r 
 /-- **Extraction is stable.** Without failure, if every entry answering the root comes before
 the `j`-th, the word extracted from the first `j` entries is the word extracted from the
 log. -/
-theorem extract_take_eq {σ : Seed} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
+theorem extract_take_eq {X : Type} {σ : Seeds X} {ℓ : Log} (hf : ¬ Fail σ ℓ) {j : ℕ} {r : Digest}
     (hr : ∀ (i : ℕ) (hi : i < ℓ.length), ℓ[i].2 = r → i < j) (ht w : ℕ) :
     extract (look (ℓ.take j)) r ht w = extract (look ℓ) r ht w := by
   have hpre : ∀ x v, look (ℓ.take j) x = some v → look ℓ x = some v := fun x v h ↦

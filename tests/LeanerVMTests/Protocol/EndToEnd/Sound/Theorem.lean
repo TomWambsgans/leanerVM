@@ -1,10 +1,12 @@
-import LeanerVM.Protocol.EndToEnd.Sound.Theorem
+import LeanerVM.Protocol.EndToEnd.Sound.Statements
 
 /-!
 # The end-to-end knowledge soundness's tests
 
-* **Statement locks** of the random-oracle theorem of the leanVM verifier, the knowledge statement,
-  the execution statement, the numeric bound, and the whole program's specification.
+* **Statement locks** of the knowledge statement and the execution statement for an adversary
+  that chooses the statement, the numeric bound, the facts that make the statement a family
+  (roots are prefix-free; the bytecode and the digest name the program and the public input),
+  and the whole program's specification.
 * **The trust audit**: the theorems depend on `propext`, `Classical.choice` and `Quot.sound` only.
 * **What is load-bearing.**
   - The stack's shape is "the stack's commitment is the only one": a second commitment breaks it.
@@ -28,54 +30,45 @@ noncomputable example (prog : Program) (input : PublicInput) :
       (fun b _ ↦ b = false) ((2 : ℝ≥0∞)⁻¹ ^ 128) 0 0 :=
   leanVmSpec prog input
 
-example (prog : Program) (input : PublicInput)
-    (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
-    Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
-        (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
-      Doomed (leanVmCert prog input) (leanVmSeed (bytecodeWords prog) (publicDigest input))
-        z.1.1 z.2] ≤
-      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
-  leanVm_romSound prog input A QA hA
+example (A : OracleComp HashSpec (Statement × Proof)) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
+    Pr{let z ← romExperiment A (verifierFam leanVmSeeds anyProgram)}[z.1.2 = true ∧
+      ¬ Extracted z.1.1.1.1 z.1.1.1.2 z.2 z.1.1.2] ≤
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 + failBound leanVmSeeds (QA + 13213)) :=
+  leanVm_knowledge A QA hA
 
-example (prog : Program) (input : PublicInput)
-    (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
-    Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
-        (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
-      ¬ ∃ (s : Sizes) (q : Column (leanIsaμ prog s)),
-        extractStack prog input z.2 z.1.1 = some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧
-        s.Admissible prog ∧
-          M3Holds (leanIsaInstance Blake2sFlock.blake2sFlockSpec prog s) input q] ≤
-      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
-  leanVm_knowledge prog input A QA hA
+example (A : OracleComp HashSpec (Statement × Proof)) (QA : ℕ) (hA : IsTotalQueryBound A QA) :
+    Pr{let z ← romExperiment A (verifierFam leanVmSeeds anyProgram)}[z.1.2 = true ∧
+      SentinelSafe z.1.1.1.1 ∧
+      ¬ ∃ (s : Sizes) (q : Column (leanIsaμ z.1.1.1.1 s)),
+        extractStack z.1.1.1.1 z.1.1.1.2 z.2 z.1.1.2 =
+          some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ z.1.1.1.1 s)) ∧
+        ∃ t, AssignmentRepresents (witnessOf Blake2sFlock.blake2sFlockSpec z.1.1.1.1 s q) t ∧
+          ValidExecution z.1.1.1.1 z.1.1.1.2 t] ≤
+      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 + failBound leanVmSeeds (QA + 13213)) :=
+  leanVm_execution A QA hA
 
-example (prog : Program) (input : PublicInput)
-    (hsafe : SentinelSafe prog) (A : OracleComp HashSpec Proof) (QA : ℕ)
-    (hA : IsTotalQueryBound A QA) :
-    Pr{let z ← romExperiment A (verifierComp (leanVmSeed (bytecodeWords prog) (publicDigest input))
-        (leanVmProgram (bytecodeWords prog) (publicDigest input)))}[z.1.2 = true ∧
-      ¬ ∃ (s : Sizes) (q : Column (leanIsaμ prog s)),
-        extractStack prog input z.2 z.1.1 = some (⟨s, q⟩ : Σ s : Sizes, Column (leanIsaμ prog s)) ∧
-        ∃ t, AssignmentRepresents (witnessOf Blake2sFlock.blake2sFlockSpec prog s q) t ∧
-          ValidExecution prog input t] ≤
-      ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-        failBound (leanVmSeed (bytecodeWords prog) (publicDigest input)) (QA + 13213)) :=
-  leanVm_execution prog input hsafe A QA hA
+example (QA : ℕ) (hQ : QA ≤ 2 ^ 64) :
+    ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 + failBound leanVmSeeds (QA + 13213)) ≤
+      (2 : ℝ≥0∞)⁻¹ ^ 63 :=
+  leanVm_bound_le hQ
 
-example (bytecode : List K) (publicInput : Digest) (QA : ℕ) (hQ : QA ≤ 2 ^ 64) :
-    ((QA + 13213 : ℕ) : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹ ^ 128 +
-      failBound (leanVmSeed bytecode publicInput) (QA + 13213)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 :=
-  leanVm_bound_le bytecode publicInput hQ
+/-- The verifier of a statement and a proof is the deployed verifier of that statement. -/
+example (z : Statement × Proof) :
+    verifierFam leanVmSeeds anyProgram z =
+      verifierComp (leanVmSeed (bytecodeWords z.1.1) (publicDigest z.1.2))
+        (leanVmProgram (bytecodeWords z.1.1) (publicDigest z.1.2)) z.2 :=
+  verifierFam_leanVm z
+
+example {x x' : Statement} {h : List Ev} (hx : stmtHistory x <+: h)
+    (hx' : stmtHistory x' <+: h) : x = x' :=
+  stmt_eq_of_prefix hx hx'
+
+example : Function.Injective bytecodeWords := bytecodeWords_injective
+
+example : Function.Injective publicDigest :=
+  LeanerVM.Protocol.EndToEnd.Complete.publicDigest_injective
 
 /-! ## The trust audit -/
-
-/--
-info: 'LeanerVM.Protocol.EndToEnd.Sound.leanVm_romSound' depends on axioms:
-  [propext, Classical.choice, Quot.sound]
--/
-#guard_msgs (whitespace := lax) in
-#print axioms leanVm_romSound
 
 /--
 info: 'LeanerVM.Protocol.EndToEnd.Sound.leanVm_knowledge' depends on axioms:

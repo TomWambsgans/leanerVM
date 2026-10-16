@@ -268,6 +268,7 @@ import LeanerVM.Protocol.EndToEnd.Sound.BusDepth
 import LeanerVM.Protocol.EndToEnd.Sound.Runs
 import LeanerVM.Protocol.EndToEnd.Sound.Assemble
 import LeanerVM.Protocol.EndToEnd.Sound.Theorem
+import LeanerVM.Protocol.EndToEnd.Sound.Statements
 import LeanerVM.Protocol.EndToEnd.Front.TableFidLeanIsaRows
 import LeanerVM.Protocol.EndToEnd.Front.TableFidLeanIsaBus
 import LeanerVM.Protocol.EndToEnd.Front.TableFidLeanIsa

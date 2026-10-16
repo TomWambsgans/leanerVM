@@ -14,19 +14,29 @@ example (prog : Program) (input : PublicInput) (proof : LeanVM.Proof) :
     verify prog input proof = Id.run (verifier LeanerVM.Protocol.Blake2sHash.blake2sBytes prog
       input proof) := rfl
 
-example {prog : Program} (input : PublicInput) (hsafe : SentinelSafe prog) {A : Adversary}
-    {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
-    Pr{let z ← experiment prog input A}[z.1.2 = true ∧
-      ¬ ∃ t, extract prog input z.2 z.1.1 = some t ∧ ValidExecution prog input t] ≤
+example {A : Adversary} {Q : ℕ} (hA : A.IsTotalQueryBound Q) :
+    Pr{let z ← experiment A}[z.1.2 = true ∧ SentinelSafe z.1.1.1.1 ∧
+      ¬ ∃ t, extract z.1.1.1.1 z.1.1.1.2 z.2 z.1.1.2 = some t ∧
+        ValidExecution z.1.1.1.1 z.1.1.1.2 t] ≤
       soundnessError Q :=
-  knowledgeSoundness input hsafe hA
+  knowledgeSoundness hA
 
-example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ ^ 63 := soundnessError_le hQ
+/-- The adversary chooses the statement: a fixed statement is the special case of an adversary
+that outputs it. -/
+example (prog : Program) (input : PublicInput)
+    (P : OracleComp LeanerVM.Protocol.Compile.Rom.HashSpec LeanVM.Proof) {Q : ℕ}
+    (hP : P.IsTotalQueryBound Q) :
+    Pr{let z ← experiment ((fun proof ↦ ((prog, input), proof)) <$> P)}[Breaks z] ≤
+      soundnessError Q :=
+  knowledgeSoundness ((OracleComp.isQueryBound_map_iff P _ Q _ _).mpr hP)
+
+example {Q : ℕ} (hQ : Q ≤ 2 ^ 64) : soundnessError Q ≤ (2 : ENNReal)⁻¹ ^ 63 :=
+  soundnessError_le hQ
 
 example {prog : Program} {input : PublicInput} {t : Trace prog} (hfill : HasFillBlocks prog)
     (hv : ValidExecution prog input t) (hsteps : t.steps ≤ 2 ^ 19) (hmem : t.κ ≤ 23)
     (hcode : prog.logSize ≤ 23) {ρ : ℕ} (hρ : 1 ≤ ρ ∧ ρ ≤ 4) {fuel : ℕ} (hfuel : fuel ≤ 2 ^ 64) :
-    Pr{let z ← experiment prog input (honestProver prog input t ρ fuel)}[z.1.2 = false] ≤
+    Pr{let z ← experiment (honestProver prog input t ρ fuel)}[z.1.2 = false] ≤
       completenessError fuel :=
   completeness hfill hv hsteps hmem hcode hρ hfuel
 

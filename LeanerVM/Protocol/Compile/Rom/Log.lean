@@ -108,6 +108,45 @@ def Seed.run {m : Type → Type} [Monad m] (H : Bytes → m Digest) (σ : Seed) 
   let d ← H σ.first
   σ.steps.foldlM (fun d a ↦ H (Seed.input a d)) d
 
+/-- The first input of the remaining seeding steps from `d` that the answers `H` do not answer,
+and whether it is the last step; `none` if all are answered. -/
+def goPend (H : Bytes → Option Digest) : List (Bytes × Bytes) → Digest → Option (Bytes × Bool)
+  | [], _ => none
+  | a :: as, d => match H (Seed.input a d) with
+    | none => some (Seed.input a d, as.isEmpty)
+    | some d' => goPend H as d'
+
+/-- The first input of the seeding that the answers `H` do not answer, and whether it is the
+last; `none` once the seed is answered. -/
+def pend (H : Bytes → Option Digest) (σ : Seed) : Option (Bytes × Bool) :=
+  match H σ.first with
+  | none => some (σ.first, σ.steps.isEmpty)
+  | some d => goPend H σ.steps d
+
+/-- **A family of seedings**, one per statement `x : X`: the seeding `seed x`, and the history
+`root x` of the verifier program at which its seed puts the chain. Every step with a nonempty
+prefix is among `steps`; the last step of each seeding is the previous digest followed by 32
+bytes, the only seeding input with the 64 bytes of a chain input; and the last input of a
+seeding, computed through answers without collisions, names its statement. -/
+structure Seeds (X : Type) where
+  /-- The seeding of a statement. -/
+  seed : X → Seed
+  /-- The history at which the seed puts the program. -/
+  root : X → List Ev
+  /-- The seeding steps with a nonempty prefix. -/
+  steps : List (Bytes × Bytes)
+  /-- Every step is among `steps` or has an empty prefix. -/
+  steps_mem : ∀ x, ∀ a ∈ (seed x).steps, a ∈ steps ∨ a.1 = []
+  /-- The last step is the previous digest followed by 32 bytes. -/
+  last : ∀ x, ∃ s : Bytes, s.length = 32 ∧ (seed x).steps.getLast? = some ([], s)
+  /-- The first input is not 64 bytes long. -/
+  first_len : ∀ x, (seed x).first.length ≠ 64
+  /-- No other step's input is 64 bytes long. -/
+  mid_len : ∀ x, ∀ a ∈ (seed x).steps.dropLast, ∀ d, (Seed.input a d).length ≠ 64
+  /-- The last input names the statement, for answers without collisions. -/
+  inj : ∀ H : Bytes → Option Digest, (∀ a b v, H a = some v → H b = some v → a = b) →
+    ∀ x x' t, pend H (seed x) = some (t, true) → pend H (seed x') = some (t, true) → x = x'
+
 /-! ## Failure -/
 
 /-- The root that the input `x` completes in `ℓ`: `x = cv ‖ (x₁, 1)` with `cv` the output of the
@@ -120,19 +159,19 @@ def RootOf (ℓ : Log) (x : Bytes) (r : Digest) : Prop :=
 
 /-- A fresh answer `u` at `t` appended to `ℓ` fails: it collides with an output of `ℓ`, or is a
 chunk, a root, or a seeding predecessor of `t` or of an input of `ℓ`. -/
-def BadEntry (σ : Seed) (ℓ : Log) (t : Bytes) (u : Digest) : Prop :=
+def BadEntry {X : Type} (σ : Seeds X) (ℓ : Log) (t : Bytes) (u : Digest) : Prop :=
   (∃ e ∈ ℓ, e.2 = u) ∨
     ∃ x ∈ t :: ℓ.map Prod.fst, chunk0 x = digestBytes u ∨ chunk1 x = digestBytes u ∨
       RootOf ℓ x u ∨ ∃ a ∈ σ.steps, x = Seed.input a u
 
 /-- Some entry of the log failed with respect to the entries before it. -/
-def Fail (σ : Seed) (ℓ : Log) : Prop :=
+def Fail {X : Type} (σ : Seeds X) (ℓ : Log) : Prop :=
   ∃ (i : ℕ) (hi : i < ℓ.length), BadEntry σ (ℓ.take i) ℓ[i].1 ℓ[i].2
 
-theorem not_fail_nil (σ : Seed) : ¬ Fail σ [] := fun ⟨_, hi, _⟩ ↦ by simp at hi
+theorem not_fail_nil {X : Type} (σ : Seeds X) : ¬ Fail σ [] := fun ⟨_, hi, _⟩ ↦ by simp at hi
 
 /-- The log with one more entry fails exactly if the log fails or the entry does. -/
-theorem fail_append (σ : Seed) (ℓ : Log) (t : Bytes) (u : Digest) :
+theorem fail_append {X : Type} (σ : Seeds X) (ℓ : Log) (t : Bytes) (u : Digest) :
     Fail σ (ℓ ++ [(t, u)]) ↔ Fail σ ℓ ∨ BadEntry σ ℓ t u := by
   constructor
   · rintro ⟨i, hi, h⟩
@@ -149,7 +188,8 @@ theorem fail_append (σ : Seed) (ℓ : Log) (t : Bytes) (u : Digest) :
     · exact ⟨ℓ.length, by simp, by simpa using h⟩
 
 /-- A prefix of a log without failure has no failure. -/
-theorem not_fail_take {σ : Seed} {ℓ : Log} (h : ¬ Fail σ ℓ) (n : ℕ) : ¬ Fail σ (ℓ.take n) := by
+theorem not_fail_take {X : Type} {σ : Seeds X} {ℓ : Log} (h : ¬ Fail σ ℓ) (n : ℕ) :
+    ¬ Fail σ (ℓ.take n) := by
   rintro ⟨i, hi, hb⟩
   simp only [List.length_take] at hi
   refine h ⟨i, by omega, ?_⟩
@@ -235,7 +275,7 @@ theorem rootOf_unique {ℓ : Log} {x : Bytes} {r r' : Digest} (h : RootOf ℓ x 
 
 /-- **The count of failing answers**: at most `(4 + k) · (|ℓ| + 1)` digests fail at a fresh
 input, `k` the number of seeding steps. -/
-theorem sum_badEntry_le (σ : Seed) (ℓ : Log) (t : Bytes) :
+theorem sum_badEntry_le {X : Type} (σ : Seeds X) (ℓ : Log) (t : Bytes) :
     ∑ u, ind (BadEntry σ ℓ t u) ≤ ((4 + σ.steps.length) * (ℓ.length + 1) : ℕ) := by
   set L := t :: ℓ.map Prod.fst
   let g : Bytes → Digest → ℝ≥0∞ := fun x u ↦ ind (chunk0 x = digestBytes u) +
@@ -349,7 +389,7 @@ theorem look_ne_none_of_mem {ℓ : Log} {e : Bytes × Digest} (he : e ∈ ℓ) :
 
 section Order
 
-variable {σ : Seed} {ℓ : Log}
+variable {X : Type} {σ : Seeds X} {ℓ : Log}
 
 /-- Without failure, outputs are distinct. -/
 theorem output_ne (h : ¬ Fail σ ℓ) {i j : ℕ} (hi : i < ℓ.length) (hj : j < ℓ.length)

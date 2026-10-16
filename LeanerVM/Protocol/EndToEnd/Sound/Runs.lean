@@ -40,20 +40,29 @@ attribute [local irreducible] instFintypeDigest
 
 /-! ## The random-oracle theorem for an event that implies doom -/
 
+/-- Some boundary prefix of the extracted history of the seeded verifier's run of `P` on `π`,
+under the answers of the cache `c`, is doomed. -/
+def DoomedRun {P : Prog Bool} (C : Cert P) (σ : Seed) (π : Proof) (c : HashSpec.QueryCache) :
+    Prop :=
+  ∃ h₀, h₀ <+: extractedHistory (fun x ↦ c x) σ P π ∧ Boundary h₀ ∧ C.D h₀
+
 /-- **The random-oracle theorem for any event that implies doom on accepted proofs.** If, on
-every proof the seeded verifier accepts with the hashes answered by the cache, the event `bad`
-implies that a boundary prefix of the extracted history is doomed, then the probability that the
-verifier accepts the adversary's proof while `bad` holds is at most romSound's bound. -/
-theorem romSound_of_imp (P : Prog Bool) (C : Cert P) (σ : Seed) (εmax : ℝ≥0∞)
+every statement and proof the statement's seeded verifier accepts with the hashes answered by the
+cache, the event `bad` implies that a boundary prefix of the extracted history is doomed, then
+the probability that the verifier accepts the adversary's statement and proof while `bad` holds
+is at most romSound's bound. -/
+theorem romSound_of_imp {X : Type} (P : Prog Bool) (C : Cert P) (σ : Seeds X)
+    (hroot : ∀ x, RootOk P (σ.root x)) (εmax : ℝ≥0∞)
     (hε : ∀ h, (2 : ℝ≥0∞)⁻¹ ^ min (grindBits h) 64 * C.ε h ≤ εmax)
-    (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA)
-    (QV : ℕ) (hV : ∀ π, IsTotalQueryBound (verifierComp σ P π) QV)
-    (bad : Proof → HashSpec.QueryCache → Prop)
-    (hbad : ∀ π c, Rom.verify (fun x ↦ c x) σ P π = some true → bad π c → Doomed C σ π c) :
-    Pr{let z ← romExperiment A (verifierComp σ P)}[z.1.2 = true ∧ bad z.1.1 z.2] ≤
+    (A : OracleComp HashSpec (X × Proof)) (QA : ℕ) (hA : IsTotalQueryBound A QA)
+    (QV : ℕ) (hV : ∀ z, IsTotalQueryBound (verifierFam σ P z) QV)
+    (bad : X × Proof → HashSpec.QueryCache → Prop)
+    (hbad : ∀ z c, Rom.verify (fun x ↦ c x) (σ.seed z.1) (nodeAt P (σ.root z.1)) z.2 =
+      some true → bad z c → Doomed C σ z c) :
+    Pr{let z ← romExperiment A (verifierFam σ P)}[z.1.2 = true ∧ bad z.1.1 z.2] ≤
       (QA + QV : ℕ) * (εmax + failBound σ (QA + QV)) := by
   refine prEvent_romExperiment_le_of_logFreshStepBelow (QA + QV) ?_ (pot_nil C.D σ P) A
-    (verifierComp σ P) QA QV hA hV le_rfl bad ?_
+    (verifierFam σ P) QA QV hA hV le_rfl bad ?_
   · intro ℓ t hℓ ht
     refine (step_ineq C hε ℓ t ht).trans (add_le_add le_rfl (add_le_add le_rfl ?_))
     rw [failBound, card_digest, Nat.cast_pow, Nat.cast_ofNat]
@@ -62,9 +71,8 @@ theorem romSound_of_imp (P : Prog Bool) (C : Cert P) (σ : Seed) (εmax : ℝ≥
   · intro z hz hacc hb
     by_cases hf : Fail σ z.2
     · simp only [pot, hf, ↓reduceIte, le_refl]
-    · have hv := verify_of_mem_support_logExperiment A hz hacc
-      obtain ⟨h₀, hh₀, hbd, hD⟩ := hbad z.1.1 (cacheOf z.2) hv hb
-      exact final_ineq C hf hv ⟨h₀, hh₀, hbd, hD⟩
+    · have hv := verifyFam_of_mem_support_logExperiment A hz hacc
+      exact final_ineq C hf (hroot _) hv (hbad z.1.1 (cacheOf z.2) hv hb)
 
 /-! ## The extracted history of an accepted run -/
 

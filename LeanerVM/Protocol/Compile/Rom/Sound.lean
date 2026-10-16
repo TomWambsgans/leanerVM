@@ -75,32 +75,35 @@ open scoped ENNReal
 /- The enumeration of `Digest` must never be unfolded by unification. -/
 attribute [local irreducible] instFintypeDigest
 
-/-- The failure term: `(4 + k) · N / 2^256`, `k` the number of seeding steps, bounds the
+/-- The failure term: `(4 + k) · N / 2^256`, `k` the number of common seeding steps, bounds the
 probability that one fresh answer collides with or predicts one of the digests a log of fewer
 than `N` entries refers to. -/
-noncomputable def failBound (σ : Seed) (N : ℕ) : ℝ≥0∞ :=
+noncomputable def failBound {X : Type} (σ : Seeds X) (N : ℕ) : ℝ≥0∞ :=
   ((4 + σ.steps.length) * N : ℕ) / 2 ^ 256
 
-/-- Some boundary prefix of the extracted history of the verifier's run on `π`, under the
-answers of the cache `c`, is doomed. -/
-def Doomed {P : Prog Bool} (C : Cert P) (σ : Seed) (π : Proof) (c : HashSpec.QueryCache) :
-    Prop :=
-  ∃ h₀, h₀ <+: extractedHistory (fun x ↦ c x) σ P π ∧ Boundary h₀ ∧ C.D h₀
+/-- Some boundary prefix, past the statement's root, of the extracted history of the verifier's
+run on the statement and proof `z`, under the answers of the cache `c`, is doomed. -/
+def Doomed {X : Type} {P : Prog Bool} (C : Cert P) (σ : Seeds X) (z : X × Proof)
+    (c : HashSpec.QueryCache) : Prop :=
+  ∃ h₀, h₀ <+: extractedFrom (fun x ↦ c x) (σ.seed z.1) (nodeAt P (σ.root z.1)) (σ.root z.1) z.2 ∧
+    (σ.root z.1).length ≤ h₀.length ∧ Boundary h₀ ∧ C.D h₀
 
 /-- **The random-oracle theorem of the compiled verifier.** For a verifier program `P` with a
-doom certificate `C`, the seeding `σ`, an adversary `A` making at most `QA` queries and a
-compiled verifier making at most `QV` queries on every proof, the probability that the verifier
-accepts the adversary's proof while some boundary prefix of its extracted history is doomed is
-at most `(QA + QV) · (εmax + failBound σ (QA + QV))`, where `εmax` bounds every escape bound of
-the certificate discounted by the proof of work before it. -/
-theorem romSound (P : Prog Bool) (C : Cert P) (σ : Seed) (εmax : ℝ≥0∞)
+doom certificate `C`, a family of seedings `σ` whose roots are roots of `P`, an adversary `A`
+making at most `QA` queries that outputs a statement and a proof, and a compiled verifier making
+at most `QV` queries on every statement and proof, the probability that the verifier accepts
+while some boundary prefix of its extracted history is doomed is at most
+`(QA + QV) · (εmax + failBound σ (QA + QV))`, where `εmax` bounds every escape bound of the
+certificate discounted by the proof of work before it. -/
+theorem romSound {X : Type} (P : Prog Bool) (C : Cert P) (σ : Seeds X)
+    (hroot : ∀ x, RootOk P (σ.root x)) (εmax : ℝ≥0∞)
     (hε : ∀ h, (2 : ℝ≥0∞)⁻¹ ^ min (grindBits h) 64 * C.ε h ≤ εmax)
-    (A : OracleComp HashSpec Proof) (QA : ℕ) (hA : IsTotalQueryBound A QA)
-    (QV : ℕ) (hV : ∀ π, IsTotalQueryBound (verifierComp σ P π) QV) :
-    Pr{let z ← romExperiment A (verifierComp σ P)}[z.1.2 = true ∧ Doomed C σ z.1.1 z.2] ≤
+    (A : OracleComp HashSpec (X × Proof)) (QA : ℕ) (hA : IsTotalQueryBound A QA)
+    (QV : ℕ) (hV : ∀ z, IsTotalQueryBound (verifierFam σ P z) QV) :
+    Pr{let z ← romExperiment A (verifierFam σ P)}[z.1.2 = true ∧ Doomed C σ z.1.1 z.2] ≤
       (QA + QV : ℕ) * (εmax + failBound σ (QA + QV)) := by
   refine prEvent_romExperiment_le_of_logFreshStepBelow (QA + QV) ?_ (pot_nil C.D σ P) A
-    (verifierComp σ P) QA QV hA hV le_rfl (Doomed C σ) ?_
+    (verifierFam σ P) QA QV hA hV le_rfl (Doomed C σ) ?_
   · intro ℓ t hℓ ht
     refine (step_ineq C hε ℓ t ht).trans (add_le_add le_rfl (add_le_add le_rfl ?_))
     rw [failBound, card_digest, Nat.cast_pow, Nat.cast_ofNat]
@@ -109,9 +112,7 @@ theorem romSound (P : Prog Bool) (C : Cert P) (σ : Seed) (εmax : ℝ≥0∞)
   · intro z hz hacc hbad
     by_cases hf : Fail σ z.2
     · simp only [pot, hf, ↓reduceIte, le_refl]
-    · refine final_ineq C hf (verify_of_mem_support_logExperiment A hz hacc) ?_
-      obtain ⟨h₀, hh₀, hb, hD⟩ := hbad
-      exact ⟨h₀, hh₀, hb, hD⟩
+    · exact final_ineq C hf (hroot _) (verifyFam_of_mem_support_logExperiment A hz hacc) hbad
 
 end
 end LeanerVM.Protocol.Compile.Rom

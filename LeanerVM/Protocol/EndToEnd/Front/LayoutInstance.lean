@@ -55,6 +55,16 @@ theorem length_bytecodeWords (prog : Program) :
     (bytecodeWords prog).length = 2 ^ (prog.logSize + 4) := by
   simp [bytecodeWords]
 
+/-- **The bytecode names the program.** -/
+theorem bytecodeWords_injective : Function.Injective bytecodeWords := by
+  intro prog prog' h
+  have hl := congrArg List.length h
+  rw [length_bytecodeWords, length_bytecodeWords] at hl
+  have hs : prog.logSize = prog'.logSize := by
+    have := Nat.pow_right_injective (le_refl 2) hl
+    omega
+  exact bytecodeColumn_injective hs h
+
 /-- `log2_strict` of a power of two. -/
 theorem log2Strict_two_pow (n : ℕ) : log2Strict (2 ^ n) = some n := by
   have hpos : 0 < 2 ^ n := Nat.two_pow_pos n

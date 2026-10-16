@@ -106,7 +106,7 @@ theorem look_chain_of_fresh {ℓ : Log} {u : Digest} (hu : Fresh ℓ u) (blk : B
   intro hm
   exact hu _ hm (chunk0_append u blk)
 
-theorem fresh_of_not_bad {σ : Seed} {ℓ : Log} {t : Bytes} {u : Digest}
+theorem fresh_of_not_bad {X : Type} {σ : Seeds X} {ℓ : Log} {t : Bytes} {u : Digest}
     (h : ¬ BadEntry σ ℓ t u) : Fresh (ℓ ++ [(t, u)]) u := by
   intro x hx hc
   refine h (Or.inr ⟨x, ?_, Or.inl hc⟩)
@@ -332,7 +332,7 @@ noncomputable def term (ℓ : Log) : Shape × Digest → ℝ≥0∞
   | (.pow h p b cv n, v) =>
     ind (D h) * (ind (powOk b n v = true) * gvOpt D ℓ (look ℓ (digestBytes cv ++ blockOf n 4)) h p)
 
-variable (σ : Seed) (P : Prog Bool)
+variable {X : Type} (σ : Seeds X) (P : Prog Bool)
 
 /-- The sum of the terms of the records of a log. -/
 noncomputable def termSum (ℓ : Log) : ℝ≥0∞ := ((decode σ P ℓ).kinds.map (term D ℓ)).sum

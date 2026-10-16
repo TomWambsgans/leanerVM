@@ -35,7 +35,7 @@ open LeanerVM.Parameters LeanerVM.Semantics LeanerVM.Protocol.Blake2sHash Leaner
 
 @[expose] public section
 
-variable {σ : Seed} {P : Prog Bool}
+variable {X : Type} {σ : Seeds X} {P : Prog Bool}
 
 /-! ## Recording decodings -/
 
@@ -59,7 +59,7 @@ theorem setInfo_self (f : Digest → Option Info) (u : Digest) {i : Info} :
   simp [setInfo]
 
 /-- A decoded digest is the output of an entry. -/
-theorem info_output (σ : Seed) (P : Prog Bool) (ℓ' : Log) {c : Digest} {i : Info}
+theorem info_output (σ : Seeds X) (P : Prog Bool) (ℓ' : Log) {c : Digest} {i : Info}
     (h : (decode σ P ℓ').info c = some i) : ∃ (m : ℕ) (hm : m < ℓ'.length), ℓ'[m].2 = c := by
   induction ℓ' using List.reverseRecOn generalizing i with
   | nil => simp [Dec.init] at h
@@ -71,14 +71,14 @@ theorem info_output (σ : Seed) (P : Prog Bool) (ℓ' : Log) {c : Digest} {i : I
     · obtain ⟨m, hm, hmc⟩ := ih h
       exact ⟨m, by simp; omega, by rw [List.getElem_append_left hm]; exact hmc⟩
 
-theorem decode_take_succ (σ : Seed) (P : Prog Bool) (ℓ : Log) {j : ℕ} (hj : j < ℓ.length) :
+theorem decode_take_succ (σ : Seeds X) (P : Prog Bool) (ℓ : Log) {j : ℕ} (hj : j < ℓ.length) :
     decode σ P (ℓ.take (j + 1)) =
       decStep σ P (ℓ.take j) (decode σ P (ℓ.take j)) ℓ[j].1 ℓ[j].2 := by
   rw [← List.take_append_getElem hj]
   exact decode_append σ P _ ℓ[j].1 ℓ[j].2
 
 /-- The records of a log extend the records of every prefix. -/
-theorem kinds_prefix (σ : Seed) (P : Prog Bool) (l r : Log) :
+theorem kinds_prefix (σ : Seeds X) (P : Prog Bool) (l r : Log) :
     (decode σ P l).kinds <+: (decode σ P (l ++ r)).kinds := by
   induction r using List.reverseRecOn with
   | nil => simp
@@ -87,7 +87,7 @@ theorem kinds_prefix (σ : Seed) (P : Prog Bool) (l r : Log) :
     rw [← List.append_assoc, kinds_decode_append]
     exact ih.trans (List.prefix_append _ _)
 
-theorem kinds_mem_of_take (σ : Seed) (P : Prog Bool) (ℓ : Log) (j : ℕ)
+theorem kinds_mem_of_take (σ : Seeds X) (P : Prog Bool) (ℓ : Log) (j : ℕ)
     {κ : Shape × Digest} (h : κ ∈ (decode σ P (ℓ.take j)).kinds) : κ ∈ (decode σ P ℓ).kinds := by
   have := kinds_prefix σ P (ℓ.take j) (ℓ.drop j)
   rw [List.take_append_drop] at this
@@ -97,7 +97,7 @@ theorem kinds_mem_of_take (σ : Seed) (P : Prog Bool) (ℓ : Log) (j : ℕ)
 
 /-- The digest `c` is the output of an entry of `ℓ`, and every prefix past that entry decodes it
 as `inf`. -/
-def Known (σ : Seed) (P : Prog Bool) (ℓ : Log) (c : Digest) (inf : Info) : Prop :=
+def Known (σ : Seeds X) (P : Prog Bool) (ℓ : Log) (c : Digest) (inf : Info) : Prop :=
   ∃ (m : ℕ) (hm : m < ℓ.length), ℓ[m].2 = c ∧
     ∀ j, m < j → j ≤ ℓ.length → (decode σ P (ℓ.take j)).info c = some inf
 
@@ -192,28 +192,93 @@ theorem look_mono_append (ℓ : Log) (t : Bytes) (u : Digest) :
     ∀ x v, look ℓ x = some v → look (ℓ ++ [(t, u)]) x = some v :=
   fun _ _ h ↦ look_append_of_some h _
 
-/-- Once a digest is decoded, the seeding is answered. -/
-theorem pend_none_of_info (σ : Seed) (P : Prog Bool) (ℓ' : Log)
-    (h : ∃ c i, (decode σ P ℓ').info c = some i) : pend (look ℓ') σ = none := by
-  induction ℓ' using List.reverseRecOn with
-  | nil => obtain ⟨c, i, h⟩ := h; simp [Dec.init] at h
+/-- The last pending input of a seeding: the last step at the digest of the input before it,
+which is the first input or the input of another step. -/
+theorem goPend_true {H : Bytes → Option Digest} {t : Bytes} :
+    ∀ (as : List (Bytes × Bytes)) (d : Digest), goPend H as d = some (t, true) →
+      ∃ (hne : as ≠ []), (t = Seed.input (as.getLast hne) d ∧ as.dropLast = []) ∨
+        ∃ a ∈ as.dropLast, ∃ d' d'', H (Seed.input a d') = some d'' ∧
+          t = Seed.input (as.getLast hne) d''
+  | [], _, h => by simp [goPend] at h
+  | a :: as, d, h => by
+    refine ⟨List.cons_ne_nil _ _, ?_⟩
+    simp only [goPend] at h
+    split at h
+    · simp only [Option.some.injEq, Prod.mk.injEq, List.isEmpty_iff] at h
+      obtain ⟨rfl, rfl⟩ := h
+      exact Or.inl ⟨rfl, rfl⟩
+    · rename_i d' hd
+      obtain ⟨hne, h1 | ⟨a', ha', e, e', he, ht⟩⟩ := goPend_true as d' h
+      · obtain ⟨rfl, hdrop⟩ := h1
+        refine Or.inr ⟨a, ?_, d, d', hd, by rw [List.getLast_cons hne]⟩
+        rw [List.dropLast_cons_of_ne_nil hne]; exact List.mem_cons_self
+      · refine Or.inr ⟨a', ?_, e, e', he, by rw [List.getLast_cons hne]; exact ht⟩
+        rw [List.dropLast_cons_of_ne_nil hne]; exact List.mem_cons_of_mem _ ha'
+
+/-- The last pending input of a seeding is a step's input at a digest the answers give to an
+earlier input of the seeding, the first or another step's. -/
+theorem pend_true {H : Bytes → Option Digest} {σ₀ : Seed} {t : Bytes}
+    (h : pend H σ₀ = some (t, true)) (hne : σ₀.steps ≠ []) :
+    ∃ prev d, H prev = some d ∧ t = Seed.input (σ₀.steps.getLast hne) d ∧
+      (prev = σ₀.first ∨ ∃ a ∈ σ₀.steps.dropLast, ∃ d', prev = Seed.input a d') := by
+  simp only [pend] at h
+  split at h
+  · simp only [Option.some.injEq, Prod.mk.injEq, List.isEmpty_iff] at h
+    exact absurd h.2 hne
+  · rename_i d hd
+    obtain ⟨hne', h1 | ⟨a, ha, d', d'', he, ht⟩⟩ := goPend_true _ d h
+    · exact ⟨σ₀.first, d, hd, h1.1, Or.inl rfl⟩
+    · exact ⟨Seed.input a d', d'', he, ht, Or.inr ⟨a, ha, d', rfl⟩⟩
+
+/-- The last input of a seeding of the family has 64 bytes. -/
+theorem pend_length {H : Bytes → Option Digest} {x : X} {t : Bytes}
+    (h : pend H (σ.seed x) = some (t, true)) : t.length = 64 := by
+  obtain ⟨s, hs, hlast⟩ := σ.last x
+  have hne : (σ.seed x).steps ≠ [] := by intro he; rw [he] at hlast; simp at hlast
+  obtain ⟨prev, d, -, rfl, -⟩ := pend_true h hne
+  rw [List.getLast?_eq_some_getLast hne, Option.some.injEq] at hlast
+  rw [hlast]
+  simp [Seed.input, digestBytes_length, hs]
+
+/-- A decoded digest is the output of an entry whose input has the 64 bytes of a chain input. -/
+theorem info_input_length (σ : Seeds X) (P : Prog Bool) (ℓ' : Log) {c : Digest} {i : Info}
+    (h : (decode σ P ℓ').info c = some i) :
+    ∃ (m : ℕ) (hm : m < ℓ'.length), ℓ'[m].2 = c ∧ ℓ'[m].1.length = 64 := by
+  induction ℓ' using List.reverseRecOn generalizing i with
+  | nil => simp [Dec.init] at h
   | append_singleton ℓ e ih =>
     obtain ⟨t, u⟩ := e
-    obtain ⟨c, i, h⟩ := h
     rw [info_decode_append] at h
-    rcases setInfo_eq_some h with ⟨-, hs⟩ | h
-    · unfold step at hs
+    rcases setInfo_eq_some h with ⟨rfl, hs⟩ | h
+    · refine ⟨ℓ.length, by simp, by simp, ?_⟩
+      simp only [List.getElem_append_right (Nat.le_refl _), Nat.sub_self,
+        List.getElem_cons_zero]
+      unfold step at hs
       split at hs
-      · rename_i hp
-        exact pend_complete (look_mono_append ℓ t u)
-          (look_append_single_self (pend_unanswered hp) u) hp
+      · rename_i x hx
+        unfold rootAt at hx
+        split at hx
+        · rename_i hex
+          exact pend_length (Option.some.inj hx ▸ hex.choose_spec)
+        · cases hx
       · split at hs
-        · rename_i cv x tag _
-          rcases ho : (decode σ P ℓ).info cv with _ | j
-          · rw [ho] at hs; simp [stepAt_info_none] at hs
-          · exact pend_none_mono (look_mono_append ℓ t u) (ih ⟨cv, j, ho⟩)
-        · simp at hs
-    · exact pend_none_mono (look_mono_append ℓ t u) (ih ⟨c, i, h⟩)
+        · rename_i hp
+          obtain ⟨-, rfl⟩ := parse_eq_some hp
+          simp [digestBytes_length, blockOf_length]
+        · cases hs
+    · obtain ⟨m, hm, hmc, hl⟩ := ih h
+      exact ⟨m, by simp; omega, by rw [List.getElem_append_left hm]; exact hmc,
+        by rw [List.getElem_append_left hm]; exact hl⟩
+
+/-- Without failure, the log's answers are injective. -/
+theorem look_inj {ℓ : Log} (hf : ¬ Fail σ ℓ) {a b : Bytes} {v : Digest} (ha : look ℓ a = some v)
+    (hb : look ℓ b = some v) : a = b := by
+  obtain ⟨i, hi, hei, -⟩ := (look_eq_some_iff ℓ a v).mp ha
+  obtain ⟨j, hj, hej, -⟩ := (look_eq_some_iff ℓ b v).mp hb
+  have := index_eq_of_output hf hi hj (by rw [hei, hej])
+  subst this
+  rw [hei] at hej
+  exact (Prod.mk.inj hej).1
 
 /-! ## Reading a chain step -/
 
@@ -227,12 +292,38 @@ theorem entry_read {ℓ : Log} (hf : ¬ Fail σ ℓ) {cv : Digest} {inf : Info}
   obtain ⟨m, hm, hmc, hall⟩ := hk
   have hmj : m < j := lt_of_chunk hf hm hj (Or.inl (by rw [ht, hmc]; exact chunk0_append _ _))
   have hinfo : (decode σ P (ℓ.take j)).info cv = some inf := hall j hmj hj.le
-  have hpend : pend (look (ℓ.take j)) σ = none := pend_none_of_info σ P _ ⟨cv, inf, hinfo⟩
+  have hroot : rootAt σ (ℓ.take j) ℓ[j].1 = none := by
+    unfold rootAt
+    split
+    · rename_i hex
+      exfalso
+      obtain ⟨x', hx'⟩ := hex
+      obtain ⟨s, -, hlast⟩ := σ.last x'
+      have hne : (σ.seed x').steps ≠ [] := by intro he; rw [he] at hlast; simp at hlast
+      obtain ⟨prev, d, hprev, htd, hpl⟩ := pend_true hx' hne
+      rw [List.getLast?_eq_some_getLast hne, Option.some.injEq] at hlast
+      rw [hlast] at htd
+      have hd : d = cv := by
+        have := congrArg chunk0 (htd.symm.trans ht)
+        simp only [Seed.input, List.nil_append, chunk0_append] at this
+        exact digestBytes_injective this
+      subst hd
+      obtain ⟨m', hm', hem', -⟩ := (look_eq_some_iff _ prev d).mp hprev
+      obtain ⟨k, hk, hkc, hkl⟩ := info_input_length σ P _ hinfo
+      have hfj := not_fail_take hf j
+      have hkm : k = m' := index_eq_of_output hfj hk hm' (by rw [hkc, hem'])
+      subst hkm
+      rw [hem'] at hkl
+      simp only at hkl
+      rcases hpl with rfl | ⟨a, ha, d', rfl⟩
+      · exact σ.first_len x' hkl
+      · exact σ.mid_len x' a ha d' hkl
+    · rfl
   have hstep : step σ P (ℓ.take j) (decode σ P (ℓ.take j)) ℓ[j].1 =
       stepAt (ℓ.take j) cv x tag (some inf) := by
     unfold step
-    rw [hpend, ht, parse_chain cv x htag]
-    simp only [reduceCtorEq, ↓reduceIte, hinfo]
+    rw [hroot, ht, parse_chain cv x htag]
+    simp only [hinfo]
   have hdec := decode_take_succ σ P ℓ hj
   refine ⟨?_, fun inf' hi ↦ ?_⟩
   · refine kinds_mem_of_take σ P ℓ (j + 1) ?_
@@ -250,7 +341,7 @@ theorem entry_read {ℓ : Log} (hf : ¬ Fail σ ℓ) {cv : Digest} {inf : Info}
 /-- The seeding's remaining steps, answered through the log, end at an entry that the entries
 before it leave as the last pending step. -/
 theorem goPend_entry {ℓ : Log} (hf : ¬ Fail σ ℓ) {s₀ : Digest} :
-    ∀ (as : List (Bytes × Bytes)), (∀ a ∈ as, a ∈ σ.steps) → as ≠ [] →
+    ∀ (as : List (Bytes × Bytes)), (∀ a ∈ as, a ∈ σ.steps ∨ a.1 = []) → as ≠ [] →
       ∀ (d : Digest) (m : ℕ) (hm : m < ℓ.length), ℓ[m].2 = d →
         as.foldlM (fun d a ↦ look ℓ (Seed.input a d)) d = some s₀ →
           ∃ (j : ℕ) (hj : j < ℓ.length), m < j ∧ ℓ[j].2 = s₀ ∧
@@ -260,8 +351,15 @@ theorem goPend_entry {ℓ : Log} (hf : ¬ Fail σ ℓ) {s₀ : Digest} :
     simp only [List.foldlM_cons, bind, Option.bind_eq_some_iff] at hfold
     obtain ⟨d', hd', hfold⟩ := hfold
     obtain ⟨m', hm', hem', hn'⟩ := (look_eq_some_iff ℓ _ d').mp hd'
-    have hmm' : m < m' := lt_of_seedInput hf hm hm' (has a List.mem_cons_self)
-      (by rw [hem', hmd])
+    have hmm' : m < m' := by
+      rcases has a List.mem_cons_self with ha | ha
+      · exact lt_of_seedInput hf hm hm' ha (by rw [hem', hmd])
+      · refine lt_of_chunk hf hm hm' (Or.inl ?_)
+        rw [hem', hmd]
+        obtain ⟨pre, suf⟩ := a
+        simp only at ha
+        subst ha
+        simp only [Seed.input, List.nil_append, chunk0_append]
     rcases as with _ | ⟨a₁, as₁⟩
     · simp only [List.foldlM_nil, pure, Option.some.injEq] at hfold
       refine ⟨m', hm', hmm', by rw [hem', hfold], ?_⟩
@@ -274,38 +372,49 @@ theorem goPend_entry {ℓ : Log} (hf : ¬ Fail σ ℓ) {s₀ : Digest} :
       rw [look_take_of_first hm' hem' hn' hm'j]
       exact hg
 
-/-- **The seed's entry.** If the seeding computes `s₀` through the log's answers, some entry
-outputs `s₀` while the entries before it leave its input as the last pending input. -/
-theorem seed_entry {ℓ : Log} (hf : ¬ Fail σ ℓ) {s₀ : Digest} (hs : σ.run (look ℓ) = some s₀) :
+/-- **The seed's entry.** If the seeding of `x` computes `s₀` through the log's answers, some
+entry outputs `s₀` while the entries before it leave its input as the last pending input. -/
+theorem seed_entry {ℓ : Log} (hf : ¬ Fail σ ℓ) {x : X} {s₀ : Digest}
+    (hs : (σ.seed x).run (look ℓ) = some s₀) :
     ∃ (j : ℕ) (hj : j < ℓ.length), ℓ[j].2 = s₀ ∧
-      pend (look (ℓ.take j)) σ = some (ℓ[j].1, true) := by
+      pend (look (ℓ.take j)) (σ.seed x) = some (ℓ[j].1, true) := by
   simp only [Seed.run, bind, Option.bind_eq_some_iff] at hs
   obtain ⟨d, hd, hfold⟩ := hs
   obtain ⟨m, hm, hem, hn⟩ := (look_eq_some_iff ℓ _ d).mp hd
-  rcases hsteps : σ.steps with _ | ⟨a, as⟩
+  rcases hsteps : (σ.seed x).steps with _ | ⟨a, as⟩
   · rw [hsteps] at hfold
     simp only [List.foldlM_nil, pure, Option.some.injEq] at hfold
     refine ⟨m, hm, by rw [hem, hfold], ?_⟩
     simp only [pend, hem, hn, hsteps, List.isEmpty_nil]
   · rw [hsteps] at hfold
     obtain ⟨j, hj, hmj, hjs, hg⟩ := goPend_entry hf (a :: as)
-      (fun b hb ↦ by rw [hsteps]; exact hb) (List.cons_ne_nil _ _) d m hm (by rw [hem]) hfold
+      (fun b hb ↦ σ.steps_mem x b (by rw [hsteps]; exact hb)) (List.cons_ne_nil _ _) d m hm
+      (by rw [hem]) hfold
     refine ⟨j, hj, hjs, ?_⟩
     simp only [pend]
     rw [look_take_of_first hm hem hn hmj, hsteps]
     exact hg
 
-/-- **The seed is decoded.** If the seeding computes `s₀` through the log's answers, the
-record `bnd [] P` of `s₀` is among the log's records and `s₀`'s decoding is known. -/
-theorem seed_known {ℓ : Log} (hf : ¬ Fail σ ℓ) {s₀ : Digest} (hs : σ.run (look ℓ) = some s₀) :
-    (Shape.bnd [] P, s₀) ∈ (decode σ P ℓ).kinds ∧
-      ∀ inf, stInfo [] P = some inf → Known σ P ℓ s₀ inf := by
+/-- **The seed is decoded.** If the seeding of `x` computes `s₀` through the log's answers and
+its root is a root of the program, the record `bnd (root x)` of `s₀` is among the log's records
+and `s₀`'s decoding is known. -/
+theorem seed_known {ℓ : Log} (hf : ¬ Fail σ ℓ) {x : X} {s₀ : Digest}
+    (hs : (σ.seed x).run (look ℓ) = some s₀) (hr : RootOk P (σ.root x)) :
+    (Shape.bnd (σ.root x) (nodeAt P (σ.root x)), s₀) ∈ (decode σ P ℓ).kinds ∧
+      ∀ inf, stInfo (σ.root x) (nodeAt P (σ.root x)) = some inf → Known σ P ℓ s₀ inf := by
   obtain ⟨j, hj, hjs, hp⟩ := seed_entry hf hs
+  have hroot : rootAt σ (ℓ.take j) ℓ[j].1 = some x := by
+    unfold rootAt
+    have hex : ∃ x', pend (look (ℓ.take j)) (σ.seed x') = some (ℓ[j].1, true) := ⟨x, hp⟩
+    have hfj := not_fail_take hf j
+    have hx := σ.inj _ (fun a b v ha hb ↦ look_inj hfj ha hb) _ _ _ hex.choose_spec hp
+    simp only [hex, ↓reduceDIte, hx]
   have hstep : step σ P (ℓ.take j) (decode σ P (ℓ.take j)) ℓ[j].1 =
-      (.bnd [] P, fun _ ↦ stInfo [] P) := by
+      (.bnd (σ.root x) (nodeAt P (σ.root x)),
+        fun _ ↦ stInfo (σ.root x) (nodeAt P (σ.root x))) := by
     unfold step
-    rw [hp]
-    simp
+    rw [hroot]
+    simp only [rootStep, hr, ↓reduceIte]
   have hdec := decode_take_succ σ P ℓ hj
   subst hjs
   refine ⟨?_, fun inf hi ↦ ?_⟩

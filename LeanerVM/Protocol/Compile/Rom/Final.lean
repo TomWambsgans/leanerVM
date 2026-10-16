@@ -49,7 +49,7 @@ open scoped ENNReal
 /- The enumeration of `Digest` must never be unfolded by unification. -/
 attribute [local irreducible] instFintypeDigest
 
-variable {σ : Seed} {P : Prog Bool}
+variable {X : Type} {σ : Seeds X} {P : Prog Bool}
 
 /-! ## Histories without boundaries -/
 
@@ -446,22 +446,25 @@ theorem from_boundary (hf : ¬ Fail σ ℓ) {s_f : St} {hist : List Ev} :
     · obtain ⟨h₀, hh₀, hl, hb, hD₀⟩ := hbad
       exact ⟨h₀, hh₀, by have := hpast hD h₀ hh₀ hl hb hD₀; omega, hb, hD₀⟩
 
-/-- **The final inequality.** If the seeded verifier accepts `π` with every hash answered by a
-log without failure, and some boundary prefix of the extracted history is doomed, the
-potential of the log is at least one. -/
-theorem final_ineq (hf : ¬ Fail σ ℓ) {π : Proof} (hv : verify (look ℓ) σ P π = some true)
-    (hbad : ∃ h₀, h₀ <+: extractedHistory (look ℓ) σ P π ∧ Boundary h₀ ∧ C.D h₀) :
+/-- **The final inequality.** If the seeded verifier of the statement `x`, whose root is a root
+of the program, accepts `π` with every hash answered by a log without failure, and some boundary
+prefix of the extracted history past the root is doomed, the potential of the log is at least
+one. -/
+theorem final_ineq (hf : ¬ Fail σ ℓ) {x : X} {π : Proof} (hroot : RootOk P (σ.root x))
+    (hv : verify (look ℓ) (σ.seed x) (nodeAt P (σ.root x)) π = some true)
+    (hbad : ∃ h₀, h₀ <+: extractedFrom (look ℓ) (σ.seed x) (nodeAt P (σ.root x)) (σ.root x) π ∧
+      (σ.root x).length ≤ h₀.length ∧ Boundary h₀ ∧ C.D h₀) :
     1 ≤ pot C.D σ P ℓ := by
-  obtain ⟨seed, s, hseed, hx⟩ := xrun_of_verify hv
-  obtain ⟨hkind, hknown⟩ := seed_known (P := P) hf hseed
+  obtain ⟨seed, s, hseed, hx⟩ := xrun_of_verify_from (σ.root x) hv
+  obtain ⟨hkind, hknown⟩ := seed_known (P := P) hf hseed hroot
   have hS : 1 ≤ termSum C.D σ P ℓ := by
-    refine from_boundary C hf (π.stream.length + 1) ⟨seed, π.stream, π.openings, []⟩ [] P
-      (Nat.lt_succ_self _) rfl Prog.Reachable.nil (by simp [Prog.after]) ?_ ?_ hx ?_
+    refine from_boundary C hf (π.stream.length + 1) ⟨seed, π.stream, π.openings, []⟩ (σ.root x)
+      (nodeAt P (σ.root x)) (Nat.lt_succ_self _) ?_ hroot.1 (after_nodeAt hroot) ?_ ?_ hx hbad
+    · show commits (σ.root x) = []
+      exact hroot.2.2.2.1
     · intro h' p' hse
       exact hknown _ (by simp only [stInfo, hse, Option.map_some])
     · exact ⟨_, hkind, by simp only [term, le_refl]⟩
-    · obtain ⟨h₀, hh₀, hb, hD⟩ := hbad
-      exact ⟨h₀, hh₀, Nat.zero_le _, hb, hD⟩
   simp only [pot, hf, ↓reduceIte]
   exact le_min le_rfl hS
 

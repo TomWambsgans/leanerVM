@@ -42,7 +42,7 @@ open scoped ENNReal
 /- The enumeration of `Digest` must never be unfolded by unification. -/
 attribute [local irreducible] instFintypeDigest
 
-variable {σ : Seed} {P : Prog Bool}
+variable {X : Type} {σ : Seeds X} {P : Prog Bool}
 
 /-- An average of terms each at most `c` is at most `c`. -/
 theorem avg_le_of_le {f : Digest → ℝ≥0∞} {c : ℝ≥0∞} (h : ∀ u, f u ≤ c) :
