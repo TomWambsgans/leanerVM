@@ -16,6 +16,22 @@ right, and supplies an independent reference for validating the existing Rust im
 That validation begins with differential testing against pinned Rust revisions and may grow into
 formal verification of the relevant Rust code.
 
+## What is proved, in three files
+
+The end-to-end result is stated over three files; everything else in the repository is proof or
+library code.
+
+| File | What it is |
+| --- | --- |
+| [`LeanerVM/Semantics.lean`](LeanerVM/Semantics.lean) | leanISA: memory, the six instructions, programs, one step, `ValidExecution` |
+| [`LeanerVM/Protocol/Verifier.lean`](LeanerVM/Protocol/Verifier.lean) | the verifier, `python-verifier/verifier.py` transcribed section by section, for any hash function |
+| [`LeanerVM/Protocol/LeanVM.lean`](LeanerVM/Protocol/LeanVM.lean) | the statements: knowledge soundness in the random-oracle model, and completeness |
+
+They import the fields, the protocol's constants (`LeanerVM/Parameters/`), BLAKE2s and the
+Fiat–Shamir layer (`LeanerVM/Protocol/Compile/`). The verifier runs compiled on proofs of the Rust
+prover (`lake exe leanvm-verify`), and `scripts/fuzz-verifier.py` compares it with the Rust verifier
+on mutated proofs. See [`docs/roadmap/e2e-status.md`](docs/roadmap/e2e-status.md).
+
 ## Project status
 
 The repository baseline is in place: module boundaries, the test library, validation policy, CI
@@ -28,9 +44,8 @@ components, each sound and complete for the relation its row refines, and the th
 blocks; Layer 8 supplies the constraint statement `SatisfiedBy` and one hand-built witness.
 The reference `step` and `run` are noncomputable; fixed-image executable
 checkers are proved equivalent to them for exact and fuel-bounded runs. Finite traces and a
-pinned Rust comparison lane provide the first ISA validation boundary. The bus theorems and
-the two T1 theorems are the layers still to come, and no
-proof-system claim has landed. See the [checker guide](docs/leanisa-checker.md).
+pinned Rust comparison lane provide the first ISA validation boundary. On this branch the bus theorems, the two T1 theorems and the
+end-to-end proof-system theorems have landed (above). See the [checker guide](docs/leanisa-checker.md).
 
 Recursive CTE is an open research problem: the intended knowledge-soundness arguments for the
 concrete inner SNARKs live in the random-oracle model, while the known outer recursion-topology
