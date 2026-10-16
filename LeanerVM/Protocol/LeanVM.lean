@@ -22,8 +22,9 @@ at that commit, transcribed into Lean (`LeanerVM.Protocol.Verifier`), for a prog
 public input `input` and a proof, with the hash function `H : Bytes → m Digest` a parameter in
 any monad `m`. Two instances:
 
-* `verify`: `H` is BLAKE2s-256 (`m = Id`), the deployed verifier, executable
-  (`lake exe leanvm-verify` on the Rust prover's files);
+* `verify`: `H` is BLAKE2s-256 (`m = Id`), the deployed verifier, executable:
+  `lake exe leanvm-verify` checks a proof of the Rust prover in well under a second (the field
+  and BLAKE2s are swapped for word-level code by proven `@[csimp]` theorems);
 * the same `verifier` with `H` a query to a random oracle (`m = OracleComp`), which is what the
   knowledge-soundness theorem is about.
 
@@ -43,10 +44,11 @@ protocol's challenges, discounted by the proof of work before it, escapes with p
 most `2^-128`, certified for every admissible size and rate (`Whir.Params.Deployed`).
 
 **Trust.** BLAKE2s is modelled as a random oracle. The statement is non-adaptive (`prog` and
-`input` are fixed before the oracle). The Lean verifier's agreement with the deployed Rust and
-Python verifiers is test evidence (transcription, real Rust proofs, differential fuzzing). The
-extractor is a classical choice in the list of codewords near the committed word. Every
-theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
+`input` are fixed before the oracle). That `verifier` is the deployed verifier is test evidence:
+it is a transcription of the Python, it accepts the Rust prover's proofs, and on 1500 mutated
+proofs it gives the deployed Rust verifier's verdict every time (`scripts/fuzz-verifier.py`). The
+extractor is a classical choice in the list of codewords near the committed word. Every theorem
+depends only on `propext`, `Classical.choice` and `Quot.sound`.
 -/
 
 namespace LeanVM
