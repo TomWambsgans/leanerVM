@@ -879,9 +879,9 @@ remains the pair `(α, β)`.
 
 `gkr` is radix 4 with a radix-2 first layer when `μ` is odd; each layer is a combiner `λ`, a
 normalized sumcheck on the layer identity (cofactor of degree 4, degree 2 in the radix-2 layer),
-and the descendants' values interpolated at the combination challenges; a combiner follows the
-last layer too, unused. `gkrError` is `(nside − 1)/|E|` on each combiner but the last, `0` on the
-last, `4/|E|` on each radix-4 round and `2/|E|` on each radix-2 round, and `1/|E|` on each
+and the descendants' values interpolated at the combination challenges; no combiner follows the
+last layer (since leanVM 40bdeac6; at `a386121f` an unused one did). `gkrError` is
+`(nside − 1)/|E|` on each combiner, `4/|E|` on each radix-4 round and `2/|E|` on each radix-2 round, and `1/|E|` on each
 combination challenge (two per radix-4 layer, one for the radix-2 layer). The leaves are a
 function of the statement and the oracles, so the bus phase instantiates them at the three leaf
 tables of the stack without ArkLib's context lifting (admitted upstream); the *riders* are tables
@@ -1373,10 +1373,11 @@ witness is executable it is a test under `tests/`.
     round `τ_max − τ_j`. Reversing it mismatches `eq(ζ_{<τ_j}, ·)`. Witness: Layer 7's run with
     two heights.
 17. **Radix, parity and combiners.** For odd `μ` the first layer is radix 2; a combiner is drawn
-    after every layer, the last included. From the seed to the end of the bus phase the stream
-    holds `μ² + 4μ + 17` scalars (one more for odd `μ`) and the GKR draws `μ²/4 + μ + 1`
-    challenges for even `μ`. Witness: the counts against the Python verifier, and
-    `verify_iff_compiled` on the dumped proof.
+    at the start of every layer and none after the last (`crates/verifier/src/bus.rs:12-46` at
+    `127510d1`), so the GKR draws `μ²/4 + μ` challenges for even `μ` (layer `k` draws its
+    combiner, `2(k − 1)` sumcheck challenges and two combination challenges). At `a386121f` a
+    combiner also followed the last layer and the GKR drew `μ²/4 + μ + 1`. Witness: the counts
+    against the Python verifier, and `verify_iff_compiled` on the dumped proof.
 18. **Counts in the count tree.** The tables' count columns only, not the finalize counts;
     otherwise the leaf layout, and so `ζ`, differ. Witness: the dumped proof.
 19. **The extractor reads the stack.** The witness is `witnessOf` of the committed `q`, not of the
