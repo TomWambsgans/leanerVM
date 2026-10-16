@@ -5,7 +5,7 @@ import LeanerVM.Protocol.EndToEnd.Sound.Returns
 
 * **Statement locks** of the bounds on the claims the bus and table phases and the public-input
   phase return.
-* **The axiom audit**: the bounds use the standard axioms only.
+* **The trust audit**: the bounds depend on `propext`, `Classical.choice` and `Quot.sound` only.
 * **What is load-bearing**: the predicate constrains the returns (a program returning `3` does not
   return at most `2`), and a rejecting program satisfies every predicate.
 -/
@@ -28,7 +28,7 @@ example (layout : LeanerVM.Protocol.Verifier.Layout) (publicInput : Digest) :
       (LeanerVM.Protocol.Verifier.publicInputPhase layout publicInput) :=
   retOK_publicInputPhase layout publicInput
 
-/-! ## The axiom audit -/
+/-! ## The trust audit -/
 
 /--
 info: 'LeanerVM.Protocol.EndToEnd.Sound.retOK_busTable' depends on axioms:

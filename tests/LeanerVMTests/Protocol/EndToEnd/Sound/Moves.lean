@@ -4,7 +4,7 @@ import LeanerVM.Protocol.EndToEnd.Sound.Moves
 # The prover moves' tests
 
 * **Statement locks** of `grindBits_le_of_reachable` and `movesOK_ringSwitch`.
-* **The axiom audit**: `grindBits_le_of_reachable` uses the standard axioms only.
+* **The trust audit**: `grindBits_le_of_reachable` depends on `propext`, `Classical.choice` and `Quot.sound` only.
 * **What is load-bearing.** The bound on the bits is the predicate's: a proof of work of `65` bits
   is not allowed at `64`, while WHIR's `17` is; a commitment is not allowed where commitments are
   excluded.
@@ -24,7 +24,7 @@ example (bytecode : List K) (publicInput : Digest) {h : List Ev}
 example (point s : List E) : MovesOK (fun _ ↦ False) False (ringSwitch point s) :=
   movesOK_ringSwitch point s
 
-/-! ## The axiom audit -/
+/-! ## The trust audit -/
 
 /--
 info: 'LeanerVM.Protocol.EndToEnd.Sound.grindBits_le_of_reachable' depends on axioms:

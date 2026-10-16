@@ -133,7 +133,7 @@ theorem levelPre_zero {μ R : ℕ} (P₀ : LevelCode) (hκ : P₀.κ = μ - lane
       (rowsOf laneBits (laneO 0 cs (2 ^ (μ - laneBits + R')))) := hV
   rw [rowsOf_laneO_zero, mem_iList_comp _ _ (bitsEquiv laneBits)] at hV'
   clear hV
-  have hV := hV' 
+  have hV := hV'
   simp only [Equiv.apply_symm_apply] at hV
   obtain ⟨q, hqc, hVq⟩ := exists_candidate_of_mem_iList hμ h64
     (LevelCode.two_pow_le_thr ⟨μ - laneBits, R', η, h64, hκ1, hR1, hη, hagr⟩) hV

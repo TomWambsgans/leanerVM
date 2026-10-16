@@ -61,7 +61,8 @@ instance of the arithmetization and imports nothing from `LeanerVM/Arithmetizati
 change to leanISA touches only the modules that meet it. Those are the fixed columns
 (`FixedColumns.lean`), the adaptor (`LeanIsa.lean` and the modules under `LeanIsa/`), the
 compiled verifier (`Transcript.lean`, `Proof.lean`, `Compile.lean`, `Verify.lean`) and the base
-theorems (`Soundness.lean`);
+theorems (`Soundness.lean`, and the end-to-end theorems under `EndToEnd/`, which compose the
+adaptor with leanISA's constraint soundness and completeness);
 `scripts/check-layers.sh` enforces the wall with that allow-list.
 
 The target-theorem ownership is:

@@ -41,9 +41,9 @@ fi
 # The wall of the proof system: a module of the protocol layer is written over an abstract
 # instance and imports nothing from the arithmetization, except the modules whose business the
 # arithmetization is: the fixed columns, the adaptor, the compiled verifier and the base
-# theorems.
+# theorems, the end-to-end theorems under `EndToEnd/` among them.
 check_wall() {
-  local allowed='^LeanerVM/Protocol/(FixedColumns|LeanIsa(/[A-Za-z]+)?|Transcript|Proof|Compile|Verify|Soundness)\.lean$'
+  local allowed='^LeanerVM/Protocol/(FixedColumns|LeanIsa(/[A-Za-z]+)?|EndToEnd(/[A-Za-z]+)+|Transcript|Proof|Compile|Verify|Soundness)\.lean$'
   local pattern="${import_prefix}LeanerVM\.Arithmetization(\.|$)"
   local matches
 

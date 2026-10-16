@@ -5,7 +5,7 @@ import LeanerVM.Protocol.EndToEnd.Front.FlockBridge
 
 * **Statement locks** of the three specifications (public input, Flock, ring switching), with their
   hypotheses, and of the fidelity theorems.
-* **The axiom audit**: the specifications and the fidelity theorems use the standard axioms only.
+* **The trust audit**: the specifications and the fidelity theorems depend on `propext`, `Classical.choice` and `Quot.sound` only.
 * **What is load-bearing.**
   - The public claims are computed from both public cells of every limb (`pubLimb`), and the
     leanISA instance sends no public line.
@@ -75,7 +75,7 @@ example (layout : LeanerVM.Protocol.Verifier.Layout) (target : E) (point cs : Li
         LeanerVM.Protocol.Verifier.ringWeight point rPrime cs).1 :=
   isMultilinearFn_ringSwitchClaim layout target point cs
 
-/-! ## The axiom audit -/
+/-! ## The trust audit -/
 
 /--
 info: 'LeanerVM.Protocol.EndToEnd.Front.pubPhaseSpec' depends on axioms:

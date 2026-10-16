@@ -5,7 +5,7 @@ import LeanerVM.Protocol.EndToEnd.Sound.Theorem
 
 * **Statement locks** of the random-oracle theorem of the leanVM verifier, the knowledge statement,
   the execution statement, the numeric bound, and the whole program's specification.
-* **The axiom audit**: the theorems use the standard axioms only.
+* **The trust audit**: the theorems depend on `propext`, `Classical.choice` and `Quot.sound` only.
 * **What is load-bearing.**
   - The stack's shape is "the stack's commitment is the only one": a second commitment breaks it.
   - The error arithmetic: `2^64/|E|` is within `2^-128`, `2^65/|E|` is not.
@@ -68,7 +68,7 @@ example (bytecode : List K) (publicInput : Digest) (QA : ℕ) (hQ : QA ≤ 2 ^ 6
       failBound (leanVmSeed bytecode publicInput) (QA + 13213)) ≤ (2 : ℝ≥0∞)⁻¹ ^ 63 :=
   leanVm_bound_le bytecode publicInput hQ
 
-/-! ## The axiom audit -/
+/-! ## The trust audit -/
 
 /--
 info: 'LeanerVM.Protocol.EndToEnd.Sound.leanVm_romSound' depends on axioms:

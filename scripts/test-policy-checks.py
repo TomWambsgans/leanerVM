@@ -218,6 +218,16 @@ def test_layer_gate() -> None:
         write(sibling, "module\n\npublic import LeanerVM.Arithmetization.Basic\n")
         require_failure(run(root, "check-layers.sh"), "wall: a sibling of the adaptor", "the wall")
         sibling.unlink()
+        # The end-to-end theorems under `EndToEnd/` are inside the wall; a sibling is not.
+        endtoend = root / "LeanerVM" / "Protocol" / "EndToEnd" / "Front" / "Layout.lean"
+        write(endtoend, "module\n\npublic import LeanerVM.Arithmetization.Basic\n")
+        require_pass(run(root, "check-layers.sh"), "wall allow-list: the end-to-end directory")
+        endtoend.unlink()
+        shutil.rmtree(endtoend.parent.parent)
+        sibling = root / "LeanerVM" / "Protocol" / "EndToEndExtra.lean"
+        write(sibling, "module\n\npublic import LeanerVM.Arithmetization.Basic\n")
+        require_failure(run(root, "check-layers.sh"), "wall: a sibling of EndToEnd", "the wall")
+        sibling.unlink()
         require_pass(run(root, "check-layers.sh"), "layer gate after cleanup")
 
 
