@@ -95,6 +95,14 @@ Flock and ring switching (`Front/{Pub,Flock,Ring}*.lean`), the BLAKE2s circuit w
   below the fuel;
 * `leanVm_complete_of_execution`: from a valid execution of well-formed bytecode that fits
   (`constraintCompleteness`).
+* In ISA terms (`EndToEnd/Complete/Small.lean`): a valid execution of a program with the fill
+  blocks (`HasFillBlocks`) that is small (`Trace.Small`: at most `2^19` steps, `2^23` words of
+  memory, `2^23` instructions) has a witness at admissible sizes (`exists_admissible_witness`;
+  the budget form `8·2^κ + 2^logSize + 356·2^n ≤ 2^28` for `2^n` steps is
+  `exists_admissible_witness_of_budget`), and the honest proof of the execution (`honestProofOf`)
+  exists when the proof-of-work searches succeed and is accepted (`complete_of_small`). The
+  witness's heights come from `constraintCompleteness_heights`, which needs of the bytecode only
+  its fill blocks.
 
 ## Trust boundary
 
