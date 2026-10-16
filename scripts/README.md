@@ -55,5 +55,17 @@
   offset in the stack the pinned verifier reconstructs for two announced size vectors, for the
   comparison in `tests/LeanerVMTests/Protocol/LeanIsa.lean`; requires `cargo`.
 
+- `export-verifier-fixtures-rust.sh <leanVM tree> <out>`: proves small guest programs with the
+  Rust prover at the pin and writes each proof as the four files `bytecode.bin`,
+  `public_input.bin`, `stream.bin`, `merkle_openings.bin` (the fixtures of
+  `tests/fixtures/verifier/`), each checked by the Rust verifier first; requires `cargo`.
+- `rust-verifier-cli/`: the deployed Rust verifier (`crates/verifier` at the pin) on the same four
+  files, one proof or a batch; `build.sh <leanVM tree>` checks the tree against the pin and builds
+  it (see its `README.md`).
+- `fuzz-verifier.py <leanVM tree> <fixtures>`: mutates the fixtures (structured and seeded random
+  edits of every phase's scalars, roots, nonces, Merkle openings, public input and bytecode) and
+  requires `lake exe leanvm-verify` and the Rust verifier to give the same verdict on every
+  mutated proof; keeps any divergent case.
+
 Keep scripts small and deterministic. Add specialized tooling only with the feature or
 artifact it validates.

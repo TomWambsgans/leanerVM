@@ -1,12 +1,14 @@
 import LeanerVM.Protocol.Verifier.Load
 
 /-!
-# `leanvm-verify`: the deployed verifier on the Python CLI's four files
+# `leanvm-verify`: the deployed verifier on a proof's four files
 
 `lake exe leanvm-verify <bytecode> <public input> <stream> <openings>` runs
 `LeanerVM.Protocol.Verifier.verifyFiles`, the Lean transcription of `python-verifier/verifier.py`
-at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`, compiled, and prints the verdict in the
-Python CLI's words; the exit code is `0` on acceptance. It imports the production verifier only.
+at leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d` (the `verify` of `LeanerVM/Protocol/LeanVM.lean`
+on the program's bytecode words), compiled, on the four files the Rust prover writes
+(`scripts/export-verifier-fixtures-rust.sh`), and prints the verdict; the exit code is `0` on
+acceptance. `scripts/fuzz-verifier.py` compares it with the Rust verifier on mutated proofs.
 -/
 
 open LeanerVM.Protocol.Verifier

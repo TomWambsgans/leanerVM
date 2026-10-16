@@ -82,7 +82,8 @@ or observed at `a386121f`. The Rust executor's error contract, its read pinning 
 status finding R28) and its fill-frame placement changed, which bear on the leanISA status
 findings and the Rust contract harness, not on a Lean definition. The proof fixtures of
 `tests/fixtures/verifier` and the scripts that export them are at the old pin and must be
-regenerated at the new one (`scripts/verifier-fixtures.py`); the mock trace of
+regenerated at the new one (`scripts/export-verifier-fixtures-rust.sh`, compared with the Rust
+verifier by `scripts/fuzz-verifier.py`); the mock trace of
 `tests/LeanerVMTests/Protocol/Verifier/Replay.lean` and the vectors of `Helpers.lean` and
 `Compiled.lean` were rerun against the new `verifier.py`.
 

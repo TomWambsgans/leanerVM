@@ -56,16 +56,10 @@ name = "LeanerVMTests"
 srcDir = "tests"
 allowNonModules = true
 
-# The Lean verifier on the Rust prover's proofs, compiled: the mutation table of
-# tests/LeanerVMTests/Protocol/Verifier/RustProofs.lean, too slow for the interpreter. Not a
-# default target; `scripts/verifier-fixtures.py --lean` builds and runs it.
-[[lean_exe]]
-name = "verifier-diff"
-root = "VerifierDiff"
-srcDir = "tests"
-
-# The deployed verifier, compiled, on the Python CLI's four files (tests/VerifyFiles.lean).
+# The deployed verifier, compiled, on the four proof files of the Rust prover
+# (cli/LeanvmVerify.lean; scripts/fuzz-verifier.py compares it with the Rust verifier).
+# Not a default target; scripts/fuzz-verifier.py runs it against the Rust verifier.
 [[lean_exe]]
 name = "leanvm-verify"
-root = "VerifyFiles"
-srcDir = "tests"
+root = "LeanvmVerify"
+srcDir = "cli"
