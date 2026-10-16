@@ -68,11 +68,11 @@ def wordOfBytes (b0 b1 b2 b3 : UInt8) : UInt32 :=
   UInt32.ofNat (b0.toNat + 2 ^ 8 * b1.toNat + 2 ^ 16 * b2.toNat + 2 ^ 24 * b3.toNat)
 
 /-- Read `n` values of `size` bytes each with `decode`, and the bytes after them; `none` if the
-bytes run out. -/
+bytes run out (checked on the next `size` bytes, not on the length of all the rest). -/
 def readMany {α : Type} (size : ℕ) (decode : Bytes → α) : ℕ → Bytes → Option (List α × Bytes)
   | 0, b => some ([], b)
   | n + 1, b =>
-    if size ≤ b.length then
+    if (b.take size).length = size then
       (readMany size decode n (b.drop size)).map fun r ↦ (decode (b.take size) :: r.1, r.2)
     else none
 
@@ -278,9 +278,9 @@ theorem readMany_flatMap (hlen : ∀ x, (enc x).length = size) (hdec : ∀ x, de
   induction xs with
   | nil => rfl
   | cons x xs ih =>
-    have hs : size ≤ (enc x ++ (xs.flatMap enc ++ rest)).length := by simp [hlen]
-    simp only [List.length_cons, List.flatMap_cons, List.append_assoc, readMany, hs, ↓reduceIte,
-      List.drop_left' (hlen x), ih, List.take_left' (hlen x), hdec, Option.map_some]
+    simp only [List.length_cons, List.flatMap_cons, List.append_assoc, readMany,
+      List.take_left' (hlen x), hlen x, ↓reduceIte, List.drop_left' (hlen x), ih, hdec,
+      Option.map_some]
 
 /-- What is read is the head of the bytes: the values' bytes, then the rest. -/
 theorem readMany_spec (henc : ∀ c, c.length = size → enc (decode c) = c) :
@@ -298,7 +298,7 @@ theorem readMany_spec (henc : ∀ c, c.length = size → enc (decode c) = c) :
     obtain ⟨rfl, rfl⟩ := he
     obtain ⟨h1, h2⟩ := readMany_spec henc hr
     refine ⟨by simp [h1], ?_⟩
-    rw [List.flatMap_cons, henc _ (by simp; omega), List.append_assoc, h2, List.take_append_drop]
+    rw [List.flatMap_cons, henc _ hs, List.append_assoc, h2, List.take_append_drop]
 
 theorem decodeAll_flatMap (hpos : 0 < size) (hlen : ∀ x, (enc x).length = size)
     (hdec : ∀ x, decode (enc x) = x) (xs : List α) :

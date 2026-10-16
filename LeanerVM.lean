@@ -21,7 +21,9 @@ import LeanerVM.Arithmetization.Tables.Xor
 import LeanerVM.Parameters.Basic
 import LeanerVM.Parameters.Blake2s
 import LeanerVM.Parameters.CleanField
+import LeanerVM.Parameters.CubicExt
 import LeanerVM.Parameters.Field
+import LeanerVM.Parameters.FieldWords
 import LeanerVM.Parameters.Flock
 import LeanerVM.Parameters.Generator
 import LeanerVM.Parameters.Isa
@@ -162,6 +164,7 @@ import LeanerVM.Protocol.Verifier.Bus
 import LeanerVM.Protocol.Verifier.TableSumcheck
 import LeanerVM.Protocol.Verifier.Flock
 import LeanerVM.Protocol.Verifier.Whir
+import LeanerVM.Protocol.Verifier.Fast.Hash
 import LeanerVM.Protocol.Verifier.Verify
 import LeanerVM.Protocol.Verifier.Load
 import LeanerVM.Protocol.EndToEnd.Candidates

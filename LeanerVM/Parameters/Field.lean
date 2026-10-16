@@ -8,6 +8,8 @@
 module
 
 public import CompPoly.Fields.Binary.BF64
+public import LeanerVM.Parameters.CubicExt
+public import LeanerVM.Parameters.FieldWords
 import Mathlib.Tactic.LinearCombination
 
 /-!
@@ -50,6 +52,14 @@ kernel reduces `K` arithmetic, `E.ofLimbs`, `E.limb`, and the two predicates on 
 `@[expose]`d, and a `module` importer sees only exposed bodies. Executable checks of those go
 through compiled evaluation (`#guard` under `meta import`), and any later-layer plan to decide an
 execution by `decide` depends on CompPoly or core lifting this.
+
+## Compiled arithmetic
+
+`LeanerVM.Parameters.FieldWords` and `LeanerVM.Parameters.CubicExt`, imported here, hold
+`@[csimp]` lemmas under which `K` arithmetic compiles to word operations (the carry-less product
+on `UInt64`) instead of arbitrary-precision `Nat` arithmetic, and `E` arithmetic to the unrolled
+cubic product. They change no definition and no statement; they affect compiled code only,
+everywhere downstream of this module.
 
 ## Clean's field interface
 
