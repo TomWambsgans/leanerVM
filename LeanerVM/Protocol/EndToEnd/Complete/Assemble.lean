@@ -64,14 +64,14 @@ structure Phases.Honest (prog : Program) (s : Sizes) (q : Column (leanIsaμ prog
     (P : Phases) : Prop where
   /-- The bus phase ends in a true result. -/
   bus : ∀ cs, Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ BusGood prog s q b) P.bus
-    (verifyBusBalance (verifierLayout prog s)) cs
+    (verifyBusBalance .computed (verifierLayout prog s)) cs
   /-- The table sumcheck, from a true bus result, ends in true claims. -/
   table : ∀ bus, BusGood prog s q bus → ∀ cs,
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ TrueClaims prog s q b) (P.table bus)
       (tablePhase (verifierLayout prog s) bus) cs
   /-- Flock ends in its true point and slices. -/
   flock : ∀ cs, Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ FlockGood prog s q b) P.flock
-    (verifyFlock (blake2sR1csLogSize + (verifierLayout prog s).tableLogHeights.getD opBlake2s 0))
+    (verifyFlock .computed (blake2sR1csLogSize + (verifierLayout prog s).tableLogHeights.getD opBlake2s 0))
     cs
   /-- Ring switching, from Flock's true result, ends in a true multilinear claim. -/
   ring : ∀ r, FlockGood prog s q r → ∀ cs,
@@ -107,7 +107,7 @@ theorem follows_verifyExecution {prog : Program} {s : Sizes} {input : PublicInpu
     {q : Column (leanIsaμ prog s)} (hs : s.Admissible prog) (hρ : validRate ρ)
     (hq : M3Holds (inst prog s) input q) (P : Phases) (hP : P.Honest prog s q) :
     Follows (fun _ _ _ ↦ True) (honestRun prog s ρ q P)
-      (verifyExecution (bytecodeWords prog) (publicDigest input)) [] := by
+      (verifyExecution .computed (bytecodeWords prog) (publicDigest input)) [] := by
   have hadm := whirAdmissible prog hs hρ
   unfold verifyExecution honestRun
   simp only [Prog.bind_eq]

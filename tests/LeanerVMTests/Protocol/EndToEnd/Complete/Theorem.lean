@@ -28,7 +28,7 @@ attribute [local irreducible] Follows
 example : ∀ {prog : Program} {s : Sizes} {input : PublicInput} {q : Column (leanIsaμ prog s)},
     s.Admissible prog → M3Holds (inst prog s) input q → ∀ (cs : Commits),
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ BusGood prog s q b) (hBus prog s q)
-      (verifyBusBalance (verifierLayout prog s)) cs :=
+      (verifyBusBalance .computed (verifierLayout prog s)) cs :=
   follows_verifyBusBalance
 
 example : ∀ {prog : Program} {s : Sizes} {q : Column (leanIsaμ prog s)} {input : PublicInput},
@@ -41,7 +41,7 @@ example : ∀ {prog : Program} {s : Sizes} {input : PublicInput} {q : Column (le
     M3Holds (inst prog s) input q → TerminalFaithful Blake2sFlock.blake2sFlockSpec prog s →
     ∀ (cs : Commits),
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ FlockGood prog s q b) (hFlock prog s q)
-      (verifyFlock (blake2sR1csLogSize +
+      (verifyFlock .computed (blake2sR1csLogSize +
         (verifierLayout prog s).tableLogHeights.getD opBlake2s 0)) cs :=
   follows_verifyFlock
 

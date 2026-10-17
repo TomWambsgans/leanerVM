@@ -80,7 +80,7 @@ noncomputable def flockBridgeSpec (hwalk : WalkFaithful F)
     (h127 : (L₀ : ℝ≥0∞) * ((overE 127 : ℝ≥0) : ℝ≥0∞) + 0 ≤ εmax)
     (h2 : (L₀ : ℝ≥0∞) * ((overE 2 : ℝ≥0) : ℝ≥0∞) + 0 ≤ εmax)
     (h3 : (L₀ : ℝ≥0∞) * ((overE 3 : ℝ≥0) : ℝ≥0∞) + 0 ≤ εmax) :
-    Spec (LeanerVM.Protocol.Verifier.verifyFlock (LeanerVM.Protocol.Verifier.blake2sR1csLogSize +
+    Spec (LeanerVM.Protocol.Verifier.verifyFlock .computed (LeanerVM.Protocol.Verifier.blake2sR1csLogSize +
         layout.tableLogHeights.getD LeanerVM.Protocol.Verifier.opBlake2s 0))
       (FlockPre F prog s layout C toI claims) (LinPost F prog s layout C toI claims input) εmax
       ((∑ _i ∈ Finset.range (LeanerVM.Protocol.Verifier.blake2sR1csLogSize +

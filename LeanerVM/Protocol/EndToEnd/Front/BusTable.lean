@@ -15,7 +15,7 @@ public import LeanerVM.Protocol.EndToEnd.Front.CommitDoom
 # The bus phase and the table sumcheck
 
 `busTableSpec` composes `busThenSpec` with `tablePhaseSpec` for the program's
-`do let bus ← verifyBusBalance layout; tablePhase layout bus`, from the commitment's doom
+`do let bus ← verifyBusBalance .computed layout; tablePhase layout bus`, from the commitment's doom
 (`Seam.commit` on the candidates) to the table seam on the wire (`TablePost`). It needs the table phase's
 identities (`TableFid`) for every read of the right shape.
 
@@ -53,7 +53,7 @@ noncomputable def busTableSpec (colOf : I.ColumnId → ℕ)
     {T : ℝ≥0∞} (he3 : roundError L₀ 3 + T ≤ εmax) (hTf : T ≤ εmax)
     (hxi : xiError I L₀ + sumcheckLead (List.replicate (layout.tableLogHeights.foldl max 0) none)
       T ≤ εmax) :
-    Spec ((verifyBusBalance layout).bind (tablePhase layout)) (HDoom cands (Seam.commit I) input)
+    Spec ((verifyBusBalance .computed layout).bind (tablePhase layout)) (HDoom cands (Seam.commit I) input)
       (TablePost I cands input colOf) εmax (abError I L₀ + 0) T :=
   busThenSpec I hI cands input layout hxi
     (fun w ↦ if hw : w.Shaped I then

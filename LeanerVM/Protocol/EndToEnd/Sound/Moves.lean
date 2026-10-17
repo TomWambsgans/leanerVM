@@ -293,12 +293,13 @@ theorem movesOK_verifyGkrGrandProducts (depth : ℕ) :
 
 /-- The bus makes no prover move other than reads. -/
 theorem movesOK_verifyBusBalance (layout : Layout) :
-    MovesOK (fun _ ↦ False) False (verifyBusBalance layout) := by
+    MovesOK (fun _ ↦ False) False (verifyBusBalance .computed layout) := by
   refine MovesOK.seq (MovesOK.sampleN _) fun _ ↦ MovesOK.seq MovesOK.sampleE fun _ ↦
     MovesOK.seq (movesOK_verifyGkrGrandProducts _) fun r ↦ ?_
   obtain ⟨countRoot, point, treeValues⟩ := r
   exact MovesOK.seq (MovesOK.require _) fun _ ↦ MovesOK.seq (MovesOK.readN 3) fun _ ↦
-    MovesOK.seq MovesOK.readE fun _ ↦ MovesOK.seq MovesOK.readE fun _ ↦ MovesOK.pure _
+    MovesOK.seq MovesOK.readE fun _ ↦ MovesOK.seq MovesOK.readE fun _ ↦
+      MovesOK.seq (MovesOK.pure _) fun _ ↦ MovesOK.pure _
 
 /-! ## The sizes, the table sumcheck and the public input -/
 
@@ -354,13 +355,15 @@ theorem movesOK_verifyFlockZerocheck (logN : ℕ) :
 
 /-- The Flock lincheck is reads and samples. -/
 theorem movesOK_verifyFlockLincheck (zc : ZerocheckResult) :
-    MovesOK (fun _ ↦ False) False (verifyFlockLincheck zc) := by
+    MovesOK (fun _ ↦ False) False (verifyFlockLincheck .computed zc) := by
   refine MovesOK.seq MovesOK.sampleE fun _ ↦ MovesOK.seq (movesOK_sumcheck _ _ _) fun r ↦ ?_
   obtain ⟨roundChallenges, rLc⟩ := r
-  exact MovesOK.seq (MovesOK.readN _) fun _ ↦ MovesOK.seq (MovesOK.require _) fun _ ↦ MovesOK.pure _
+  exact MovesOK.seq (MovesOK.readN _) fun _ ↦ MovesOK.seq (MovesOK.pure _) fun _ ↦
+    MovesOK.seq (MovesOK.require _) fun _ ↦ MovesOK.pure _
 
 /-- Flock makes no prover move other than reads. -/
-theorem movesOK_verifyFlock (logN : ℕ) : MovesOK (fun _ ↦ False) False (verifyFlock logN) :=
+theorem movesOK_verifyFlock (logN : ℕ) :
+    MovesOK (fun _ ↦ False) False (verifyFlock .computed logN) :=
   MovesOK.seq (movesOK_verifyFlockZerocheck logN) fun zc ↦ movesOK_verifyFlockLincheck zc
 
 /-- Ring switching only samples. -/
@@ -456,7 +459,7 @@ theorem movesOK_verifyStackedOpening (stackLog logInvRate : ℕ) (claims : List 
 
 /-- `verify_execution`: commitments, and proofs of work of `Whir.queryGrindingBits` bits. -/
 theorem movesOK_verifyExecution (bytecode : List K) (publicInput : Digest) :
-    MovesOK (· = Whir.queryGrindingBits) True (verifyExecution bytecode publicInput) := by
+    MovesOK (· = Whir.queryGrindingBits) True (verifyExecution .computed bytecode publicInput) := by
   refine MovesOK.seq (MovesOK.of_none (movesOK_readSizes bytecode)) fun p ↦ ?_
   obtain ⟨layout, logInverseRate⟩ := p
   refine MovesOK.seq ((movesOK_commitStack _ _).mono (fun _ h ↦ h.elim) id) fun _ ↦

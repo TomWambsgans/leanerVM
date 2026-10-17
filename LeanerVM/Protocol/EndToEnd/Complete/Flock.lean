@@ -314,7 +314,7 @@ theorem follows_hLincheck {prog : Program} {s : Sizes} {input : PublicInput}
     (hterm : Front.TerminalFaithful Blake2sFlock.blake2sFlockSpec prog s)
     (zc : ZerocheckResult) (hzc : ZcGood prog s q zc) (cs : Commits) :
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ FlockGood prog s q b) (hLincheck prog s q zc)
-      (Verifier.verifyFlockLincheck zc) cs := by
+      (Verifier.verifyFlockLincheck .computed zc) cs := by
   have hchi := hzc.1
   have hA := hzc.2.1
   have hB := hzc.2.2.1
@@ -384,7 +384,7 @@ theorem follows_verifyFlock {prog : Program} {s : Sizes} {input : PublicInput}
     {q : Column (leanIsaμ prog s)} (hq : M3Holds (inst prog s) input q)
     (hterm : Front.TerminalFaithful Blake2sFlock.blake2sFlockSpec prog s) (cs : Commits) :
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ FlockGood prog s q b) (hFlock prog s q)
-      (Verifier.verifyFlock (Verifier.blake2sR1csLogSize +
+      (Verifier.verifyFlock .computed (Verifier.blake2sR1csLogSize +
         (Front.verifierLayout prog s).tableLogHeights.getD Verifier.opBlake2s 0)) cs := by
   unfold hFlock Verifier.verifyFlock
   refine Follows.bind (fun cs₁ zc zc' h₁ ↦ ?_) _ _ _ (follows_hZerocheck hq cs)

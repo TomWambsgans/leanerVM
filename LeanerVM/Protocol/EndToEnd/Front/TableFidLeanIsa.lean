@@ -709,7 +709,7 @@ noncomputable def busThenSpec4 {β : Type} {f : BusResult → Prog β} {Q : β �
     (hdepth : (busLayout [0, layout.logMemory, layout.logBytecode] layout.push).depth = I.μBus)
     (hab : abError I L₀ < 1) (he : roundError L₀ 4 ≤ εmax)
     (hT : interpLead L₀ 2 (lambdaError L₀) ≤ εmax) (hlam : lambdaError L₀ + 0 ≤ εmax) :
-    Spec ((verifyBusBalance layout).bind f) (HDoom cands (Seam.commit I) input) Q εmax
+    Spec ((verifyBusBalance .computed layout).bind f) (HDoom cands (Seam.commit I) input) Q εmax
       (abError I L₀ + 0) T :=
   Spec.congr (verifyBusBalance_bind_eq layout f).symm
     ((abSpec4 I hI cands input hfin hcard hab).bind' fun ab ↦
@@ -741,7 +741,7 @@ noncomputable def busTableSpec_leanIsa {L₀ : ℕ} (hfin : ∀ W, (cands W).Fin
     (hTf : T ≤ εmax)
     (hxi : xiError (leanIsaInstance F prog s) L₀ + sumcheckLead
       (List.replicate ((verifierLayout prog s).tableLogHeights.foldl max 0) none) T ≤ εmax) :
-    Spec ((verifyBusBalance (verifierLayout prog s)).bind (tablePhase (verifierLayout prog s)))
+    Spec ((verifyBusBalance .computed (verifierLayout prog s)).bind (tablePhase (verifierLayout prog s)))
       (HDoom cands (Seam.commit (leanIsaInstance F prog s)) input)
       (TablePost (leanIsaInstance F prog s) cands input pyCol) εmax
       (abError (leanIsaInstance F prog s) L₀ + 0) T :=

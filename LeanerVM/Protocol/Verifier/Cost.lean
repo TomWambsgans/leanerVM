@@ -196,7 +196,7 @@ theorem costs_verifyGkrGrandProducts (depth : ℕ) :
 
 /-- The bus phase, at the push side's depth. -/
 theorem costs_verifyBusBalance (layout : Layout) :
-    Prog.Costs height (verifyBusBalance layout)
+    Prog.Costs height (verifyBusBalance .computed layout)
       (busBits + 1 + (2 + gkrCost (busLayout [0, layout.logMemory, layout.logBytecode]
         layout.push).depth 0) + 5) fun _ ↦ True := by
   refine Prog.Costs.seq (Prog.Costs.sampleN _) (fun _ _ ↦ Prog.Costs.seq Prog.Costs.sampleE
@@ -332,7 +332,7 @@ theorem gkrCost_le : ∀ D ≤ 38, gkrCost D 0 ≤ gkrBound := by decide
 
 /-- **The bus phase** costs at most `12 + gkrBound` on a built layout. -/
 theorem costs_verifyBusBalance_le {height : ℕ} {layout : Layout} (h : LayoutBounds layout) :
-    Prog.Costs height (verifyBusBalance layout) (busBits + 1 + (2 + gkrBound) + 5)
+    Prog.Costs height (verifyBusBalance .computed layout) (busBits + 1 + (2 + gkrBound) + 5)
       fun _ ↦ True :=
   (costs_verifyBusBalance layout).mono
     (by have := gkrCost_le _ (pushDepth_le h); omega) fun _ h ↦ h
@@ -435,12 +435,13 @@ theorem costs_verifyFlockZerocheck (logN : ℕ) :
 
 /-- The Flock lincheck: eight rounds and the `64` slices. -/
 theorem costs_verifyFlockLincheck (zc : ZerocheckResult) :
-    Prog.Costs height (verifyFlockLincheck zc) 89 fun _ ↦ True := by
+    Prog.Costs height (verifyFlockLincheck .computed zc) 89 fun _ ↦ True := by
   refine Prog.Costs.seq Prog.Costs.sampleE (fun _ _ ↦ Prog.Costs.seq (costs_sumcheck _ _ _)
     (fun r _ ↦ ?_) ?_) ?_
   · obtain ⟨roundChallenges, rLc⟩ := r
     exact Prog.Costs.seq (Prog.Costs.readN kBits) (fun _ _ ↦ Prog.Costs.seq
-      (Prog.Costs.require (n := 0) _) (fun _ _ ↦ trivial) (Nat.zero_le _))
+      (Prog.Costs.pure0 _) (fun _ _ ↦ Prog.Costs.seq
+        (Prog.Costs.require (n := 0) _) (fun _ _ ↦ trivial) (Nat.zero_le _)) (Nat.zero_le _))
       (by simp only [List.length_replicate, flockNumLincheckRounds_eq, kBits,
         show max 3 2 = 3 from rfl]; omega)
   all_goals (try simp only [List.length_replicate, flockNumLincheckRounds_eq,
@@ -449,7 +450,7 @@ theorem costs_verifyFlockLincheck (zc : ZerocheckResult) :
 
 /-- **Flock** at `logN` variables. -/
 theorem costs_verifyFlock (logN : ℕ) :
-    Prog.Costs height (verifyFlock logN) (4 * (logN - 13) + 177) fun _ ↦ True :=
+    Prog.Costs height (verifyFlock .computed logN) (4 * (logN - 13) + 177) fun _ ↦ True :=
   Prog.Costs.seq (costs_verifyFlockZerocheck logN) (fun zc _ ↦
     (costs_verifyFlockLincheck zc).mono (by omega) fun _ h ↦ h) (by omega)
 
@@ -650,7 +651,7 @@ private theorem getD_le_of_forall {l : List ℕ} {M : ℕ} (h : ∀ x ∈ l, x �
 
 /-- **The cost of `verify_execution`.** -/
 theorem costs_verifyExecution (bytecode : List K) (publicInput : Digest) :
-    Prog.Costs costHeight (verifyExecution bytecode publicInput) leanVmCost fun _ ↦ True := by
+    Prog.Costs costHeight (verifyExecution .computed bytecode publicInput) leanVmCost fun _ ↦ True := by
   unfold leanVmCost
   refine Prog.Costs.seq (costs_readSizes bytecode) (fun p hp ↦ ?_) (by omega)
   obtain ⟨layout, logInverseRate⟩ := p

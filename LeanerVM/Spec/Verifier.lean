@@ -44,6 +44,12 @@ The file has three parts:
    publicInput proof`, the verifier with the hash `H`, and `verify`, the deployed one, with
    BLAKE2s.
 
+The verifier takes the values of the two polynomials the statement fixes (the bytecode's, and
+flock's matrices') from a parameter `ev : Evaluations`. The deployed verifier computes them. The
+deferring verifier (`verifyDeferred`), which has no counterpart in the Python, takes them from
+claims, as an aggregate's in-circuit verifier of its children does
+(`crates/rec_aggregation/guests/lean_ethereum.py`, `verify_sub`).
+
 The fields are `LeanerVM.Spec.Field`, BLAKE2s is `LeanerVM.Spec.Blake2s`; `LeanerVM.Spec.Fast.Hash`
 only makes the compiled hash fast (`@[csimp]`). Reading proofs from files (`verifyFiles`) is
 outside the specification, in `LeanerVM.Protocol.Verifier`.
@@ -1358,6 +1364,26 @@ def verifyGkrGrandProducts (depth : ℕ) : Prog (E × List E × List E) := do
   let s ← gkrLayers depth ⟨[shared, shared, count], []⟩
   return (count, s.point, s.values)
 
+/-!
+## The fixed polynomials
+
+Two of the verifier's values are evaluations of polynomials that the statement fixes and the proof
+does not: the stacked bytecode's multilinear extension at the bus point (`verifyBusBalance`), and
+flock's matrices against the lincheck's weights (`verifyFlockLincheck`). The verifier asks `ev`
+for them. The deployed verifier computes them (`Evaluations.computed`); the verifier inside an
+aggregate takes them from claims that it hands on instead of checking (`Evaluations.claimed`).
+-/
+
+/-- Where the verifier gets the values of the fixed polynomials. -/
+structure Evaluations where
+  /-- The value the verifier takes for the multilinear extension of the bytecode `words` at
+  `point`. -/
+  bytecode (words : List K) (point : List E) : Prog E
+  /-- The value the verifier takes for `blake2sBilinear alpha eRow wCol` of the lincheck, whose
+  weights its skip challenge `zSkip`, row point `chiIn`, column point `chiInPrime` and slices `s`
+  give. -/
+  matrices (alpha zSkip : E) (chiIn chiInPrime s : List E) : Prog E
+
 /-! ### The leaf decomposition (`verifier.py:526-593`) -/
 
 /-- `BusResult`: the framework columns' claims, the GKR point, each table's form per side
@@ -1373,13 +1399,13 @@ structure BusResult where
   totals : List E
 
 /-- The three framework fingerprints of a side (`verifier.py:556-568`, `fingerprints`; the
-Python hoists `memory_index`, `bytecode_index` and `bytecode_value`, pure values inlined here). -/
-def fingerprints (layout : Layout) (weights alphas memory memoryLow bytecodeLow : List E)
+Python hoists `memory_index` and `bytecode_index`, pure values inlined here; `bytecode_value` is
+the bytecode's value, from `Evaluations`). -/
+def fingerprints (weights memory memoryLow bytecodeLow : List E) (bytecodeValue : E)
     (pc memoryCount bytecodeCount : E) : List E :=
   [dot (weights.take 3) [sepState, pc, gpow 0],
     dot (weights.take 6) ([sepMem, indexMle memoryLow, memoryCount] ++ memory),
-    dot (weights.take 3) [sepBytecode, indexMle bytecodeLow, bytecodeCount] +
-      multilinearEval (layout.bytecode.map ofK) (bytecodeLow ++ alphas)]
+    dot (weights.take 3) [sepBytecode, indexMle bytecodeLow, bytecodeCount] + bytecodeValue]
 
 /-- One side of the leaf decomposition (`verifier.py:578-591`): the forms with the side's table
 blocks added, and the side's total. -/
@@ -1399,8 +1425,8 @@ def accumulateSide (forms : List (List Form)) (side : ℕ) (blocks : List BusBlo
   let onesPadding := sumE (frameworkSelectors ++ tableSelectors) + 1
   (forms, treeValue + known + onesPadding)
 
-/-- `verify_bus_balance(layout)` (`verifier.py:534-593`). -/
-def verifyBusBalance (layout : Layout) : Prog BusResult := do
+/-- `verify_bus_balance(layout)` (`verifier.py:534-593`), the bytecode's value from `ev`. -/
+def verifyBusBalance (ev : Evaluations) (layout : Layout) : Prog BusResult := do
   let frameworkLogRows := [0, layout.logMemory, layout.logBytecode]
   let pushLayout := busLayout frameworkLogRows layout.push
   let pullLayout := busLayout frameworkLogRows layout.pull
@@ -1420,7 +1446,8 @@ def verifyBusBalance (layout : Layout) : Prog BusResult := do
       memory) ++
     [⟨memoryFinalCounters, memoryLow, memoryFinal⟩, ⟨bytecodeFinalCounters, bytecodeLow,
       bytecodeFinal⟩]
-  let fp := fingerprints layout weights alphas memory memoryLow bytecodeLow
+  let bytecodeValue ← ev.bytecode layout.bytecode (bytecodeLow ++ alphas)
+  let fp := fingerprints weights memory memoryLow bytecodeLow bytecodeValue
   let finalPc := gpow (2 ^ layout.logBytecode - 1)
   let forms0 : List (List Form) := tables.map fun _ ↦ [{}, {}, {}]
   let (forms1, total0) := accumulateSide forms0 0 layout.push pushLayout (fp (gpow 0) 1 1)
@@ -1897,30 +1924,40 @@ def blake2sBilinear (alpha : E) (rowWeights columnWeights : List E) : E :=
 
 /-! ### The lincheck (`verifier.py:1152-1176`) -/
 
+/-- The lincheck's row weights: the Lagrange weights at the skip challenge, along the
+equality weights of the row point (`verify_flock_lincheck`'s `e_row`). -/
+def lincheckRowWeights (zSkip : E) (chiIn : List E) : List E :=
+  (eqKernel chiIn).flatMap fun weight ↦ (lagrangeWeights kBits zSkip).map (weight * ·)
+
+/-- The lincheck's column weights: the slices along the equality weights of the column point
+(`verify_flock_lincheck`'s `w_col`). -/
+def lincheckColumnWeights (chiInPrime s : List E) : List E :=
+  (eqKernel chiInPrime).flatMap fun weight ↦ s.map (· * weight)
+
 /-- `verify_flock_lincheck(zc)` (`verifier.py:1152-1176`): eight plain-mode rounds bind the
-high column coordinates; the 64 slices `s` close the terminal identity. Returns the claim's
-point and the slices. -/
-def verifyFlockLincheck (zc : ZerocheckResult) : Prog (List E × List E) := do
+high column coordinates; the 64 slices `s` close the terminal identity, the matrices' value from
+`ev`. Returns the claim's point and the slices. -/
+def verifyFlockLincheck (ev : Evaluations) (zc : ZerocheckResult) : Prog (List E × List E) := do
   let alpha ← Prog.sampleE
   let skipWeights := lagrangeWeights kBits zc.zSkip
   let chiIn := zc.chi.take flockNumLincheckRounds
-  let eRow := (eqKernel chiIn).flatMap fun weight ↦ skipWeights.map (weight * ·)
   let claim := zc.vA + alpha * zc.vB + alpha ^ 2 * zc.vC + alpha ^ 3
   let (roundChallenges, rLc) ←
     sumcheck claim 3 (List.replicate flockNumLincheckRounds none)
   let s ← Prog.readN kBits
   let chiInPrime := roundChallenges.reverse
-  let wCol := (eqKernel chiInPrime).flatMap fun weight ↦ s.map (· * weight)
-  let terminal := blake2sBilinear alpha eRow wCol +
+  let wCol := lincheckColumnWeights chiInPrime s
+  let matrixValue ← ev.matrices alpha zc.zSkip chiIn chiInPrime s
+  let terminal := matrixValue +
     alpha ^ 2 * eqEval chiIn chiInPrime * dot skipWeights s +
     alpha ^ 3 * wCol.getD blake2sConstantColumn 0
   Prog.require (terminal = rLc)
   return (chiInPrime ++ zc.chi.drop flockNumLincheckRounds, s)
 
 /-- `verify_flock(log_n)`: the zerocheck, then the lincheck (`verifier.py:1297-1301`). -/
-def verifyFlock (logN : ℕ) : Prog (List E × List E) := do
+def verifyFlock (ev : Evaluations) (logN : ℕ) : Prog (List E × List E) := do
   let zc ← verifyFlockZerocheck logN
-  verifyFlockLincheck zc
+  verifyFlockLincheck ev zc
 
 /-! ### Ring switching (`verifier.py:1304-1340`) -/
 
@@ -2036,14 +2073,15 @@ def ringSwitchClaim (layout : Layout) (target : E) (weight : List E → E) : Sta
   (fun x ↦ qflockPlacement.eqAbove x * weight (x.take qflockPlacement.vars), target)
 
 /-- `verify_execution(bytecode, public_input, proof)` without its `finish`
-(`verifier.py:1358-1407`). -/
-def verifyExecution (bytecode : List K) (publicInput : Digest) : Prog Unit := do
+(`verifier.py:1358-1407`), the fixed polynomials' values from `ev`. -/
+def verifyExecution (ev : Evaluations) (bytecode : List K) (publicInput : Digest) :
+    Prog Unit := do
   -- 1] memory log-size, table log-sizes, and the WHIR rate
   let (layout, logInverseRate) ← readSizes bytecode
   -- 2] the stack's commitment
   commitStack layout.stackLog logInverseRate
   -- 3] the bus
-  let bus ← verifyBusBalance layout
+  let bus ← verifyBusBalance ev layout
   -- 4] the table sumcheck
   let claims ← tablePhase layout bus
   -- 5] the public input
@@ -2051,16 +2089,70 @@ def verifyExecution (bytecode : List K) (publicInput : Digest) : Prog Unit := do
   let claims := claims ++ publicClaims
   -- 6] BLAKE2s validity via Flock
   let (flockPoint, flockS) ←
-    verifyFlock (blake2sR1csLogSize + layout.tableLogHeights.getD opBlake2s 0)
+    verifyFlock ev (blake2sR1csLogSize + layout.tableLogHeights.getD opBlake2s 0)
   -- 7] ring switching, then one opening of the stack for every claim
   let (ringTarget, ringWeight) ← ringSwitch flockPoint flockS
   verifyStackedOpening layout.stackLog logInverseRate
     (ringSwitchClaim layout ringTarget ringWeight :: claims.map (·.onStack layout))
 
+/-! ### The fixed polynomials' values -/
+
+/-- The deployed verifier computes the fixed polynomials' values. -/
+def Evaluations.computed : Evaluations where
+  bytecode words point := pure (multilinearEval (words.map ofK) point)
+  matrices alpha zSkip chiIn chiInPrime s :=
+    pure (blake2sBilinear alpha (lincheckRowWeights zSkip chiIn)
+      (lincheckColumnWeights chiInPrime s))
+
+/-- What a proof claims of the fixed polynomials, for a verifier that does not evaluate them:
+the bytecode's value at its point, and the matrices' value at the lincheck's weights, given by
+`alpha`, the skip challenge, the row and column points and the slices. -/
+structure FixedClaims where
+  /-- Where the bus reads the bytecode. -/
+  bytecodePoint : List E
+  /-- The bytecode's value there. -/
+  bytecodeValue : E
+  /-- The lincheck's batching challenge. -/
+  alpha : E
+  /-- The zerocheck's skip challenge. -/
+  zSkip : E
+  /-- The lincheck's row point. -/
+  rowPoint : List E
+  /-- The lincheck's column point. -/
+  columnPoint : List E
+  /-- The 64 slices. -/
+  slices : List E
+  /-- The matrices' value at those weights. -/
+  matrixValue : E
+
+/-- The values claimed by `c`, at the points of `c` only: the run fails where the verifier asks
+elsewhere. -/
+def Evaluations.claimed (c : FixedClaims) : Evaluations where
+  bytecode _ point := do
+    Prog.require (point = c.bytecodePoint)
+    return c.bytecodeValue
+  matrices alpha zSkip chiIn chiInPrime s := do
+    Prog.require (alpha = c.alpha ∧ zSkip = c.zSkip ∧ chiIn = c.rowPoint ∧
+      chiInPrime = c.columnPoint ∧ s = c.slices)
+    return c.matrixValue
+
+/-- The claims are true of `bytecode` and of flock's matrices. -/
+def FixedClaims.Holds (bytecode : List K) (c : FixedClaims) : Prop :=
+  multilinearEval (bytecode.map ofK) c.bytecodePoint = c.bytecodeValue ∧
+    blake2sBilinear c.alpha (lincheckRowWeights c.zSkip c.rowPoint)
+      (lincheckColumnWeights c.columnPoint c.slices) = c.matrixValue
+
+/-! ### The programs -/
+
 /-- **The leanVM verifier program**: `verify_execution` in the verifier language, accepting
 where the Python returns. -/
 def leanVmProgram (bytecode : List K) (publicInput : Digest) : Prog Bool := do
-  verifyExecution bytecode publicInput
+  verifyExecution .computed bytecode publicInput
+  return true
+
+/-- The verifier program with the fixed polynomials' values claimed by `c`. -/
+def deferredProgram (c : FixedClaims) (bytecode : List K) (publicInput : Digest) : Prog Bool := do
+  verifyExecution (.claimed c) bytecode publicInput
   return true
 
 /-! ### The seed and the compiled verifier -/
@@ -2092,11 +2184,32 @@ def verifyWith (bytecode : List K) (publicInput : Digest) (π : Proof) : m Bool 
   let seed ← seedWith H bytecode publicInput
   runProof H (leanVmProgram bytecode publicInput) seed π
 
+/-- The IV with the hash `H`, the hash of `ivPreimage` (`Bytecode::new`). -/
+def fiatShamirIvWith (bytecode : List K) : m Digest := do
+  let bytecodeHash ← H (bytecode.flatMap kBytes)
+  H (ivPreimage bytecodeHash)
+
+/-- **The deferring verifier** with the hash `H`, as an aggregate runs it on a child's proof
+(`verify_sub`): the IV is given rather than hashed from the bytecode, and the fixed polynomials'
+values are those claimed by `c`. Only the bytecode's length is read. -/
+def verifyDeferredWith (bytecode : List K) (iv publicInput : Digest) (c : FixedClaims)
+    (π : Proof) : m Bool := do
+  let seed ← H (digestBytes iv ++ digestBytes publicInput)
+  runProof H (deferredProgram c bytecode publicInput) seed π
+
 end Hash
 
 /-- The deployed seed, with BLAKE2s. -/
 def seed (bytecode : List K) (publicInput : Digest) : Digest :=
   Id.run (seedWith blake2sBytes bytecode publicInput)
+
+/-- The deployed IV, with BLAKE2s. -/
+def fiatShamirIv (bytecode : List K) : Digest := Id.run (fiatShamirIvWith blake2sBytes bytecode)
+
+/-- The deployed deferring verifier, with BLAKE2s. -/
+def verifyDeferred (bytecode : List K) (iv publicInput : Digest) (c : FixedClaims) (π : Proof) :
+    Bool :=
+  Id.run (verifyDeferredWith blake2sBytes bytecode iv publicInput c π)
 
 /-- **The deployed leanVM verifier**: the program's compiled reading with BLAKE2s, from the
 deployed seed. -/

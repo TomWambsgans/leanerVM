@@ -239,7 +239,7 @@ noncomputable def verifyFlockSpec (hst : Stable C) {L₀ : ℕ} (hcard : ∀ h, 
     (h3 : (L₀ : ℝ≥0∞) * ((overE 3 : ℝ≥0) : ℝ≥0∞) + 0 ≤ εmax) (logN : ℕ)
     (hlog : logN - LeanerVM.Protocol.Verifier.flockKSkip -
       LeanerVM.Protocol.Verifier.fixedChallenges.length = (fP F prog s).nRand) :
-    Spec (LeanerVM.Protocol.Verifier.verifyFlock logN)
+    Spec (LeanerVM.Protocol.Verifier.verifyFlock .computed logN)
       (FlockPre F prog s layout C toI claims) (LinPost F prog s layout C toI claims input) εmax
       ((∑ _i ∈ Finset.range (logN - LeanerVM.Protocol.Verifier.flockKSkip -
           LeanerVM.Protocol.Verifier.fixedChallenges.length),

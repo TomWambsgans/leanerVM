@@ -106,6 +106,7 @@ import LeanerVMTests.Protocol.EndToEnd.Sound.Moves
 import LeanerVMTests.Protocol.EndToEnd.Sound.Returns
 import LeanerVMTests.Protocol.EndToEnd.Front.TableFid
 import LeanerVMTests.Protocol.LeanVM
+import LeanerVMTests.Spec.Node
 
 /-!
 # leanerVM test aggregate

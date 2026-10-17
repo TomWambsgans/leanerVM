@@ -19,7 +19,7 @@ open LeanerVM.Protocol.EndToEnd.Sound
 
 example (layout : LeanerVM.Protocol.Verifier.Layout) :
     RetOK (fun claims : List LeanerVM.Protocol.Verifier.ColumnClaim ↦ claims.length ≤ 227)
-      ((LeanerVM.Protocol.Verifier.verifyBusBalance layout).bind
+      ((LeanerVM.Protocol.Verifier.verifyBusBalance .computed layout).bind
         (LeanerVM.Protocol.Verifier.tablePhase layout)) :=
   retOK_busTable layout
 

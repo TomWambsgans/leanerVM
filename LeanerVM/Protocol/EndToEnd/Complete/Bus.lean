@@ -68,7 +68,8 @@ def busOut (layout : Verifier.Layout) (alphas : List E) (beta : E)
       memory) ++
     [⟨memoryFinalCounters, memoryLow, memoryFinal⟩, ⟨bytecodeFinalCounters, bytecodeLow,
       bytecodeFinal⟩]
-  let fp := fingerprints layout weights alphas memory memoryLow bytecodeLow
+  let fp := fingerprints weights memory memoryLow bytecodeLow
+    (multilinearEval (layout.bytecode.map ofK) (bytecodeLow ++ alphas))
   let finalPc := Verifier.gpow (2 ^ layout.logBytecode - 1)
   let forms0 : List (List Form) := tables.map fun _ ↦ [{}, {}, {}]
   let r1 := accumulateSide forms0 0 layout.push pushLayout (fp (Verifier.gpow 0) 1 1)
@@ -80,7 +81,7 @@ def busOut (layout : Verifier.Layout) (alphas : List E) (beta : E)
 
 /-- `verify_bus_balance` reads, then computes `busOut`. -/
 theorem verifyBusBalance_eq (layout : Verifier.Layout) :
-    verifyBusBalance layout = (do
+    verifyBusBalance .computed layout = (do
       let alphas ← Prog.sampleN busBits
       let beta ← Prog.sampleE
       let g ← verifyGkrGrandProducts
@@ -466,8 +467,8 @@ theorem fw_push (L : Verifier.Layout) (hbc : L.bytecode = bytecodeWords prog) (a
     ∀ b < (fwLogs prog s).length,
       multilinearEval (pushTabs prog s q β (eqKernel alphas) b)
           (p.take ((fwLogs prog s).getD b 0)) =
-        β + (fingerprints L (eqKernel alphas) alphas (memVals prog s q p) (p.take s.logMem)
-          (p.take prog.logSize) (Verifier.gpow 0) 1 1).getD b 0
+        β + (fingerprints (eqKernel alphas) (memVals prog s q p) (p.take s.logMem)
+          (p.take prog.logSize) (multilinearEval (L.bytecode.map ofK) (p.take prog.logSize ++ alphas)) (Verifier.gpow 0) 1 1).getD b 0
   | 0, _ => rfl
   | 1, _ => by
     have hz := length_take_of_le ((logMem_le_busDepth prog s).trans hp)
@@ -488,8 +489,8 @@ theorem fw_pull (L : Verifier.Layout) (hlb : L.logBytecode = prog.logSize)
     ∀ b < (fwLogs prog s).length,
       multilinearEval (pullTabs prog s q β (eqKernel alphas) b)
           (p.take ((fwLogs prog s).getD b 0)) =
-        β + (fingerprints L (eqKernel alphas) alphas (memVals prog s q p) (p.take s.logMem)
-          (p.take prog.logSize) (Verifier.gpow (2 ^ L.logBytecode - 1)) (mfVal prog s q p)
+        β + (fingerprints (eqKernel alphas) (memVals prog s q p) (p.take s.logMem)
+          (p.take prog.logSize) (multilinearEval (L.bytecode.map ofK) (p.take prog.logSize ++ alphas)) (Verifier.gpow (2 ^ L.logBytecode - 1)) (mfVal prog s q p)
           (bfVal prog s q p)).getD b 0
   | 0, _ => by rw [hlb]; rfl
   | 1, _ => by
@@ -760,7 +761,7 @@ def busK1 (L : Verifier.Layout) (D : ℕ) (alphas : List E) : Prog BusResult :=
   Prog.sampleE.bind (busK2 L D alphas)
 
 theorem verifyBusBalance_eq' (L : Verifier.Layout) :
-    verifyBusBalance L = (Prog.sampleN busBits).bind
+    verifyBusBalance .computed L = (Prog.sampleN busBits).bind
       (busK1 L (busLayout [0, L.logMemory, L.logBytecode] L.push).depth) := by
   rw [verifyBusBalance_eq]
   rfl
@@ -806,7 +807,7 @@ theorem follows_verifyBusBalance {prog : Program} {s : Sizes} {input : PublicInp
     {q : Column (leanIsaμ prog s)} (_hs : s.Admissible prog) (hq : M3Holds (inst prog s) input q)
     (cs : Commits) :
     Follows (fun cs' a b ↦ cs' = cs ∧ a = b ∧ BusGood prog s q b) (hBus prog s q)
-      (verifyBusBalance (verifierLayout prog s)) cs := by
+      (verifyBusBalance .computed (verifierLayout prog s)) cs := by
   obtain ⟨-, hbal, hcnt, -, -⟩ := hq
   rw [verifyBusBalance_eq', busLayout_depth_verifier, hBus]
   refine Follows.bind (fun cs₁ a b h ↦ ?_) _ _ _ (Follows.sampleN_sampleN cs busBits)

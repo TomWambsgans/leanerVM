@@ -10,9 +10,19 @@ Read in this order:
 3. [`Isa.lean`](Isa.lean): leanISA (programs, memory, one step, valid executions), the encoding of
    an instruction, and the fill blocks completeness assumes.
 4. [`Verifier.lean`](Verifier.lean): the verifier, transcribed from leanVM's Python verifier, with
-   the WHIR and Flock constants it reads and the Fiat–Shamir transcript it runs on.
+   the WHIR and Flock constants it reads and the Fiat–Shamir transcript it runs on; and the
+   deferring verifier an aggregate runs on its children, which takes the values of the fixed
+   polynomials from claims instead of computing them.
 5. [`Statement.lean`](Statement.lean): the random-oracle experiment and the two statements,
    `KnowledgeSoundness` and `Completeness`.
+
+The aggregation guest (in progress: stated, not yet proved):
+
+6. [`Xmss.lean`](Xmss.lean), [`Sphincs.lean`](Sphincs.lean): the two signature schemes, vendored
+   from leanVM's `formal/`, where their security is proved.
+7. [`Da.lean`](Da.lean): LeanDA's commitment and the claim on a DA root.
+8. [`Node.lean`](Node.lean): a node's statement and its digest, the batching of deferred claims,
+   `NodeSpec` (what a node establishes) and the outer verifier.
 
 [`Fast/`](Fast/) needs no review: it holds `@[csimp]` theorems, each proved, that make the compiled
 field arithmetic and BLAKE2s fast. They change no definition.

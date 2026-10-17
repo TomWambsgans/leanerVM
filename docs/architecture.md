@@ -22,7 +22,9 @@ An arrow points from a lower layer to a layer allowed to depend on it.
 Owns what is proved, for review: the definitions the two end-to-end statements mention (the
 fields, BLAKE2s, leanISA, the instruction encoding, the fill blocks, the verifier with its
 constants and transcript, the random-oracle experiment) and the statements themselves, as
-propositions (`LeanerVM/Spec/Statement.lean`). It contains definitions only, plus the `@[csimp]`
+propositions (`LeanerVM/Spec/Statement.lean`); and the aggregation guest's statement, `NodeSpec`,
+with the signature schemes (vendored from leanVM's `formal/`) and LeanDA (`Spec/Node.lean`,
+`Spec/Xmss.lean`, `Spec/Sphincs.lean`, `Spec/Da.lean`). It contains definitions only, plus the `@[csimp]`
 theorems of `Spec/Fast/` that make the compiled verifier fast, and imports nothing from
 `LeanerVM/` outside `Spec/`. Lemmas about these definitions live in the layer that owns the
 topic (`Parameters`, `Semantics`, `Protocol`). [`LeanerVM/Spec/README.md`](../LeanerVM/Spec/README.md)
@@ -51,8 +53,8 @@ should be upstreamed to Clean rather than duplicated here.
 
 ### Applications
 
-Owns the recursive signature-aggregation guest specification, the exact guest program and
-compiler or assembly boundary, and application-level correctness results. It may depend on
+Owns the exact recursive signature-aggregation guest program, the compiler or assembly boundary,
+and application-level correctness results; the guest's specification, `NodeSpec`, is in `Spec`. It may depend on
 `Parameters` and `Semantics`, but not on the arithmetization or protocol layers. Create the
 directory with its first concrete module rather than adding an empty placeholder.
 

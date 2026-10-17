@@ -104,7 +104,7 @@ theorem RetOK.readN : ∀ n : ℕ, RetOK (fun xs : List E ↦ xs.length = n) (Pr
 
 /-- The bus phase returns at most five framework claims. -/
 theorem retOK_verifyBusBalance (layout : Layout) :
-    RetOK (fun bus : BusResult ↦ bus.claims.length ≤ 5) (verifyBusBalance layout) := by
+    RetOK (fun bus : BusResult ↦ bus.claims.length ≤ 5) (verifyBusBalance .computed layout) := by
   unfold verifyBusBalance
   refine RetOK.bind_true fun _ ↦ RetOK.bind_true fun _ ↦ RetOK.bind_true fun r ↦ ?_
   obtain ⟨countRoot, point, treeValues⟩ := r
@@ -164,7 +164,7 @@ theorem retOK_tablePhase (layout : Layout) (bus : BusResult) :
 /-- The bus phase and the table sumcheck return at most `5 + 6·37` claims. -/
 theorem retOK_busTable (layout : Layout) :
     RetOK (fun claims : List ColumnClaim ↦ claims.length ≤ 227)
-      ((verifyBusBalance layout).bind (tablePhase layout)) :=
+      ((verifyBusBalance .computed layout).bind (tablePhase layout)) :=
   (retOK_verifyBusBalance layout).bind fun bus hb ↦
     (retOK_tablePhase layout bus).mono fun _ h ↦ by omega
 

@@ -103,8 +103,10 @@ def bndPushAgrees (w : BusWit) : Bool :=
   ((boundary prog4 sTiny).filter fun b ↦ decide (b.side = Side.push)).map (fun b ↦
       arkB Blake2sFlock.blake2sFlockSpec prog4 sTiny (toAlpha w.alphas) w.beta
         (w.vals _) w.point (.boundary b)) ==
-    (fingerprints (verifierLayout prog4 sTiny) (eqKernel w.alphas) w.alphas w.memory
-      (w.point.take sTiny.logMem) (w.point.take prog4.logSize) (Verifier.gpow 0) 1 1).map
+    (fingerprints (eqKernel w.alphas) w.memory (w.point.take sTiny.logMem)
+      (w.point.take prog4.logSize)
+      (multilinearEval ((verifierLayout prog4 sTiny).bytecode.map ofK)
+        (w.point.take prog4.logSize ++ w.alphas)) (Verifier.gpow 0) 1 1).map
         (w.beta + ·)
 
 /-- A read with four challenges. -/

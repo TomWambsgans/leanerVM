@@ -64,7 +64,7 @@ def linTail (zc : LeanerVM.Protocol.Verifier.ZerocheckResult) (alpha : E) :
 
 /-- The lincheck is `α`, the rounds, then the tail. -/
 theorem verifyFlockLincheck_eq (zc : LeanerVM.Protocol.Verifier.ZerocheckResult) :
-    LeanerVM.Protocol.Verifier.verifyFlockLincheck zc = Prog.sampleE >>= fun alpha ↦
+    LeanerVM.Protocol.Verifier.verifyFlockLincheck .computed zc = Prog.sampleE >>= fun alpha ↦
       LeanerVM.Protocol.Verifier.sumcheck (zc.vA + alpha * zc.vB + alpha ^ 2 * zc.vC + alpha ^ 3) 3
         (List.replicate LeanerVM.Protocol.Verifier.flockNumLincheckRounds none) >>=
           linTail zc alpha := rfl
@@ -208,7 +208,7 @@ noncomputable def linSpec (hst : Stable C) {L₀ : ℕ} (hcard : ∀ h, (C h).nc
     (hterm : TerminalFaithful F prog s) {εmax T : ℝ≥0∞} (hT : T ≤ εmax)
     (h2 : (L₀ : ℝ≥0∞) * ((overE 2 : ℝ≥0) : ℝ≥0∞) + 0 ≤ εmax)
     (zc : LeanerVM.Protocol.Verifier.ZerocheckResult) :
-    Spec (LeanerVM.Protocol.Verifier.verifyFlockLincheck zc)
+    Spec (LeanerVM.Protocol.Verifier.verifyFlockLincheck .computed zc)
       (ZcPost F prog s layout C toI claims input zc) (LinPost F prog s layout C toI claims input)
       εmax ((L₀ : ℝ≥0∞) * ((overE 3 : ℝ≥0) : ℝ≥0∞) + 0) T :=
   if hz : zc.chi.length = (fP F prog s).m + (fP F prog s).κ then

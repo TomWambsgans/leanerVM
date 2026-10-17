@@ -1016,8 +1016,9 @@ theorem bnd_push (w : BusWit) (ha : w.alphas.length = 4) (hm : w.memory.length =
     (hlm : s.logMem ≤ w.point.length) (hls : prog.logSize ≤ w.point.length) :
     ((boundary prog s).filter fun b ↦ decide (b.side = Side.push)).map (fun b ↦
         arkB F prog s (toAlpha w.alphas) w.beta (w.vals _) w.point (.boundary b)) =
-      (fingerprints (verifierLayout prog s) (eqKernel w.alphas) w.alphas w.memory
-        (w.point.take s.logMem) (w.point.take prog.logSize) (Verifier.gpow 0) 1 1).map
+      (fingerprints (eqKernel w.alphas) w.memory (w.point.take s.logMem)
+        (w.point.take prog.logSize)
+        (multilinearEval ((verifierLayout prog s).bytecode.map ofK) (w.point.take prog.logSize ++ w.alphas)) (Verifier.gpow 0) 1 1).map
           (w.beta + ·) := by
   obtain ⟨v0, v1, v2, -, -⟩ := valueOf_leanIsa F prog s w hm
   obtain ⟨a, b, c, habc⟩ : ∃ a b c, w.memory = [a, b, c] := by
@@ -1044,8 +1045,9 @@ theorem bnd_pull (w : BusWit) (ha : w.alphas.length = 4) (hm : w.memory.length =
     (hlm : s.logMem ≤ w.point.length) (hls : prog.logSize ≤ w.point.length) :
     ((boundary prog s).filter fun b ↦ decide (b.side = Side.pull)).map (fun b ↦
         arkB F prog s (toAlpha w.alphas) w.beta (w.vals _) w.point (.boundary b)) =
-      (fingerprints (verifierLayout prog s) (eqKernel w.alphas) w.alphas w.memory
-        (w.point.take s.logMem) (w.point.take prog.logSize)
+      (fingerprints (eqKernel w.alphas) w.memory (w.point.take s.logMem)
+        (w.point.take prog.logSize)
+        (multilinearEval ((verifierLayout prog s).bytecode.map ofK) (w.point.take prog.logSize ++ w.alphas))
         (Verifier.gpow (2 ^ (verifierLayout prog s).logBytecode - 1)) w.mf w.bf).map
           (w.beta + ·) := by
   obtain ⟨v0, v1, v2, v3, v4⟩ := valueOf_leanIsa F prog s w hm
@@ -1216,8 +1218,9 @@ theorem busOut_totals (w : BusWit) (hp : w.point.length = (leanIsaInstance F pro
   | ⟨0, _⟩ =>
     have hG : (Bus.sources (leanIsaInstance F prog s) 0).map
         (arkB F prog s (toAlpha w.alphas) w.beta (w.vals _) w.point) =
-        (fingerprints (verifierLayout prog s) (eqKernel w.alphas) w.alphas w.memory
-          (w.point.take s.logMem) (w.point.take prog.logSize) (Verifier.gpow 0) 1 1).map
+        (fingerprints (eqKernel w.alphas) w.memory (w.point.take s.logMem)
+          (w.point.take prog.logSize)
+          (multilinearEval ((verifierLayout prog s).bytecode.map ofK) (w.point.take prog.logSize ++ w.alphas)) (Verifier.gpow 0) 1 1).map
             (w.beta + ·) ++ List.replicate (Complete.pushBlocks s).length 0 := by
       rw [sources_zero, sideSources_leanIsa, List.map_append, List.map_map,
         flushSrcs_map_arkB, ← pushBlocks_eq]
@@ -1231,8 +1234,9 @@ theorem busOut_totals (w : BusWit) (hp : w.point.length = (leanIsaInstance F pro
   | ⟨1, _⟩ =>
     have hG : (Bus.sources (leanIsaInstance F prog s) 1).map
         (arkB F prog s (toAlpha w.alphas) w.beta (w.vals _) w.point) =
-        (fingerprints (verifierLayout prog s) (eqKernel w.alphas) w.alphas w.memory
-          (w.point.take s.logMem) (w.point.take prog.logSize)
+        (fingerprints (eqKernel w.alphas) w.memory (w.point.take s.logMem)
+          (w.point.take prog.logSize)
+          (multilinearEval ((verifierLayout prog s).bytecode.map ofK) (w.point.take prog.logSize ++ w.alphas))
           (Verifier.gpow (2 ^ (verifierLayout prog s).logBytecode - 1)) w.mf w.bf).map
             (w.beta + ·) ++ List.replicate (Complete.pullBlocks s).length 0 := by
       rw [sources_one, sideSources_leanIsa, List.map_append, List.map_map,

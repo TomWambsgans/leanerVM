@@ -6,6 +6,10 @@ import LeanerVM.Spec.Fast.Hash
 import LeanerVM.Spec.Isa
 import LeanerVM.Spec.Verifier
 import LeanerVM.Spec.Statement
+import LeanerVM.Spec.Xmss
+import LeanerVM.Spec.Sphincs
+import LeanerVM.Spec.Da
+import LeanerVM.Spec.Node
 import LeanerVM.Arithmetization.Basic
 import LeanerVM.Arithmetization.Boundary
 import LeanerVM.Arithmetization.Bytecode
