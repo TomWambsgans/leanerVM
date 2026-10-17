@@ -1,7 +1,7 @@
 # Status: end-to-end soundness and completeness of the deployed verifier
 
 Branch `e2e/rom-knowledge-soundness`, built on the open stack #86–#99, #82/#83 and #67, at leanVM
-`127510d14c98ade4e8a97646c44fa7f1ff5e752d`. Design: [e2e-rom-design.md](e2e-rom-design.md).
+`a0ca7858f2533ce51abdc20bb635c007e19b26b3`. Design: [e2e-rom-design.md](e2e-rom-design.md).
 Every theorem below depends only on `propext`, `Classical.choice`, `Quot.sound` (`#print axioms`,
 locked in the tests).
 

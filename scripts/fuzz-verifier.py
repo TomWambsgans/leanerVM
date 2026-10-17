@@ -64,7 +64,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-PIN = "127510d14c98ade4e8a97646c44fa7f1ff5e752d"
+PIN = "a0ca7858f2533ce51abdc20bb635c007e19b26b3"
 VERIFIER_SHA256 = "ecce66e3d87d84fc9f5a65426982e1afba5128769abd449165b36288fd1da1af"
 FILES = ("bytecode.bin", "public_input.bin", "stream.bin", "merkle_openings.bin")
 ROOT = Path(__file__).resolve().parent.parent

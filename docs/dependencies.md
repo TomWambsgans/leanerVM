@@ -6,7 +6,7 @@ The repository tracks eight upstreams and six direct Lake packages:
 | --- | --- | --- |
 | Lean | `v4.34.1` | Root toolchain |
 | Mathlib | `v4.34.1` (`d13f23b7`) | Algebra, finite types, probability measures, and tactics |
-| leanVM | `127510d14c98ade4e8a97646c44fa7f1ff5e752d` (current main) | Audited Rust/specification target; not a Lake dependency |
+| leanVM | `a0ca7858f2533ce51abdc20bb635c007e19b26b3` (current main) | Audited Rust/specification target; not a Lake dependency |
 | CompPoly | `572f997390aa4fc131ef30b1186fa1dcf292ca10` (current main) | Computable polynomial and field infrastructure |
 | Clean | `42fe4b268132a46604d40cc73f642a1995f26547` (PR #474, includes current main) | Circuit, AIR, channel, and witness-generation infrastructure |
 | ArkLib | `7653a901ed466c88a2e61a3075011b73d7bb2316` (current main) | Oracle reductions, security definitions, composition, sumcheck, and multilinear theory |
@@ -29,6 +29,20 @@ Add a dependency only with a named first-party use and a narrow import. A depend
 6. delete every `LeanerVM/Protocol/To*/` file or declaration that the new pin contains, move its
    consumers to the upstream names, and update the protocol blueprint's upstream ledger and the
    status page's watch list.
+
+## leanVM `a0ca7858` review
+
+The previous pin was `127510d14c98ade4e8a97646c44fa7f1ff5e752d`; the new one is
+`a0ca7858f2533ce51abdc20bb635c007e19b26b3` (`main`, 2026-10-17), one commit later ("Guest: certify the native bus tiling order"). It
+changes only `crates/rec_aggregation/guests/lean_ethereum.py` and a comment of
+`crates/rec_aggregation/src/aggregation.rs`: the aggregation guest's in-circuit verifier,
+`verify_sub`, now checks that the hinted order of the bus blocks is the native verifier's
+(descending size, then ascending index), as the verifier does (`stack_offsets`,
+`crates/verifier/src/multilinear.rs:127-137`); before, it accepted any aligned tiling, so it
+accepted proofs the verifier rejects. No Lean definition changes. `python-verifier/verifier.py`,
+`crates/verifier`, the prover and the specification are identical at both pins, so the proof
+fixtures stand, the scripts' checksums are unchanged, and every citation of them keeps `127510d1`;
+citations of the guest name `a0ca7858`.
 
 ## leanVM `127510d1` review
 

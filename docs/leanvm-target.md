@@ -3,10 +3,11 @@
 leanerVM targets [leanVM](https://github.com/leanEthereum/leanVM). Its default implementation now
 uses binary fields and BLAKE2s; the historical KoalaBear/Poseidon implementation remains on the
 `koalabear` branch. The audited baseline is commit
-[`127510d14c98ade4e8a97646c44fa7f1ff5e752d`](https://github.com/leanEthereum/leanVM/commit/127510d14c98ade4e8a97646c44fa7f1ff5e752d)
-on `main`, dated 2026-10-15. The previous baseline,
-`a386121f84292f6fa663aaa3e570c15bc0240ea2` (2026-09-03), and what changed between the two are
-reviewed in [dependencies.md](dependencies.md). Source-faithful
+[`a0ca7858f2533ce51abdc20bb635c007e19b26b3`](https://github.com/leanEthereum/leanVM/commit/a0ca7858f2533ce51abdc20bb635c007e19b26b3)
+on `main`, dated 2026-10-17, one commit after `127510d14c98ade4e8a97646c44fa7f1ff5e752d` (2026-10-15), which changes only the
+aggregation guest; the verifier, the Python and the specification are those of `127510d1`, and
+citations of them name it. The baselines before, and what changed between them, are reviewed in
+[dependencies.md](dependencies.md). Source-faithful
 definitions, fixtures, and implementation-correspondence claims must name this or a later
 explicitly reviewed commit; `main` is only the drift-monitoring branch.
 
@@ -18,7 +19,7 @@ The audit also examined the local checkouts supplied for comparison:
 | Transitional `leanVM-b` checkout | `f5d6e5040d666981005371742a6f21640ce865a1` | Earlier binary-field revision |
 | Transitional `leanVM-b` upstream | `c701f62b0e05a48212febfae7ed5713a37d90392` | Earlier target baseline |
 | `leanVM` upstream `main` | `a386121f84292f6fa663aaa3e570c15bc0240ea2` | Previous target baseline |
-| `leanVM` upstream `main` | `127510d14c98ade4e8a97646c44fa7f1ff5e752d` | Current target baseline |
+| `leanVM` upstream `main` | `a0ca7858f2533ce51abdc20bb635c007e19b26b3` | Current target baseline |
 
 The historical local leanVM checkout was clean. The transitional local leanVM-b checkout contained
 unrelated modified and untracked files; the comparison used committed objects only. The current

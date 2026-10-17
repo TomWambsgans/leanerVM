@@ -9,7 +9,7 @@ Python verifier's CLI reads: `bytecode.bin`, `public_input.bin`, `stream.bin` an
 (`verifier::Proof::load`, `verifier::Bytecode::new`), so its verdicts can be set beside those of
 the Lean verifier, `lake exe leanvm-verify` (`tests/VerifyFiles.lean`), on the same bytes.
 
-The pin is leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`.
+The pin is leanVM `a0ca7858f2533ce51abdc20bb635c007e19b26b3`.
 
 ## Building
 
@@ -19,7 +19,7 @@ source tree at the pin. `build.sh` makes the link, checks that the tree's `crate
 
 ```sh
 mkdir -p /path/to/leanvm-main
-git -C /path/to/leanVM archive 127510d14c98ade4e8a97646c44fa7f1ff5e752d | tar -x -C /path/to/leanvm-main
+git -C /path/to/leanVM archive a0ca7858f2533ce51abdc20bb635c007e19b26b3 | tar -x -C /path/to/leanvm-main
 scripts/rust-verifier-cli/build.sh /path/to/leanvm-main
 ```
 

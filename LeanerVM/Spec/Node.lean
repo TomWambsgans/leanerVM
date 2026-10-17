@@ -17,7 +17,7 @@ public import LeanerVM.Spec.Da
 
 **Status: stated, not proved.** No theorem of the repository is about these definitions yet.
 
-Category B: transcribed from leanVM `127510d14c98ade4e8a97646c44fa7f1ff5e752d`,
+Category B: transcribed from leanVM `a0ca7858f2533ce51abdc20bb635c007e19b26b3`,
 `crates/rec_aggregation/src/aggregation.rs` (the statement, its digest, the outer verifier) and
 `crates/rec_aggregation/guests/lean_ethereum.py` (the guest).
 

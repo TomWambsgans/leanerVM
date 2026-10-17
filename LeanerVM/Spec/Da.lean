@@ -27,7 +27,7 @@ all the cells, column by column. The root is the hash of the two roots (`commitC
 A row is a codeword when it is orthogonal to the dual codeword `L` of challenges drawn from the
 root (`membershipVector`), with high probability over the challenges. An aggregate's DA claim is
 a pair of a root and a vector digest; it is held by a matrix committed to the root whose rows are
-orthogonal to a vector of that digest (`Witness.Opens`, `lean_ethereum.py:3147-3341`). The guest
+orthogonal to a vector of that digest (`Witness.Opens`, `lean_ethereum.py:3159-3353` at `a0ca7858`). The guest
 takes the vector digest from the statement; the outer verifier derives it from the root
 (`vectorDigest (membershipVector root)`), so that the rows are codewords given that BLAKE2s, here
 and in the statement's digests, has no collision.
